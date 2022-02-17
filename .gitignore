@@ -33,4 +33,5 @@
 
 
 webserv
-POC/
+.vscode
+POC/server
