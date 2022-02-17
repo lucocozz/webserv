@@ -15,7 +15,9 @@ select vs poll vs epoll:
 
 socket:
 	http://dpnc.unige.ch/users/meunier/DATA/DOCS/socket.cpp.pdf	|	
-	https://perso.ens-lyon.fr/michael.rao/ASR2/cours_slides_13.pdf
+	https://perso.ens-lyon.fr/michael.rao/ASR2/cours_slides_13.pdf	|
+	https://github.com/codeplea/Hands-On-Network-Programming-with-C	|
+	http://www.kohala.com/start/unpv12e.chap11.pdf
 
 Concurrent HTTP Server with Epoll:
 	https://kaleid-liner.github.io/blog/2019/06/02/epoll-web-server.html

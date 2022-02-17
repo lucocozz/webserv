@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/16 22:47:38 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/02/17 01:14:21 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/02/17 17:11:50 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 #include <unistd.h>
 #include <iostream>
 #include <cstring>
+#include <cerrno>
 
 #define MAX_EVENTS 10
 

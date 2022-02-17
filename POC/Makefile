@@ -6,7 +6,7 @@
 #    By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2022/01/21 19:56:36 by lucocozz          #+#    #+#              #
-#    Updated: 2022/02/16 22:19:15 by lucocozz         ###   ########.fr        #
+#    Updated: 2022/02/17 17:11:25 by lucocozz         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -17,7 +17,7 @@ SRC := 	main.cpp
 MAKE = make
 MAKEFLAGS += --no-print-directory
 CXX := c++
-CXXFLAGS := -Wall -Wextra -Werror -MMD -MD -g3 #-std=c++98
+CXXFLAGS := -Wall -Wextra -Werror -MMD -MD -std=c++98 -g3
 BUILD_DIR := .build
 INCLUDES_DIR := includes
 SOURCE_DIR := sources
