@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/16 22:47:38 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/02/17 17:11:50 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/02/18 19:42:21 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,34 +19,33 @@
 #include <iostream>
 #include <cstring>
 #include <cerrno>
-
-#define MAX_EVENTS 10
+#include "EpollSocket.hpp"
 
 class Epoll
 {
 private:
 	int					_epollFd;
-	const int			_max_events;
-	struct epoll_event	*_events;
+	const int			_maxEvents;
+	struct epoll_event	*_eventList;
 
 public:
-	Epoll(int max_events): _max_events(max_events), _events(NULL)
+	Epoll(int maxEvents = 10): _maxEvents(maxEvents), _eventList(NULL)
 	{
 		this->_epollFd = epoll_create1(0);
 		if (this->_epollFd == -1)
 			throw (std::runtime_error(strerror(errno)));
-		this->_events = new struct epoll_event[max_events];		
+		this->_eventList = new struct epoll_event[maxEvents];		
 	}
 
 	~Epoll()
 	{
 		close(this->_epollFd);
-		delete[] this->_events;
+		delete[] this->_eventList;
 	}
 
-	void	control(int _operator_, int fd, struct epoll_event &event)
+	void	control(int option, EpollSocket &target)
 	{
-		if (epoll_ctl(this->_epollFd, _operator_, fd, &event) == -1)
+		if (epoll_ctl(this->_epollFd, option, target.listener(), &target.infoEvent()) == -1)
 			throw (std::runtime_error(strerror(errno)));
 	}
 
@@ -54,9 +53,23 @@ public:
 	{
 		int	nfds;
 
-		nfds = epoll_wait(this->_epollFd, this->_events, this->_max_events, timeout);
+		nfds = epoll_wait(this->_epollFd, this->_eventList, this->_maxEvents, timeout);
 		if (nfds == -1)
 			throw (std::runtime_error(strerror(errno)));
 		return (nfds);
+	}
+
+	struct EpollSocket socketAt(int index)
+	{
+		if (index < 0 || index >= this->_maxEvents)
+			throw (std::out_of_range("Epoll: socketAt() index out of range"));
+		return (this->_eventList[index]);
+	}
+
+	uint32_t	eventAt(int index)
+	{
+		if (index < 0 || index >= this->_maxEvents)
+			throw (std::out_of_range("Epoll: eventAt() index out of range"));
+		return (this->_eventList[index].events);
 	}
 };

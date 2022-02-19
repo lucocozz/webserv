@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/16 23:19:48 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/02/16 23:27:44 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/02/19 19:55:12 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,19 +18,23 @@
 class EpollSocket: public Socket
 {
 private:
-	struct epoll_event	_event;
+	struct epoll_event	_infoEvent;
 
 public:
-	EpollSocket() {}
-
-	EpollSocket(Socket &socket)
+	EpollSocket(int fd = 0, uint32_t events = 0): Socket(fd)
 	{
-		*this = socket;
+		this->_infoEvent.data.fd = fd;
+		this->_infoEvent.events = events;
 	}
 
-	EpollSocket(int family, int socktype, int flags, std::string port): Socket(family, socktype, flags, port)
+	EpollSocket(struct epoll_event infoEvent): Socket(infoEvent.data.fd)
 	{
-		this->_event.data.fd = this->_listenSocket;
+		this->_infoEvent = infoEvent;
+	}
+	
+	EpollSocket(const EpollSocket &socket): Socket(socket)
+	{
+		this->_infoEvent = socket._infoEvent;
 	}
 
 	~EpollSocket() {}
@@ -39,33 +43,31 @@ public:
 	{
 		if (this != &rhs)
 		{
-			this->_listenSocket = rhs.listener();
-			// this->_bindAdress = rhs.addrInfo();
-			//! check comment bien copy bindAddress
-			this->_event = rhs._event;
+			Socket::operator=(rhs);
+			this->_infoEvent = rhs._infoEvent;
 		}
 		return (*this);
 	}
 
-	EpollSocket	&operator=(const Socket &rhs)
+	void	createSocket(int socktype = SOCK_STREAM)
 	{
-		if (this != &rhs)
-		{
-			this->_listenSocket = rhs.listener();
-			// this->_bindAdress = rhs.addrInfo();
-			//! check comment bien copy bindAddress (maybe getaddrinfo or memcpy)
-		}
-		return (*this);
+		Socket::createSocket(socktype);
+		this->_infoEvent.data.fd = this->_listenSocket;
 	}
 
-	struct epoll_event &event(int events)
+	uint32_t events(int events)
 	{
-		this->_event.events = events;
-		return (this->_event);
+		this->_infoEvent.events = events;
+		return (this->_infoEvent.events);
 	}
 
-	struct epoll_event &event(void)
+	uint32_t events(void)
 	{
-		return (this->_event);
+		return (this->_infoEvent.events);
+	}
+
+	struct epoll_event	&infoEvent(void)
+	{
+		return (this->_infoEvent);
 	}
 };
