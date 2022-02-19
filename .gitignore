@@ -34,4 +34,6 @@
 
 webserv
 .vscode
+.build
 POC/server
+POC/.build

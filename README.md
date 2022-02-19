@@ -7,7 +7,7 @@ qu'est-ce qu'un serveur web ?:
 
 HTTP 1.1 RFC:
 	https://datatracker.ietf.org/doc/html/rfc2616	|	
-	https://developer.mozilla.org/en-US/docs/Web/HTTP/Overview
+	https://developer.mozilla.org/en-US/docs/Web/HTTP
 
 select vs poll vs epoll:
 	https://devarea.com/linux-io-multiplexing-select-vs-poll-vs-epoll/	|	
@@ -20,7 +20,8 @@ socket:
 	http://www.kohala.com/start/unpv12e.chap11.pdf
 
 Concurrent HTTP Server with Epoll:
-	https://kaleid-liner.github.io/blog/2019/06/02/epoll-web-server.html
+	https://kaleid-liner.github.io/blog/2019/06/02/epoll-web-server.html	|
+	https://stackoverflow.com/questions/66916835/c-confused-by-epoll-and-socket-fd-on-linux-systems-and-async-threads
 
 nginx doc:
 	https://nginx.org/en/docs/
