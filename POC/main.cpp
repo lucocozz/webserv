@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/23 22:47:36 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/02/19 19:55:31 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/02/19 22:10:54 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@ void	server(EpollSocket &local)
 	EpollSocket	socketEvent;
 	EpollSocket	client;
 
-	local.events(EPOLLIN | EPOLLET);
+	local.events(EPOLLIN);
 	epoll.control(EPOLL_CTL_ADD, local);
 	while (true)
 	{
@@ -53,7 +53,7 @@ void	server(EpollSocket &local)
 						socketEvent.closeSocket();
 					}
 					else
-						socketEvent.sendData("HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Type: text/plain\r\n\r\nResponse sent by 42 webserv");
+						socketEvent.sendData("HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Type: text/plain\r\nContent-Length: 27\r\n\r\nResponse sent by 42 webserv");
 				}
 			}
 		}
