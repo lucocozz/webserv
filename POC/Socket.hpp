@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/16 22:47:17 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/02/19 19:54:34 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/02/20 20:01:47 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,53 +28,102 @@
 class Socket
 {
 protected:
-	int					_listenSocket;
+	int				_listenSocket;
+	struct addrinfo	*_bindAddress;
 
 public:
-	Socket(int fd = 0): _listenSocket(fd) {}
+	Socket(int fd = 0): _listenSocket(fd), _bindAddress(NULL) {}
 
-	Socket(const Socket &rhs): _listenSocket(0)
+	Socket(const Socket &rhs): _listenSocket(0), _bindAddress(NULL)
 	{
 		*this = rhs;
 	}
 
-	~Socket() {}
+	~Socket()
+	{
+		if (this->_bindAddress != NULL)
+			freeaddrinfo(this->_bindAddress);
+	}
 
 	Socket	&operator=(const Socket &rhs)
 	{
+		int	size;
+
 		if (this != &rhs)
+		{
 			this->_listenSocket = rhs._listenSocket;
+			if (this->_bindAddress != NULL)
+				freeaddrinfo(this->_bindAddress);
+			this->_bindAddress = NULL;
+			if (rhs._bindAddress != NULL)
+			{
+				size = sizeof(rhs._bindAddress);
+				this->_bindAddress = new struct addrinfo[size];
+				memcpy(this->_bindAddress, rhs._bindAddress, size);
+			}
+		}
 		return (*this);
 	}
+
+
+
+
 
 	int	listener(void) const
 	{
 		return (this->_listenSocket);
 	}
 
-	void	createSocket(int socktype = SOCK_STREAM)
+
+
+
+
+	void	createSocket(int family, int socktype, std::string port, int flags = 0)
 	{
+		struct addrinfo	hints;
+
 		if (this->_listenSocket != 0)
 			throw (std::runtime_error("Socket already created"));
 		std::cout << "Creating socket..." << std::endl;
-		this->_listenSocket = socket(AF_INET, socktype, 0);
+		bzero(&hints, sizeof(hints));
+		hints.ai_family = family;
+		hints.ai_socktype = socktype;
+		hints.ai_flags = flags;
+		getaddrinfo(NULL, port.c_str(), &hints, &this->_bindAddress);
+		this->_listenSocket = socket(this->_bindAddress->ai_family,
+			this->_bindAddress->ai_socktype, this->_bindAddress->ai_protocol);
 		if (this->_listenSocket == -1)
 			throw (std::runtime_error(strerror(errno)));
-		std::cout << "New socket as: " << this->_listenSocket << std::endl;
 	}
 
-	void	bindSocket(uint16_t port, int listenAddress = INADDR_ANY)
+	void	setNonBlocking(void)
 	{
-		struct sockaddr_in	bindAddress;
-		
+		fcntl(this->_listenSocket, F_SETFL, O_NONBLOCK);
+	}
+	
+	void	closeSocket(void)
+	{
+		std::cout << "Closing socket: " << this->getNameInfo(this->_listenSocket) << std::endl;
+		if (close(this->_listenSocket) == -1)
+			throw (std::runtime_error(strerror(errno)));
+		this->_listenSocket = 0;
+	}
+	
+	void	shutdownSocket(int how = SHUT_RDWR)
+	{
+		if (shutdown(this->_listenSocket, how) == -1)
+			throw (std::runtime_error(strerror(errno)));
+	}
+
+
+	
+
+	void	bindSocket(void)
+	{
 		if (this->_listenSocket == 0)
 			throw (std::runtime_error("Socket have not been created yet"));
 		std::cout << "Binding socket to address..." << std::endl;
-		bzero(&bindAddress, sizeof(bindAddress));
-		bindAddress.sin_family = AF_INET;
-		bindAddress.sin_port = htons(port);
-		bindAddress.sin_addr.s_addr = htonl(listenAddress);
-		if (bind(this->_listenSocket, (struct sockaddr*)&bindAddress, sizeof(bindAddress)) == -1)
+		if (bind(this->listener(), this->_bindAddress->ai_addr, this->_bindAddress->ai_addrlen) == -1)
 			throw (std::runtime_error(strerror(errno)));
 	}
 
@@ -96,9 +145,12 @@ public:
 		socketClient = accept(this->_listenSocket, (struct sockaddr*)&clientAddress, &clientLen);
 		if (socketClient == -1)
 			throw (std::runtime_error(strerror(errno)));
-		std::cout << "Client is connected as socket: " << socketClient << std::endl;
+		std::cout << "Client is connected as: " << this->getNameInfo(socketClient) << std::endl;
 		return (socketClient);
 	}
+
+
+
 
 	std::pair<std::string, int>	recvData(int flags = 0)
 	{
@@ -125,22 +177,20 @@ public:
 		return (bytesSent);
 	}
 
-	void	shutdownSocket(int how = SHUT_RDWR)
-	{
-		if (shutdown(this->_listenSocket, how) == -1)
-			throw (std::runtime_error(strerror(errno)));
-	}
 
-	void	closeSocket(void)
-	{
-		std::cout << "Closing socket: " << this->_listenSocket << std::endl;
-		if (close(this->_listenSocket) == -1)
-			throw (std::runtime_error(strerror(errno)));
-		this->_listenSocket = 0;
-	}
 
-	void	setNonBlocking(void)
+
+	std::string	getNameInfo(int socketFd, int flags = 0)
 	{
-		fcntl(this->_listenSocket, F_SETFL, O_NONBLOCK);
+		socklen_t				hostLen;
+		struct sockaddr_storage	hostAddress;
+		char					addressBuffer[128] = {0};
+
+		hostLen = sizeof(hostAddress);
+		if (getpeername(socketFd, (struct sockaddr*)&hostAddress, &hostLen) == -1)
+			std::cerr << "getpeername(): " << strerror(errno) << std::endl;
+		if (getnameinfo((struct sockaddr*)&hostAddress, hostLen, addressBuffer, sizeof(addressBuffer), NULL, 0, flags) == -1)
+			std::cerr << "getnameinfo(): " << strerror(errno) << std::endl;
+		return (addressBuffer);
 	}
 };

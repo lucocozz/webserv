@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/16 23:19:48 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/02/19 19:55:12 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/02/20 16:04:19 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,9 +49,9 @@ public:
 		return (*this);
 	}
 
-	void	createSocket(int socktype = SOCK_STREAM)
+	void	createSocket(int family, int socktype, std::string port, int flags = 0)
 	{
-		Socket::createSocket(socktype);
+		Socket::createSocket(family, socktype, port, flags);
 		this->_infoEvent.data.fd = this->_listenSocket;
 	}
 

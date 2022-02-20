@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/23 22:47:36 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/02/19 22:10:54 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/02/20 16:05:13 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,8 +65,8 @@ int	main()
 	try {
 		EpollSocket	local;
 
-		local.createSocket();
-		local.bindSocket(8080);
+		local.createSocket(AF_INET, SOCK_STREAM, "8080");
+		local.bindSocket();
 		local.listenSocket();
 		server(local);
 		local.closeSocket();
