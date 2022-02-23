@@ -26,6 +26,10 @@ Concurrent HTTP Server with Epoll:
 nginx doc:
 	https://nginx.org/en/docs/
 
+nginx lexer/parser:
+	https://github.com/tufanbarisyildirim/gonginx	|
+	https://github.com/caddyserver/nginx-adapter
+
 epoll man:
 	https://manpages.ubuntu.com/manpages/bionic/fr/man7/epoll.7.html
 
