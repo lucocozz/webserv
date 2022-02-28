@@ -24,7 +24,8 @@ Concurrent HTTP Server with Epoll:
 	https://stackoverflow.com/questions/66916835/c-confused-by-epoll-and-socket-fd-on-linux-systems-and-async-threads
 
 nginx doc:
-	https://nginx.org/en/docs/
+	https://nginx.org/en/docs/	|
+	https://github.com/nginx/nginx
 
 nginx lexer/parser:
 	https://github.com/tufanbarisyildirim/gonginx	|
