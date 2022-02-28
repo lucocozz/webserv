@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/21 17:45:09 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/02/28 04:00:34 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/02/28 11:46:02 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -134,7 +134,7 @@ private:
 public:
 	Parser(void) {}
 
-	Parser(const char *fileName)
+	Parser(const std::string &fileName)
 	{
 		this->open(fileName);
 	}
@@ -147,14 +147,14 @@ public:
 
 
 
-	void open(const char *fileName)
+	void open(const std::string &fileName)
 	{
 		this->_fileName = fileName;
 		if (this->_parsedFile.is_open() == true)
-			this->_parsedFile.close();
-		this->_parsedFile.open(fileName);
+			throw (std::runtime_error("File already open"));
+		this->_parsedFile.open(fileName.c_str());
 		if (this->_parsedFile.is_open() == false)
-			throw (std::runtime_error("Can't open file:" + std::string(fileName)));
+			throw (std::runtime_error("Can't open file:" + fileName));
 	}
 
 	void close(void)
