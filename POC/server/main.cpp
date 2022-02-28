@@ -14,6 +14,8 @@
 #include "Socket.hpp"
 #include "EpollSocket.hpp"
 
+#include "../CGI/ClassCGI.hpp"
+
 void	server(EpollSocket &local)
 {
 	int			nfds;
@@ -46,6 +48,11 @@ void	server(EpollSocket &local)
 				{
 					std::pair<std::string, int>	data;
 					data = socketEvent.recvData();
+
+					//CGI_startup temporaire
+					if (data.second != 0)
+						CGI_startup(client, data);
+
 					std::cout << data.first << std::endl;
 					if (data.second == 0)
 					{
