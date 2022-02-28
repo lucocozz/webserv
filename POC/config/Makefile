@@ -6,11 +6,11 @@
 #    By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2022/01/21 19:56:36 by lucocozz          #+#    #+#              #
-#    Updated: 2022/02/17 17:11:25 by lucocozz         ###   ########.fr        #
+#    Updated: 2022/02/28 02:07:08 by lucocozz         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
-NAME := server
+NAME := config
 
 SRC := 	main.cpp
 
