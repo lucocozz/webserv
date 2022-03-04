@@ -56,6 +56,7 @@ private:
     HeaderCont  *_header;
 
     std::string    *header_parser(const std::string &data, const size_t size) const{
+		(void)size;
         size_t      start = 0, end = 0;
         size_t      i = 0;
         std::string *buffer;
@@ -89,7 +90,7 @@ private:
     }
 };
 
-int CGI_startup(EpollSocket EplSock, std::pair<std::string, int> Header);
+void CGI_startup(EpollSocket EplSock, std::pair<std::string, int> Header);
 
 
 #endif

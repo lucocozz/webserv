@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
+/*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/23 22:47:36 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/02/23 23:06:55 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/03/04 01:42:31 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,12 +16,23 @@
 
 #include "../CGI/ClassCGI.hpp"
 
+//httpRequest
+#include "../http/httpRequest.hpp"
+
+void CGI_startup(EpollSocket EplSock, std::pair<std::string, int> RequestData){
+	CGI cgi(EplSock, RequestData);
+
+    cgi.create_envs();
+}
+
 void	server(EpollSocket &local)
 {
 	int			nfds;
 	Epoll		epoll;
 	EpollSocket	socketEvent;
 	EpollSocket	client;
+	//httpRequest
+	httpRequest request;
 
 	local.events(EPOLLIN);
 	epoll.control(EPOLL_CTL_ADD, local);
@@ -49,9 +60,12 @@ void	server(EpollSocket &local)
 					std::pair<std::string, int>	data;
 					data = socketEvent.recvData();
 
-					//CGI_startup temporaire
-					if (data.second != 0)
+					if (data.second != 0){
+						//CGI_startup temporaire
 						CGI_startup(client, data);
+						//httpRequest
+						request.treatData(data.first);
+					}
 
 					std::cout << data.first << std::endl;
 					if (data.second == 0)
