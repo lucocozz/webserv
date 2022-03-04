@@ -65,7 +65,16 @@ class httpRequest{
 			std::cout << _body << std::endl;
 			_check();
 			//debug
+			std::cout << "findHeader(Host) = '" << findHeader("Host") << "'" << std::endl;
+			std::cout << "findHeader(Content-Length) = '" << findHeader("Content-Length") << "'" << std::endl;
 			std::cout << "STATUS CODE : " << _status << std::endl << std::endl;
+		}
+
+		std::string		findHeader(std::string key){
+			std::map<std::string, std::string>::iterator it = _headers.find(key);
+			if (it == _headers.end())
+				return (std::string());
+			return ((*it).second);
 		}
 
 	private:
@@ -132,6 +141,13 @@ class httpRequest{
 			if (_method != "GET" && _method != "POST" && _method != "DELETE"){
 				_status = NOT_IMPLEMENTED;
 				return;
+			}
+			else if (_method == "POST" && _body.empty() == true){
+				std::map<std::string, std::string>::iterator it(_headers.find("Content-Length"));
+				if (it == _headers.end()){
+				_status = LENGTH_REQUIRED;
+				return;
+				}
 			}
 			if (isPathExist(_path) == false){
 				_status = NOT_FOUND;
