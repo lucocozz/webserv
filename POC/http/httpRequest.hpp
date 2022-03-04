@@ -8,39 +8,8 @@
 
 #include <sys/stat.h>
 
-//OK
-#define OK 200
-//Error client
-#define BAD_REQUEST 400
-#define NOT_FOUND 404
-#define LENGTH_REQUIRED 411
-//Error server
-#define INTERNAL_SERVER_ERROR 500
-#define NOT_IMPLEMENTED 501
-#define SERVICE_UNAVAILABLE 503
-#define HTTP_VERSION_NOT_SUPPORTED 505
-
-
-std::vector<std::string>	split(std::string str, std::string delimiter){
-	size_t posStart = 0;
-	size_t posEnd = 0;
-	size_t delimLen = delimiter.length();
-	std::string token;
-	std::vector<std::string> ret;
-
-	while ((posEnd = str.find(delimiter, posStart)) != std::string::npos){
-		token = str.substr(posStart, posEnd - posStart);
-		posStart = posEnd + delimLen;
-		ret.push_back(token);
-	}
-	ret.push_back(str.substr(posStart));
-	return (ret);
-}
-
-bool						isPathExist(std::string const &path){
-	struct stat buffer;
-	return (stat(path.c_str(), &buffer) == 0);
-}
+#include "httpStatus.hpp"
+#include "httpUtils.hpp"
 
 class httpRequest{
 	public:
@@ -64,10 +33,10 @@ class httpRequest{
 				std::cout << "_headers[] = {'" << (*it).first << "' , '" << (*it).second << "'}" << std::endl;
 			std::cout << _body << std::endl;
 			_check();
+			_answer();
 			//debug
-			std::cout << "findHeader(Host) = '" << findHeader("Host") << "'" << std::endl;
-			std::cout << "findHeader(Content-Length) = '" << findHeader("Content-Length") << "'" << std::endl;
-			std::cout << "STATUS CODE : " << _status << std::endl << std::endl;
+			std::cout << "RESPONSE :" << std::endl;
+			std::cout << getResponse() << std::endl;
 		}
 
 		std::string		findHeader(std::string key){
@@ -75,6 +44,10 @@ class httpRequest{
 			if (it == _headers.end())
 				return (std::string());
 			return ((*it).second);
+		}
+
+		std::string		getResponse() const{
+			return (_response);
 		}
 
 	private:
@@ -159,16 +132,30 @@ class httpRequest{
 			}
 		}
 
+		//Answering
+		void	_answer(){
+			_buildStatusLine();
+		}
+
+		void _buildStatusLine(){
+			_response.append("HTTP/1.1 ");
+			_response.append(itos(_status) + " ");
+			_response.append(getStatusMessage(_status) + "\r\n");
+		}
+
+		//Members
 		std::vector<std::string> 			_request;
 
+		//Request
 		std::string 						_method;
 		std::string 						_path;
 		std::string 						_protocol;
-
 		std::map<std::string, std::string>	_headers;
-
 		std::string							_body;
+
+		//Response
 		int									_status;
+		std::string							_response;
 };//end of class httpRequest
 
 #endif
