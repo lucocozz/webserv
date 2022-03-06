@@ -38,11 +38,12 @@ I/O Multiplexing:
 	https://www.softprayog.in/programming/io-multiplexing-select-poll-epoll-in-linux
 
 CGI simple explanation:
-	https://www.ibm.com/docs/en/netcoolomnibus/8.1?topic=SSSHTQ_8.1.0/com.ibm.netcool_OMNIbus.doc_8.1.0/webtop/wip/reference/web_cust_envvariablesincgiscripts.html
+	https://computer.howstuffworks.com/cgi.htm |
+	https://www.garshol.priv.no/download/text/http-tut.html
 
 CGI doc:
-	https://www.ibm.com/docs/en/netcoolomnibus/8.1?topic=SSSHTQ_8.1.0/com.ibm.netcool_OMNIbus.doc_8.1.0/webtop/wip/reference/web_cust_envvariablesincgiscripts.html
+	https://datatracker.ietf.org/doc/html/rfc3875
 
 CGI's environment variables:
-	https://www.ibm.com/docs/en/netcoolomnibus/8.1?topic=SSSHTQ_8.1.0/com.ibm.netcool_OMNIbus.doc_8.1.0/webtop/wip/reference/web_cust_envvariablesincgiscripts.html
-
+	https://www.ibm.com/docs/en/netcoolomnibus/8.1?topic=SSSHTQ_8.1.0/com.ibm.netcool_OMNIbus.doc_8.1.0/webtop/wip/reference/web_cust_envvariablesincgiscripts.html |
+	https://docs.oracle.com/cd/E14571_01/doc.1111/e10726/c03_master_type004.htm#CSIDO191
