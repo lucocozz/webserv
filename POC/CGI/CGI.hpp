@@ -83,8 +83,7 @@ public:
     _headerContent(data.first),
     _encodedURL(_setURL()),
     _decodedURL(_decodeUrl()),
-    _envVar()
-    {
+    _envVar(){
     }
 
     ~CGI(){
@@ -138,11 +137,11 @@ public:
             itb++;
         }
         
-        for (size_t i = 0; i < cgi.getEnvVar().size(); i++){
-            std::cout << "envVar " << i << " " << envVar[i] << std::endl; 
-            //cannot use delete because envVar is allocated with malloc throught strdup
-            //delete envVar[i];
-        }
+        // for (size_t i = 0; i < cgi.getEnvVar().size(); i++){
+        //     std::cout << "envVar " << i << " " << envVar[i] << std::endl; 
+        //     //cannot use delete because envVar is allocated with malloc throught strdup
+        //     //delete envVar[i];
+        // }
 
         delete [] envVar; 
     }

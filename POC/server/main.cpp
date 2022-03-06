@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
+/*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/23 22:47:36 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/02/23 23:06:55 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/03/04 16:22:04 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,9 @@
 #include "EpollSocket.hpp"
 
 #include "../CGI/CGI.hpp"
+
+//httpRequest
+#include "../http/httpRequest.hpp"
 
 void	server(EpollSocket &local)
 {
@@ -49,10 +52,15 @@ void	server(EpollSocket &local)
 				{
 					std::pair<std::string, int>	data;
 					data = socketEvent.recvData();
+					//httpRequest
+					httpRequest request;
 
-					//CGI_startup temporaire
-					if (data.second != 0)
-						CGI::CGI_startup(local.get_bind_address(), data);
+					if (data.second != 0){
+						//CGI_startup temporaire
+						CGI::CGI_startup(NULL, data);
+						//httpRequest
+						request.treatData(data.first);
+					}
 
 					std::cout << data.first << std::endl;
 					if (data.second == 0)
