@@ -66,7 +66,11 @@ public:
 	}
 
 
-
+	//Getter for cgi
+	struct addrinfo *get_bind_address(){
+		return (_bindAddress);
+	}
+	//
 
 
 	int	listener(void) const

@@ -14,7 +14,7 @@
 #include "Socket.hpp"
 #include "EpollSocket.hpp"
 
-#include "../CGI/ClassCGI.hpp"
+#include "../CGI/CGI.hpp"
 
 void	server(EpollSocket &local)
 {
@@ -22,6 +22,7 @@ void	server(EpollSocket &local)
 	Epoll		epoll;
 	EpollSocket	socketEvent;
 	EpollSocket	client;
+
 
 	local.events(EPOLLIN);
 	epoll.control(EPOLL_CTL_ADD, local);
@@ -51,7 +52,7 @@ void	server(EpollSocket &local)
 
 					//CGI_startup temporaire
 					if (data.second != 0)
-						CGI_startup(client, data);
+						CGI::CGI_startup(local.get_bind_address(), data);
 
 					std::cout << data.first << std::endl;
 					if (data.second == 0)
