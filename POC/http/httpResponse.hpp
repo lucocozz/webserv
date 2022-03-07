@@ -27,7 +27,7 @@ class httpResponse{
 			this->_buildHeaders();
 			this->_buildBody();
 
-			std::cout << "RESPONSE :" << std::endl;
+			std::cout << std::endl << "SERVER RESPONSE :" << std::endl;
 			std::cout << _response << std::endl;
 		}
 

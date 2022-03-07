@@ -34,14 +34,6 @@ class httpRequest{
 
 		void	treatRequest(std::string const &rawRequest){
 			this->_parse(rawRequest);
-			//debug
-			std::cout << std::endl;
-			std::cout << "_method = " << this->_method << std::endl;
-			std::cout << "_path = " << this->_path << std::endl;
-			std::cout << "_protocol = " << this->_protocol << std::endl;
-			for (std::map<std::string, std::string>::iterator it = this->_headers.begin(); it != this->_headers.end(); it++)
-				std::cout << "_headers[] = {'" << (*it).first << "' , '" << (*it).second << "'}" << std::endl;
-			std::cout << this->_body << std::endl;
 			this->_check();
 		}
 
