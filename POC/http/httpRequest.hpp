@@ -169,8 +169,6 @@ class httpRequest{
 		std::string 						_protocol;
 		std::map<std::string, std::string>	_headers;
 		std::string							_body;
-
-		//Response
 		int									_status;
 };//end of class httpRequest
 

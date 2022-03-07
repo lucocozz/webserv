@@ -8,6 +8,10 @@
 #include <sys/stat.h>
 #include <sstream>
 
+#include <iostream>
+#include <ctime>
+#include <cstdlib>
+
 std::vector<std::string>	split(std::string str, std::string delimiter){
 	size_t posStart = 0;
 	size_t posEnd = 0;
@@ -34,6 +38,31 @@ std::string					itos(int nb){
 	str << nb;
 	std::string ret;
 	str >> ret;
+	return (ret);
+}
+
+std::string					getActualTime(){
+	time_t rawTime;
+	struct tm *timeInfo;
+	time(&rawTime);
+	timeInfo = localtime(&rawTime);
+
+	std::vector<std::string> vect = split(asctime(timeInfo), " ");
+	std::string ret;
+	ret.append(vect.at(0) + ", ");
+	std::string daydate;
+	if (atoi(vect.at(3).c_str()) < 10)
+		daydate = "0" + vect.at(3);
+	else
+		daydate = vect.at(3);
+	ret.append(daydate + " ");
+	ret.append(vect.at(1) + " ");
+	std::string year = vect.at(5);
+	year.erase(year.end() - 1);
+	ret.append(year + " ");
+	ret.append(vect.at(4) + " ");
+	ret.append("GMT");
+
 	return (ret);
 }
 

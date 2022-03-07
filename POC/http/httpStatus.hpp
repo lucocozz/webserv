@@ -18,29 +18,4 @@ enum STATUS_CODE{
 	HTTP_VERSION_NOT_SUPPORTED = 505
 };
 
-std::string					getStatusMessage(int statusCode){
-	//SUCCESS
-	if (statusCode == OK)
-		return ("OK");
-	if (statusCode == CREATED)
-		return ("Created");
-	//ERROR CLIENT
-	if (statusCode == BAD_REQUEST)
-		return ("Bad Request");
-	if (statusCode == NOT_FOUND)
-		return ("Not Found");
-	if (statusCode == LENGTH_REQUIRED)
-		return ("Length Required");
-	//ERROR SERVER
-	if (statusCode == INTERNAL_SERVER_ERROR)
-		return ("Internal Server Error");
-	if (statusCode == NOT_IMPLEMENTED)
-		return ("Not Implemented");
-	if (statusCode == SERVICE_UNAVAILABLE)
-		return ("Service Unavailable");
-	if (statusCode == HTTP_VERSION_NOT_SUPPORTED)
-		return ("http Version Not Supported");
-	return ("OK");
-}
-
 #endif
