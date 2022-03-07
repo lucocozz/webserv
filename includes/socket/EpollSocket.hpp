@@ -6,14 +6,16 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/16 23:19:48 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/02/20 16:04:19 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/03/02 22:12:17 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#pragma once
+#ifndef EPOLLSOCKET_HPP
+# define EPOLLSOCKET_HPP
 
-#include "Socket.hpp"
-#include "Epoll.hpp"
+#include <string>
+#include "./Socket.hpp"
+#include "./Epoll.hpp"
 
 class EpollSocket: public Socket
 {
@@ -21,13 +23,13 @@ private:
 	struct epoll_event	_infoEvent;
 
 public:
-	EpollSocket(int fd = 0, uint32_t events = 0): Socket(fd)
+	explicit EpollSocket(int fd = 0, uint32_t events = 0): Socket(fd)
 	{
 		this->_infoEvent.data.fd = fd;
 		this->_infoEvent.events = events;
 	}
 
-	EpollSocket(struct epoll_event infoEvent): Socket(infoEvent.data.fd)
+	explicit EpollSocket(struct epoll_event infoEvent): Socket(infoEvent.data.fd)
 	{
 		this->_infoEvent = infoEvent;
 	}
@@ -71,3 +73,5 @@ public:
 		return (this->_infoEvent);
 	}
 };
+
+#endif
