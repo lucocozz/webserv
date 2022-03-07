@@ -58,11 +58,15 @@ void	server(EpollSocket &local)
 
 					if (data.second != 0){
 						//CGI_startup temporaire
-						CGI::CGI_startup(NULL, data);
+						CGI cgi(NULL, data);
+
 						//httpRequest/httpResponse
 						request.treatRequest(data.first);
+						if (request.getPath().find(".cgi") != std::string::npos)
+							cgi.CGIStartup(request.getHeaders());
 						response.buildResponse(request);
 					}
+
 
 					std::cout << data.first << std::endl;
 					if (data.second == 0)
