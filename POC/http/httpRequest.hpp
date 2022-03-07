@@ -14,7 +14,7 @@
 class httpRequest{
 	public:
 		httpRequest(){
-			_status = OK;
+			this->_status = OK;
 			return;
 		}
 
@@ -23,31 +23,31 @@ class httpRequest{
 		}
 
 		void	treatData(std::string const &rawRequest){
-			_parse(rawRequest);
+			this->_parse(rawRequest);
 			//debug
 			std::cout << std::endl;
-			std::cout << "_method = " << _method << std::endl;
-			std::cout << "_path = " << _path << std::endl;
-			std::cout << "_protocol = " << _protocol << std::endl;
-			for (std::map<std::string, std::string>::iterator it = _headers.begin(); it != _headers.end(); it++)
+			std::cout << "_method = " << this->_method << std::endl;
+			std::cout << "_path = " << this->_path << std::endl;
+			std::cout << "_protocol = " << this->_protocol << std::endl;
+			for (std::map<std::string, std::string>::iterator it = this->_headers.begin(); it != this->_headers.end(); it++)
 				std::cout << "_headers[] = {'" << (*it).first << "' , '" << (*it).second << "'}" << std::endl;
-			std::cout << _body << std::endl;
-			_check();
-			_answer();
+			std::cout << this->_body << std::endl;
+			this->_check();
+			this->_answer();
 			//debug
 			std::cout << "RESPONSE :" << std::endl;
 			std::cout << getResponse() << std::endl;
 		}
 
 		std::string		findHeader(std::string key){
-			std::map<std::string, std::string>::iterator it = _headers.find(key);
-			if (it == _headers.end())
+			std::map<std::string, std::string>::iterator it = this->_headers.find(key);
+			if (it == this->_headers.end())
 				return (std::string());
 			return ((*it).second);
 		}
 
 		std::string		getResponse() const{
-			return (_response);
+			return (this->_response);
 		}
 
 	private:
@@ -60,43 +60,43 @@ class httpRequest{
 				_parseHeaders();
 			}
 			else
-				_status = BAD_REQUEST;
+				this->_status = BAD_REQUEST;
 		}
 
 		void	_parseBody(std::string const &rawRequest){
 			std::vector<std::string> sep = split(rawRequest, "\r\n\r\n");
 			if (sep.size() == 2)
-				_body = sep.at(1);
-			_request = split(sep.at(0), "\r\n");
+				this->_body = sep.at(1);
+			this->_request = split(sep.at(0), "\r\n");
 		}
 
 		void	_parseRequestLine(){
-			std::vector<std::string> requestLine = split(_request.at(0), " ");
+			std::vector<std::string> requestLine = split(this->_request.at(0), " ");
 			if (requestLine.size() == 3){
-				_method = requestLine.at(0);
-				_path = requestLine.at(1);
-				_protocol = requestLine.at (2);
-				_request.erase(_request.begin());
+				this->_method = requestLine.at(0);
+				this->_path = requestLine.at(1);
+				this->_protocol = requestLine.at (2);
+				this->_request.erase(_request.begin());
 			}
 			else
 				_status = BAD_REQUEST;
 		}
 
 		void	_parseHeaders(){
-			if (_status != OK)
+			if (this->_status != OK)
 				return;
 			for (size_t i = 0; i < _request.size(); i++){
-				if (_request.at(i).find(": ") == std::string::npos){
-					_status = BAD_REQUEST;
+				if (this->_request.at(i).find(": ") == std::string::npos){
+					this->_status = BAD_REQUEST;
 					return;
 				}
 				std::vector<std::string> res = split(_request.at(i), ": ");
 				if (res.size() < 3){
 					std::pair<std::string, std::string> pair = std::make_pair(res.at(0), res.at(1));
-					_headers.insert(pair);
+					this->_headers.insert(pair);
 				}
 				else{
-					_status = BAD_REQUEST;
+					this->_status = BAD_REQUEST;
 					return;
 				}
 				res.clear();
@@ -105,42 +105,42 @@ class httpRequest{
 
 		//Checking
 		void	_check(){
-			if (_status != OK)
+			if (this->_status != OK)
 				return;
-			_checkRequestLine();
+			this->_checkRequestLine();
 		}
 
 		void	_checkRequestLine(){
-			if (_method != "GET" && _method != "POST" && _method != "DELETE"){
-				_status = NOT_IMPLEMENTED;
+			if (this->_method != "GET" && this->_method != "POST" && this->_method != "DELETE"){
+				this->_status = NOT_IMPLEMENTED;
 				return;
 			}
-			else if (_method == "POST" && _body.empty() == true){
-				std::map<std::string, std::string>::iterator it(_headers.find("Content-Length"));
+			else if (this->_method == "POST" && this->_body.empty() == true){
+				std::map<std::string, std::string>::iterator it(this->_headers.find("Content-Length"));
 				if (it == _headers.end()){
-				_status = LENGTH_REQUIRED;
+				this->_status = LENGTH_REQUIRED;
 				return;
 				}
 			}
 			if (isPathExist(_path) == false){
-				_status = NOT_FOUND;
+				this->_status = NOT_FOUND;
 				return;
 			}
-			if (_protocol != "HTTP/1.1"){
-				_status = HTTP_VERSION_NOT_SUPPORTED;
+			if (this->_protocol != "HTTP/1.1"){
+				this->_status = HTTP_VERSION_NOT_SUPPORTED;
 				return;
 			}
 		}
 
 		//Answering
 		void	_answer(){
-			_buildStatusLine();
+			this->_buildStatusLine();
 		}
 
 		void _buildStatusLine(){
-			_response.append("HTTP/1.1 ");
-			_response.append(itos(_status) + " ");
-			_response.append(getStatusMessage(_status) + "\r\n");
+			this->_response.append("HTTP/1.1 ");
+			this->_response.append(itos(_status) + " ");
+			this->_response.append(getStatusMessage(_status) + "\r\n");
 		}
 
 		//Members
