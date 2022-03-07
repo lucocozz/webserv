@@ -4,8 +4,9 @@
 #include <string>
 
 enum STATUS_CODE{
-	//OK
+	//Success
 	OK = 200,
+	CREATED = 201,
 	//Error client
 	BAD_REQUEST = 400,
 	NOT_FOUND = 404,
@@ -21,6 +22,8 @@ std::string					getStatusMessage(int statusCode){
 	//SUCCESS
 	if (statusCode == OK)
 		return ("OK");
+	if (statusCode == CREATED)
+		return ("Created");
 	//ERROR CLIENT
 	if (statusCode == BAD_REQUEST)
 		return ("Bad Request");
@@ -36,7 +39,7 @@ std::string					getStatusMessage(int statusCode){
 	if (statusCode == SERVICE_UNAVAILABLE)
 		return ("Service Unavailable");
 	if (statusCode == HTTP_VERSION_NOT_SUPPORTED)
-		return ("Http Version Not Supported");
+		return ("http Version Not Supported");
 	return ("OK");
 }
 
