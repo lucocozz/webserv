@@ -22,7 +22,17 @@ class httpRequest{
 			return;
 		}
 
-		void	treatData(std::string const &rawRequest){
+		httpRequest &operator=(httpRequest const &rhs){
+			this->_method = rhs.getMethod();
+			this->_path = rhs.getPath();
+			this->_protocol = rhs.getProtocol();
+			this->_headers = rhs.getHeaders();
+			this->_body = rhs.getBody();
+			this->_status = rhs.getStatus();
+			return (*this);
+		}
+
+		void	treatRequest(std::string const &rawRequest){
 			this->_parse(rawRequest);
 			//debug
 			std::cout << std::endl;
@@ -33,10 +43,6 @@ class httpRequest{
 				std::cout << "_headers[] = {'" << (*it).first << "' , '" << (*it).second << "'}" << std::endl;
 			std::cout << this->_body << std::endl;
 			this->_check();
-			this->_answer();
-			//debug
-			std::cout << "RESPONSE :" << std::endl;
-			std::cout << getResponse() << std::endl;
 		}
 
 		std::string		findHeader(std::string key){
@@ -46,9 +52,31 @@ class httpRequest{
 			return ((*it).second);
 		}
 
-		std::string		getResponse() const{
-			return (this->_response);
+		//Getters
+		std::string 						getMethod() const{
+			return (this->_method);
 		}
+
+		std::string 						getPath() const{
+			return (this->_path);
+		}
+
+		std::string 						getProtocol() const{
+			return (this->_protocol);
+		}
+
+		std::map<std::string, std::string>	getHeaders() const{
+			return (this->_headers);
+		}
+
+		std::string							getBody() const{
+			return (this->_body);
+		}
+
+		int									getStatus() const{
+			return (this->_status);
+		}
+
 
 	private:
 
@@ -132,17 +160,6 @@ class httpRequest{
 			}
 		}
 
-		//Answering
-		void	_answer(){
-			this->_buildStatusLine();
-		}
-
-		void _buildStatusLine(){
-			this->_response.append("HTTP/1.1 ");
-			this->_response.append(itos(_status) + " ");
-			this->_response.append(getStatusMessage(_status) + "\r\n");
-		}
-
 		//Members
 		std::vector<std::string> 			_request;
 
@@ -155,7 +172,6 @@ class httpRequest{
 
 		//Response
 		int									_status;
-		std::string							_response;
 };//end of class httpRequest
 
 #endif

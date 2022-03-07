@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/23 22:47:36 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/03/04 16:22:04 by user42           ###   ########.fr       */
+/*   Updated: 2022/03/07 02:24:39 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@
 #include "../CGI/CGI.hpp"
 
 //httpRequest
-#include "../http/httpRequest.hpp"
+#include "../http/httpResponse.hpp"
 
 void	server(EpollSocket &local)
 {
@@ -52,14 +52,16 @@ void	server(EpollSocket &local)
 				{
 					std::pair<std::string, int>	data;
 					data = socketEvent.recvData();
-					//httpRequest
-					httpRequest request;
+					//httpRequest/httpResponse
+					httpRequest 	request;
+					httpResponse	response;
 
 					if (data.second != 0){
 						//CGI_startup temporaire
 						CGI::CGI_startup(NULL, data);
-						//httpRequest
-						request.treatData(data.first);
+						//httpRequest/httpResponse
+						request.treatRequest(data.first);
+						response.buildResponse(request);
 					}
 
 					std::cout << data.first << std::endl;
