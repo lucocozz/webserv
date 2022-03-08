@@ -29,7 +29,8 @@ nginx doc:
 
 nginx lexer/parser:
 	https://github.com/tufanbarisyildirim/gonginx	|
-	https://github.com/caddyserver/nginx-adapter
+	https://github.com/caddyserver/nginx-adapter	|
+	https://github.com/nginxinc/crossplane
 
 epoll man:
 	https://manpages.ubuntu.com/manpages/bionic/fr/man7/epoll.7.html

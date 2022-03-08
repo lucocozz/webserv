@@ -6,22 +6,25 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/16 22:47:17 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/02/23 22:55:34 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/03/08 17:29:58 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#pragma once
+#ifndef SOCKET_HPP
+# define SOCKET_HPP
 
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <unistd.h>
+#include <fcntl.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <iostream>
 #include <cstdlib>
-#include <unistd.h>
 #include <cstring>
-#include <fcntl.h>
 #include <cerrno>
-#include <sys/types.h>
-#include <sys/socket.h>
+#include <utility>
+#include <string>
 
 #define RECV_BUFFER 1024
 
@@ -32,7 +35,7 @@ protected:
 	struct addrinfo	*_bindAddress;
 
 public:
-	Socket(int fd = 0): _listenSocket(fd), _bindAddress(NULL) {}
+	explicit Socket(int fd = 0): _listenSocket(fd), _bindAddress(NULL) {}
 
 	Socket(const Socket &rhs): _listenSocket(0), _bindAddress(NULL)
 	{
@@ -66,11 +69,7 @@ public:
 	}
 
 
-	//Getter for cgi
-	struct addrinfo *get_bind_address(){
-		return (_bindAddress);
-	}
-	//
+
 
 
 	int	listener(void) const
@@ -103,6 +102,12 @@ public:
 	void	setNonBlocking(void)
 	{
 		fcntl(this->_listenSocket, F_SETFL, O_NONBLOCK);
+	}
+
+	void	setSockOpt(int level, int optname, int optval)
+	{
+		if (setsockopt(this->_listenSocket, level, optname, (void*)&optval, sizeof(optval)) == -1)
+			throw (std::runtime_error(strerror(errno)));
 	}
 	
 	void	closeSocket(void)
@@ -138,7 +143,7 @@ public:
 			throw (std::runtime_error(strerror(errno)));
 	}
 
-	int	acceptConnection(void)
+	int	acceptConnection(void) const
 	{
 		int						socketClient;
 		socklen_t				clientLen;
@@ -156,7 +161,7 @@ public:
 
 
 
-	std::pair<std::string, int>	recvData(int flags = 0)
+	std::string	recvData(int flags = 0)
 	{
 		char	buffer[RECV_BUFFER] = {0};
 		int		bytesReceived = 0;
@@ -166,7 +171,7 @@ public:
 		if (bytesReceived == -1)
 			throw (std::runtime_error(strerror(errno)));
 		std::cout << "Received " << bytesReceived << " bytes." << std::endl;
-		return (std::make_pair(buffer, bytesReceived));
+		return (buffer);
 	}
 
 	int	sendData(std::string data, int flags = 0)
@@ -184,7 +189,7 @@ public:
 
 
 
-	std::string	getNameInfo(int socketFd, int flags = 0)
+	std::string	getNameInfo(int socketFd, int flags = 0) const
 	{
 		socklen_t				hostLen;
 		struct sockaddr_storage	hostAddress;
@@ -198,3 +203,5 @@ public:
 		return (addressBuffer);
 	}
 };
+
+#endif

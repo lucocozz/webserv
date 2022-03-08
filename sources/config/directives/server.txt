@@ -1,0 +1,6 @@
+root
+index
+listen
+error_log
+access_log
+server_name
