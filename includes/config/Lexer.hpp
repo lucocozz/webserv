@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/03 01:06:41 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/03/05 17:42:29 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/03/08 01:52:34 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,7 +69,7 @@ public:
 
 		if (file.is_open() == false)
 			throw (std::runtime_error("File not open"));
-		for (uint lineNumber = 0; file.eof() == false; ++lineNumber)
+		for (uint lineNumber = 1; file.eof() == false; ++lineNumber)
 		{
 			std::getline(file, line);
 			this->_tokenize(line, lineNumber);

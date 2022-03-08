@@ -6,16 +6,18 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/03 01:09:40 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/03/07 15:49:57 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/03/08 01:54:08 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
-#include <iostream>
+#include <set>
 #include <string>
 #include <utility>
 #include <sstream>
+#include <iostream>
+#include <algorithm>
 #include "Lexer.hpp"
 
 #ifndef WEBSERV_PATH
@@ -24,11 +26,10 @@
 
 typedef struct Directive
 {
-	std::string					directive;
+	std::string					literal;
 	uint						line;
 	std::vector<std::string>	args;
 	std::vector<Directive>		block;
-
 } Directive;
 
 
@@ -37,8 +38,8 @@ typedef struct Directive
 class Parser
 {
 private:
-	std::vector<std::string>	_directivesServer;
-	std::vector<std::string>	_directivesLocation;
+	std::set<std::string>	_directivesServer;
+	std::set<std::string>	_directivesLocation;
 
 protected:
 	std::vector<Directive>		_parsed;
@@ -80,6 +81,36 @@ public:
 private:
 	void	_checkParsing(void)
 	{
+		for (size_t i = 0; i < this->_parsed.size(); ++i)
+		{
+			if (this->_parsed[i].literal == "server")
+				this->_checkServerBlock(this->_parsed[i].block);
+			else
+				throw (std::runtime_error(this->_errorMsg(this->_parsed[i].line,
+					"Unknow directive: " + this->_parsed[i].literal)));
+		}
+	}
+
+	void	_checkServerBlock(std::vector<Directive> &block)
+	{
+		for (size_t i = 0; i < block.size(); ++i)
+		{
+			if (block[i].literal == "location")
+				this->_checkLocationBlock(block[i].block);
+			else if (this->_directivesServer.find(block[i].literal) == this->_directivesServer.end())
+				throw (std::runtime_error(this->_errorMsg(block[i].line,
+					"Unknow directive: " + block[i].literal)));
+		}
+	}
+
+	void	_checkLocationBlock(std::vector<Directive> &block)
+	{
+		for (size_t i = 0; i < block.size(); ++i)
+		{
+			if (this->_directivesLocation.find(block[i].literal) == this->_directivesLocation.end())
+				throw (std::runtime_error(this->_errorMsg(block[i].line,
+					"Unknow directive: " + block[i].literal)));
+		}
 	}
 
 	std::vector<Directive>	_parseDirective(std::vector<Token> &tokens, size_t &i)
@@ -93,7 +124,7 @@ private:
 			if (tokens[i].type == BlockEnd)
 				return (directiveList);
 			if (tokens[i].type == Keyword)
-				directive.directive = tokens[i].literal;
+				directive.literal = tokens[i].literal;
 			else
 				throw (std::runtime_error(this->_errorMsg(tokens[i].line, "Invalid directive: " + tokens[i].literal)));
 			directive.line = tokens[i].line;
@@ -102,7 +133,7 @@ private:
 			if (tokens[i].type == BlockStart)
 				directive.block = this->_parseDirective(tokens, ++i);
 			else if (tokens[i].type != Semicolon)
-				throw (std::runtime_error(this->_errorMsg(tokens[i].line, "Missing ';'")));
+				throw (std::runtime_error(this->_errorMsg(tokens[i].line, "Don't end with ';'")));
 			directiveList.push_back(directive);
 		}
 		return (directiveList);
@@ -125,7 +156,7 @@ private:
 			throw (std::runtime_error("unexpected end of file, missing '}'"));
 	}
 
-	void	_readDirectives(const std::string &file, std::vector<std::string> &directives)
+	void	_readDirectives(const std::string &file, std::set<std::string> &directives)
 	{
 		std::string		line;
 		std::ifstream	directivesFile;
@@ -139,7 +170,7 @@ private:
 		{
 			std::getline(directivesFile, line);
 			if (line.empty() == false)
-				directives.push_back(line);
+				directives.insert(line);
 		}
 	}
 
