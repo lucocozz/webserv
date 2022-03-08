@@ -12,9 +12,9 @@
 #include <sys/wait.h>
 #include <map>
 
-#include "../server/Epoll.hpp"
-#include "../server/Socket.hpp"
-#include "../server/EpollSocket.hpp"
+#include "../../includes/socket/Epoll.hpp"
+#include "../../includes/socket/Socket.hpp"
+#include "../../includes/socket/EpollSocket.hpp"
 
 #include "URLDecoder.hpp"
 

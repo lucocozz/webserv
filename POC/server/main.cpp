@@ -6,13 +6,13 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/23 22:47:36 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/03/07 16:56:41 by user42           ###   ########.fr       */
+/*   Updated: 2022/03/08 18:03:44 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Epoll.hpp"
-#include "Socket.hpp"
-#include "EpollSocket.hpp"
+#include "../../includes/socket/Epoll.hpp"
+#include "../../includes/socket/Socket.hpp"
+#include "../../includes/socket/EpollSocket.hpp"
 
 #include "../CGI/CGI.hpp"
 
@@ -50,8 +50,10 @@ void	server(EpollSocket &local)
 				}
 				else
 				{
-					std::pair<std::string, int>	data;
-					data = socketEvent.recvData();
+					std::string dataStr = socketEvent.recvData();
+					int	dataLen = dataStr.length();
+					std::pair<std::string, int>	data = std::make_pair(dataStr, dataLen);
+					
 					//httpRequest/httpResponse
 					httpRequest 	request;
 					httpResponse	response;
