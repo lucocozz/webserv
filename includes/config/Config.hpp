@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/03 01:11:36 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/03/08 17:24:51 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/03/08 21:47:15 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,13 +19,14 @@
 
 struct LocationContext
 {
-	std::map<std::string, std::vector<std::string>>	directives;
+	std::vector<std::string>							args;
+	std::map<std::string, std::vector<std::string> >	directives;
 };
 
 struct ServerContext
 {
-	std::map<std::string, std::vector<std::string>>	directives;
-	std::vector<LocationContext>					locations;
+	std::map<std::string, std::vector<std::string> >	directives;
+	std::vector<LocationContext>						locations;
 };
 
 class Config: public Lexer, public Parser
@@ -34,6 +35,8 @@ private:
 	std::string					_filePath;
 
 public:
+	std::vector<ServerContext>	servers;
+
 	Config(void): Lexer(), Parser() {}
 
 	Config(const Config &src): Lexer(), Parser()
@@ -65,14 +68,41 @@ public:
 		this->Lexer::lex(fileStream);
 		fileStream.close();
 		this->Parser::parse(this->_tokens);
-		this->_parsingToStruct();
+		this->_parsingToData();
 	}
 
 
 
 private:
-	void	_parsingToStruct(void)
+	void	_parsingToData(void)
 	{
-		
+		for (size_t i = 0; i < this->_parsed.size(); ++i)
+			this->servers.push_back(this->_parsedServerToData(this->_parsed[i].block));
+	}
+
+	ServerContext	_parsedServerToData(const std::vector<Directive> &block)
+	{
+		ServerContext			server;
+
+		for (size_t i = 0; i < block.size(); ++i)
+		{
+			if (block[i].literal == "location")
+				server.locations.push_back(this->_parsedLocationToData(block[i].block));
+			else
+				server.directives[block[i].literal] = block[i].args;
+		}
+		return (server);
+	}
+
+	LocationContext	_parsedLocationToData(const std::vector<Directive> &block)
+	{
+		LocationContext			location;
+
+		for (size_t i = 0; i < block.size(); ++i)
+		{
+			location.args = block[i].args;
+			location.directives[block[i].literal] = block[i].args;
+		}
+		return (location);
 	}
 };
