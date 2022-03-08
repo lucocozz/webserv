@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/21 19:48:40 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/03/08 22:02:32 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/03/08 22:13:41 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,7 @@ int	main(void)
 
 	try {
 		config.parse(std::string(WEBSERV_PATH) + "config/default.conf");
-		std::cout << config.servers[0].directives["root"][0] << std::endl;
+		std::cout << config.servers[0].directives.at("root")[0] << std::endl;
 	}
 	catch (const std::exception &e) {
 		std::cerr << e.what() << std::endl;
