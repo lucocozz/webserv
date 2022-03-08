@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/03 01:09:40 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/03/08 01:54:08 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/03/08 17:07:30 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,12 +37,10 @@ typedef struct Directive
 
 class Parser
 {
-private:
+protected:
 	std::set<std::string>	_directivesServer;
 	std::set<std::string>	_directivesLocation;
-
-protected:
-	std::vector<Directive>		_parsed;
+	std::vector<Directive>	_parsed;
 
 public:
 	Parser(void)
@@ -78,7 +76,59 @@ public:
 		this->_checkParsing();
 	}
 
+
+
+
 private:
+	void	_checkBrackets(std::vector<Token> &tokens)
+	{
+		int	depth = 0;
+
+		for (size_t i = 0; i < tokens.size(); ++i)
+		{
+			if (tokens[i].type == BlockStart)
+				++depth;
+			else if (tokens[i].type == BlockEnd)
+				--depth;
+			if (depth < 0)
+				throw (std::runtime_error(this->_errorMsg(tokens[i].line, "unexpected '}'")));
+		}
+		if (depth > 0)
+			throw (std::runtime_error("unexpected end of file, missing '}'"));
+	}
+
+
+
+
+	std::vector<Directive>	_parseDirective(std::vector<Token> &tokens, size_t &i)
+	{
+		Directive				directive;
+		std::vector<Directive>	directiveList;
+
+		for (; i < tokens.size(); ++i)
+		{
+			directive = Directive();
+			if (tokens[i].type == BlockEnd)
+				return (directiveList);
+			if (tokens[i].type == Keyword)
+				directive.literal = tokens[i].literal;
+			else
+				throw (std::runtime_error(this->_errorMsg(tokens[i].line, "Invalid directive: " + tokens[i].literal)));
+			directive.line = tokens[i].line;
+			for (++i ; i < tokens.size() && tokens[i].type == Keyword; ++i)
+				directive.args.push_back(tokens[i].literal);
+			if (tokens[i].type == BlockStart)
+				directive.block = this->_parseDirective(tokens, ++i);
+			else if (tokens[i].type != Semicolon)
+				throw (std::runtime_error(this->_errorMsg(tokens[i].line, "Don't end with ';'")));
+			directiveList.push_back(directive);
+		}
+		return (directiveList);
+	}
+
+
+
+
 	void	_checkParsing(void)
 	{
 		for (size_t i = 0; i < this->_parsed.size(); ++i)
@@ -113,48 +163,8 @@ private:
 		}
 	}
 
-	std::vector<Directive>	_parseDirective(std::vector<Token> &tokens, size_t &i)
-	{
-		Directive				directive;
-		std::vector<Directive>	directiveList;
 
-		for (; i < tokens.size(); ++i)
-		{
-			directive = Directive();
-			if (tokens[i].type == BlockEnd)
-				return (directiveList);
-			if (tokens[i].type == Keyword)
-				directive.literal = tokens[i].literal;
-			else
-				throw (std::runtime_error(this->_errorMsg(tokens[i].line, "Invalid directive: " + tokens[i].literal)));
-			directive.line = tokens[i].line;
-			for (++i ; i < tokens.size() && tokens[i].type == Keyword; ++i)
-				directive.args.push_back(tokens[i].literal);
-			if (tokens[i].type == BlockStart)
-				directive.block = this->_parseDirective(tokens, ++i);
-			else if (tokens[i].type != Semicolon)
-				throw (std::runtime_error(this->_errorMsg(tokens[i].line, "Don't end with ';'")));
-			directiveList.push_back(directive);
-		}
-		return (directiveList);
-	}
 
-	void	_checkBrackets(std::vector<Token> &tokens)
-	{
-		int	depth = 0;
-
-		for (size_t i = 0; i < tokens.size(); ++i)
-		{
-			if (tokens[i].type == BlockStart)
-				++depth;
-			else if (tokens[i].type == BlockEnd)
-				--depth;
-			if (depth < 0)
-				throw (std::runtime_error(this->_errorMsg(tokens[i].line, "unexpected '}'")));
-		}
-		if (depth > 0)
-			throw (std::runtime_error("unexpected end of file, missing '}'"));
-	}
 
 	void	_readDirectives(const std::string &file, std::set<std::string> &directives)
 	{

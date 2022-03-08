@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/16 22:47:17 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/03/04 16:12:01 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/03/08 17:29:58 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -102,6 +102,12 @@ public:
 	void	setNonBlocking(void)
 	{
 		fcntl(this->_listenSocket, F_SETFL, O_NONBLOCK);
+	}
+
+	void	setSockOpt(int level, int optname, int optval)
+	{
+		if (setsockopt(this->_listenSocket, level, optname, (void*)&optval, sizeof(optval)) == -1)
+			throw (std::runtime_error(strerror(errno)));
 	}
 	
 	void	closeSocket(void)

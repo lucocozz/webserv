@@ -6,15 +6,27 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/03 01:11:36 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/03/07 15:27:50 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/03/08 17:24:51 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
+#include <map>
 #include <vector>
 #include <string>
 # include "Parser.hpp"
+
+struct LocationContext
+{
+	std::map<std::string, std::vector<std::string>>	directives;
+};
+
+struct ServerContext
+{
+	std::map<std::string, std::vector<std::string>>	directives;
+	std::vector<LocationContext>					locations;
+};
 
 class Config: public Lexer, public Parser
 {
@@ -51,7 +63,16 @@ public:
 		if (fileStream.is_open() == false)
 			throw (std::runtime_error("Can't open file: " + filePath));
 		this->Lexer::lex(fileStream);
-		this->Parser::parse(this->_tokens);
 		fileStream.close();
+		this->Parser::parse(this->_tokens);
+		this->_parsingToStruct();
+	}
+
+
+
+private:
+	void	_parsingToStruct(void)
+	{
+		
 	}
 };
