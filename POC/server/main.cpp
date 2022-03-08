@@ -59,11 +59,13 @@ void	server(EpollSocket &local)
 					if (data.second != 0){
 						//CGI_startup temporaire
 						CGI cgi(NULL, data);
-
+						int cgiRet = 0;
 						//httpRequest/httpResponse
 						request.treatRequest(data.first);
-						if (request.getPath().find(".cgi") != std::string::npos)
-							cgi.CGIStartup(request.getHeaders());
+						if (request.getPath().find(".php") != std::string::npos)
+							cgiRet =cgi.CGIStartup(request.getHeaders());
+						if (cgiRet == -1)
+							std::cerr << "CGI error" << std::endl;
 						response.buildResponse(request);
 					}
 

@@ -17,7 +17,7 @@ SRC := 	main.cpp
 MAKE = make
 MAKEFLAGS += --no-print-directory
 CXX := c++
-CXXFLAGS := -Wall -Wextra -Werror -MMD -MD -std=c++98 -fsanitize=address -g -g3
+CXXFLAGS := -Wall -Wextra -Werror -MMD -MD -std=c++98 -g3
 BUILD_DIR := .build
 INCLUDES_DIR := includes
 SOURCE_DIR := sources
