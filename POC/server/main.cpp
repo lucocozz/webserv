@@ -13,8 +13,7 @@
 #include "../../includes/socket/Epoll.hpp"
 #include "../../includes/socket/Socket.hpp"
 #include "../../includes/socket/EpollSocket.hpp"
-
-#include "../CGI/CGI.hpp"
+#include "../../includes/CGI/CGI.hpp"
 
 //httpRequest
 #include "../http/httpResponse.hpp"

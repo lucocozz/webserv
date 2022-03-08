@@ -114,7 +114,7 @@ public:
         if ((pid = fork()) == -1)
             return (-1);
         if (pid == 0){
-            execve("/home/user42/webserv/POC/CGI/ubuntu_cgi_tester.php", args, envVar);
+            execve("/home/user42/webserv/includes/CGI/ubuntu_cgi_tester.php", args, envVar);
             std::cerr << "Execve error code: " << errno << std::endl;
             exit(-1);
         }
