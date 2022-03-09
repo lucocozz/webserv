@@ -51,7 +51,7 @@ class httpResponse{
 			//OPTIONNAL HEADERS (depending on method used if no error occurs)
 			if (this->_request.getStatus() / 100 == 2){
 				this->_response.append("Last-Modified: " + getFileModification(this->_request.getPath().c_str()) + "\r\n");
-				//this->_response.append("Etag: " + hashETAG + "\r\n"); //Need more information on how generate/retrieve the Etag
+				this->_response.append("Etag: " + makeETag(this->_request.getPath().c_str()) + "\r\n");
 				this->_response.append("Accept-Ranges: bytes\r\n"); //Can be none but useless, only bytes ranges is defined by RFC
 			}
 		}

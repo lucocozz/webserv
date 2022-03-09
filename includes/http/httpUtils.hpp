@@ -91,4 +91,30 @@ std::string		getFileModification(char const *path){
 	return (ret);
 }
 
+
+
+std::string		makeETag(char const *path){
+	struct stat sb;
+	lstat(path, &sb);
+	std::cout << "Etag : \"" << sb.st_mtime << "-" << sb.st_size << "\"" << std::endl;
+
+	std::string ret;
+	ret.append("\"");
+
+	int mTime = sb.st_mtime;
+	std::stringstream mTimeStream;
+	mTimeStream << std::hex << mTime;
+	ret.append(mTimeStream.str());
+
+	ret.append("-");
+
+	int sSize = sb.st_size;
+	std::stringstream sSizeStream;
+	sSizeStream << std::hex << sSize;
+	ret.append(sSizeStream.str());
+
+	ret.append("\"");
+	return (ret);
+}
+
 #endif
