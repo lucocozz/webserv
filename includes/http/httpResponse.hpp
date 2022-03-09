@@ -3,6 +3,7 @@
 
 #include "httpRequest.hpp"
 #include "../socket/Epoll.hpp"
+#include "httpMimeTypes.hpp"
 
 class httpResponse{
 	public:

@@ -55,16 +55,16 @@ std::string					getActualTime(){
 	std::string ret;
 	ret.append(vect.at(0) + ", ");
 	std::string daydate;
-	if (atoi(vect.at(3).c_str()) < 10)
-		daydate = "0" + vect.at(3);
+	if (atoi(vect.at(2).c_str()) < 10)
+		daydate = "0" + vect.at(2);
 	else
-		daydate = vect.at(3);
+		daydate = vect.at(2);
 	ret.append(daydate + " ");
 	ret.append(vect.at(1) + " ");
-	std::string year = vect.at(5);
+	std::string year = vect.at(4);
 	year.erase(year.end() - 1);
 	ret.append(year + " ");
-	ret.append(vect.at(4) + " ");
+	ret.append(vect.at(3) + " ");
 	ret.append("GMT");
 
 	return (ret);
