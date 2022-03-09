@@ -2,7 +2,7 @@
 #define HTTPRESPONSE_HPP
 
 #include "httpRequest.hpp"
-#include "../../includes/socket/Epoll.hpp"
+#include "../socket/Epoll.hpp"
 
 class httpResponse{
 	public:

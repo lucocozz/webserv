@@ -6,14 +6,14 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/23 22:47:36 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/03/08 18:03:44 by user42           ###   ########.fr       */
+/*   Updated: 2022/03/09 11:01:49 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../../includes/socket/Epoll.hpp"
-#include "../../includes/socket/Socket.hpp"
-#include "../../includes/socket/EpollSocket.hpp"
-#include "../../includes/CGI/CGI.hpp"
+#include "../socket/Epoll.hpp"
+#include "../socket/Socket.hpp"
+#include "../socket/EpollSocket.hpp"
+#include "../CGI/CGI.hpp"
 
 //httpRequest
 #include "../http/httpResponse.hpp"
