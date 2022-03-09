@@ -12,6 +12,9 @@
 #include <ctime>
 #include <cstdlib>
 
+#include <sys/types.h>
+#include <unistd.h>
+
 std::vector<std::string>	split(std::string str, std::string delimiter){
 	size_t posStart = 0;
 	size_t posEnd = 0;
@@ -41,6 +44,7 @@ std::string					itos(int nb){
 	return (ret);
 }
 
+//Date
 std::string					getActualTime(){
 	time_t rawTime;
 	struct tm *timeInfo;
@@ -66,16 +70,14 @@ std::string					getActualTime(){
 	return (ret);
 }
 
-#include <sys/types.h>
-#include <unistd.h>
-
+//Last-Modified
 std::string		getFileModification(char const *path){
 	struct stat sb;
 	lstat(path, &sb);
 	std::string timeInfo = ctime(&sb.st_mtime);
 	std::vector<std::string> vect = split(timeInfo, " ");
-
 	std::string ret;
+
 	ret.append(vect.at(0) + ", ");
 	std::string daydate;
 	if (atoi(vect.at(3).c_str()) < 10)
@@ -88,32 +90,28 @@ std::string		getFileModification(char const *path){
 	year.erase(year.end() - 1);
 	ret.append(year + " ");
 	ret.append(vect.at(4) + " GMT");
+
 	return (ret);
 }
 
-
-
+//ETag
 std::string		makeETag(char const *path){
 	struct stat sb;
 	lstat(path, &sb);
-	std::cout << "Etag : \"" << sb.st_mtime << "-" << sb.st_size << "\"" << std::endl;
-
 	std::string ret;
-	ret.append("\"");
 
+	ret.append("\"");
 	int mTime = sb.st_mtime;
 	std::stringstream mTimeStream;
 	mTimeStream << std::hex << mTime;
 	ret.append(mTimeStream.str());
-
 	ret.append("-");
-
 	int sSize = sb.st_size;
 	std::stringstream sSizeStream;
 	sSizeStream << std::hex << sSize;
 	ret.append(sSizeStream.str());
-
 	ret.append("\"");
+
 	return (ret);
 }
 

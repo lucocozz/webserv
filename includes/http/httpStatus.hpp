@@ -18,4 +18,38 @@ enum STATUS_CODE{
 	HTTP_VERSION_NOT_SUPPORTED = 505
 };
 
+std::map<int, std::string>	initStatusMessages(){
+	std::map<int, std::string> ret;
+
+	//Success
+	ret.insert(std::make_pair(OK, "OK"));
+	ret.insert(std::make_pair(CREATED, "Created"));
+	//Error client
+	ret.insert(std::make_pair(BAD_REQUEST, "Bad Request"));
+	ret.insert(std::make_pair(NOT_FOUND, "Not Found"));
+	ret.insert(std::make_pair(LENGTH_REQUIRED, "Length Required"));
+	//Error server
+	ret.insert(std::make_pair(INTERNAL_SERVER_ERROR, "Internal Server Error"));
+	ret.insert(std::make_pair(NOT_IMPLEMENTED, "Not Implemented"));
+	ret.insert(std::make_pair(SERVICE_UNAVAILABLE, "Service Unavailable"));
+	ret.insert(std::make_pair(HTTP_VERSION_NOT_SUPPORTED, "http Version Not Supported"));
+
+	return (ret);
+}
+
+std::map<int, std::string>	statusMessages = initStatusMessages();
+
+
+void	setStatusMessage(std::map<int, std::string> &statusMessage){
+	statusMessage.insert(std::make_pair(OK, "OK"));
+	statusMessage.insert(std::make_pair(CREATED, "Created"));
+	statusMessage.insert(std::make_pair(BAD_REQUEST, "Bad Request"));
+	statusMessage.insert(std::make_pair(NOT_FOUND, "Not Found"));
+	statusMessage.insert(std::make_pair(LENGTH_REQUIRED, "Length Required"));
+	statusMessage.insert(std::make_pair(INTERNAL_SERVER_ERROR, "Internal Server Error"));
+	statusMessage.insert(std::make_pair(NOT_IMPLEMENTED, "Not Implemented"));
+	statusMessage.insert(std::make_pair(SERVICE_UNAVAILABLE, "Service Unavailable"));
+	statusMessage.insert(std::make_pair(HTTP_VERSION_NOT_SUPPORTED, "http Version Not Supported"));
+}
+
 #endif
