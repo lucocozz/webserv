@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/16 22:47:17 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/03/10 01:22:05 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/03/10 13:11:15 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -161,7 +161,7 @@ public:
 
 
 
-	std::string	recvData(int flags = 0)
+	std::pair<std::string, int>	recvData(int flags = 0)
 	{
 		char	buffer[RECV_BUFFER] = {0};
 		int		bytesReceived = 0;
@@ -171,7 +171,7 @@ public:
 		if (bytesReceived == -1)
 			throw (std::runtime_error(strerror(errno)));
 		std::cout << "Received " << bytesReceived << " bytes." << std::endl;
-		return (std::string().append(buffer, bytesReceived));
+		return (std::make_pair(std::string().append(buffer, bytesReceived), bytesReceived));
 	}
 
 	int	sendData(std::string data, int flags = 0)

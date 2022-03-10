@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/23 22:47:36 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/03/10 01:20:43 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/03/10 13:11:47 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,8 +44,8 @@ void	server(EpollSocket &local)
 			}
 			else if (socketEvent.events() & EPOLLIN)
 			{
-				std::string	data = socketEvent.recvData();
-				std::cout << data << std::endl;
+				std::pair<std::string, int>	data = socketEvent.recvData();
+				std::cout << data.first << std::endl;
 				//CGI_startup temporaire
 				// CGI_startup(client, data);
 				socketEvent.sendData("HTTP/1.1 401 Unauthorized\r\nWWW-Authenticate: Basic realm=\"Access to the staging site\"\r\nConnection: keep-alive\r\nContent-length: 0\r\n\r\n");
