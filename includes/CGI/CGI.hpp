@@ -63,7 +63,7 @@ private:
     std::string                         _headerContent;
     std::string                         _encodedURL;
     std::string                         _decodedURL;
-    std::map<std::string, std::string>  _mapEnvVar;
+    std::map<std::string, std::string>  _mapMetaVars;
 
 public:
 
@@ -73,65 +73,54 @@ public:
     _headerContent(data.first),
     _encodedURL(_setURL()),
     _decodedURL(_decodeUrl()),
-    _mapEnvVar(){
+    _mapMetaVars(){
     }
 
     ~CGI(){
     }
 
     std::map<std::string, std::string>  &getEnvVar() {
-        return (_mapEnvVar);
+        return (_mapMetaVars);
     }
 
-    char **_createEnvVar(std::map<std::string, std::string>::iterator it){
-        char        **envVar;
-        std::string join;
-        size_t      i;
-    
-        envVar = new char *[this->_mapEnvVar.size() + 1];
-        i = 0;
-        it = this->_mapEnvVar.begin();
-        while(i < this->_mapEnvVar.size()){
-            envVar[i] = new char [it->first.size() + it->second.size() + 1];
-            join = static_cast<std::string>(it->first).append(it->second);
-            strcpy(envVar[i], join.c_str());
-            it++;
-            i++;
-        }
-        envVar[i] = NULL;
-        return (envVar);
-    }
 
     int CGIStartup(std::map<std::string, std::string> headers){
         pid_t                                               pid;
         std::map<const std::string, std::string>::iterator  itb;
-        char                                                **envVar;
-        char *const                                         *args = NULL;
+        char                                                **cMetaVar;
+        char *const                                         *nullArgs = NULL;
 
-        createEnvs(headers);
-        itb = this->_mapEnvVar.begin();
-        envVar = _createEnvVar(itb);
+        _setMapEnvVar(headers);
+        itb = this->_mapMetaVars.begin();
+        cMetaVar = _createEnvVar(itb);
+        std::cout << "vars " << std::endl;
+        for (size_t i = 0;cMetaVar[i]; i++){
+            std::cout << "envvar " << cMetaVar[i] << std::endl;
+        }
+        std::string tmppath("/home/user42/webserv/includes/CGI/");
+        tmppath.append(_mapMetaVars.find("SCRIPT_NAME=")->second);
         if ((pid = fork()) == -1)
-            return (-1);
+            return (errno);
         if (pid == 0){
-            execve("/home/user42/webserv/includes/CGI/ubuntu_cgi_tester.php", args, envVar);
+            execve(tmppath.c_str(), nullArgs, cMetaVar);
             std::cerr << "Execve error code: " << errno << std::endl;
-            exit(-1);
+            exit(errno);
         }
         waitpid(pid, NULL, 0);
-        for (size_t i = 0; envVar[i]; i++)
-            delete [] envVar[i];
-        delete [] envVar;
-        return (0);
+        for (size_t i = 0; cMetaVar[i]; i++)
+            delete [] cMetaVar[i];
+        delete [] cMetaVar;
+        return (errno);
     }
 
 
 private:
-    void    createEnvs(std::map<std::string, std::string> headers){
+    void    _setMapEnvVar(std::map<std::string, std::string> headers){
 
         _setServerSoftware();
         _setServerName(headers);
         _setGatewayInterface();
+        _setHtppVariables(headers);
 
         _setServerProtocol();
         _setServerPort();
@@ -148,7 +137,6 @@ private:
         _setContentLength();
         _setRequestUri();
 
-        _setHtppVariables(headers);
     }
 
     std::string    _setURL(){
@@ -175,7 +163,7 @@ private:
         std::string varName("SERVER_SOFTWARE=");
         std::string nameVersion("WebServ/1.0");
 
-       this->_mapEnvVar.insert(std::make_pair(varName, nameVersion));
+       this->_mapMetaVars.insert(std::make_pair(varName, nameVersion));
     }
 
     void _setServerName(std::map<std::string, std::string> headers){
@@ -189,25 +177,28 @@ private:
         begin = 0;
         end = line.find(':');
         name = line.substr(begin, end);
-        this->_mapEnvVar.insert(std::make_pair(varName, name));
+        this->_mapMetaVars.insert(std::make_pair(varName, name));
     }
 
     void _setGatewayInterface(){
         std::string     varName("GATEWAY_INTERFACE=");
         std::string     name("CGI/1.1");
 
-        this->_mapEnvVar.insert(std::make_pair(varName, name));
+        this->_mapMetaVars.insert(std::make_pair(varName, name));
     }
 
     void _setServerProtocol(){
         std::string     varName("SERVER_PROTOCOL=");
         std::string     name_version("HTTP/1.1");
 
-        this->_mapEnvVar.insert(std::make_pair(varName, name_version));
+        this->_mapMetaVars.insert(std::make_pair(varName, name_version));
     }
 
     void _setServerPort(){
-        //get the port througt server
+        std::string     varName("SERVER_PORT=");
+        std::string     port("8080");
+
+        this->_mapMetaVars.insert(std::make_pair(varName, port));
     }
 
     void _setRequestMethod(){
@@ -217,7 +208,7 @@ private:
         
         end = _headerContent.find(' ');
         method = _headerContent.substr(0, end);
-        this->_mapEnvVar.insert(std::make_pair(varName, method));
+        this->_mapMetaVars.insert(std::make_pair(varName, method));
     }
 
     void _setPathInfo(){
@@ -230,11 +221,11 @@ private:
         begin = this->_decodedURL.find(cgiExtension, 0) + cgiExtension.size();
         end =  _decodedURL.size() - begin;
         if (end == 0 || (begin + 1 == cgiExtension.size())){
-            _mapEnvVar.insert(std::make_pair(varName, ""));
+            _mapMetaVars.insert(std::make_pair(varName, ""));
             return ;
         }
         pathInfo = this->_decodedURL.substr(begin, end);
-        this->_mapEnvVar.insert(std::make_pair(varName, pathInfo));
+        this->_mapMetaVars.insert(std::make_pair(varName, pathInfo));
     }
 
     void _setPathTranslated(){
@@ -244,15 +235,15 @@ private:
         size_t      eraseBegin;
         size_t      eraseEnd;
 
-        eraseBegin = _decodedURL.find(_mapEnvVar.find("PATH_INFO=")->second, 0);
+        eraseBegin = _decodedURL.find(_mapMetaVars.find("PATH_INFO=")->second, 0);
         eraseEnd = _decodedURL.size() - eraseBegin;
         if (eraseBegin == 0){
-            _mapEnvVar.insert(std::make_pair(varName, wd.append(_decodedURL)));
+            _mapMetaVars.insert(std::make_pair(varName, wd.append(_decodedURL)));
             return ;
         }
         path = _decodedURL.erase(eraseBegin, eraseEnd);
         //wd should be the path from the root of the server
-        this->_mapEnvVar.insert(std::make_pair(varName, wd.append(path)));
+        this->_mapMetaVars.insert(std::make_pair(varName, wd.append(path)));
     }
 
     void _setScriptName(){
@@ -261,16 +252,16 @@ private:
         size_t          begin;
         size_t          end = 0;
 
-        begin = this->_decodedURL.find("cgi-bin/");
+        begin = this->_decodedURL.find("cgi-bin/", _decodedURL.find('/'));
         if (begin == std::string::npos || end == std::string::npos){
-            _mapEnvVar.insert(std::make_pair(varName, name));
+            _mapMetaVars.insert(std::make_pair(varName, name));
             return ;
         }
         begin += 8;
         end = this->_decodedURL.find(".php", begin) - (begin - 5) - 1;
         // may change depending on how the location is managed
         name = this->_decodedURL.substr(begin, end);
-        this->_mapEnvVar.insert(std::make_pair(varName, name));
+        this->_mapMetaVars.insert(std::make_pair(varName, name));
     }
 
     void _setQueryString(){
@@ -282,63 +273,83 @@ private:
     
         if ((queryChar = this->_decodedURL .find('?', 0)) == std::string::npos){
             varName.append(query);
-            _mapEnvVar.insert(std::make_pair(varName, query));
+            _mapMetaVars.insert(std::make_pair(varName, query));
             return ;
         }
         begin = queryChar + 1;
         end = _decodedURL.size() - begin;
         query = this->_decodedURL.substr(begin, end);
 
-        this->_mapEnvVar.insert(std::make_pair(varName, query));
+        this->_mapMetaVars.insert(std::make_pair(varName, query));
     }
 
     void _setRemoteHost(){
         std::string varName("REMOTE_HOST=");
         std::string host("");
 
-        this->_mapEnvVar.insert(std::make_pair(varName, host));
+        this->_mapMetaVars.insert(std::make_pair(varName, host));
     }
 
     void _setRemoteAddr(){
         std::string varName("REMOTE_ADDR=");
         std::string addr("");
 
-        this->_mapEnvVar.insert(std::make_pair(varName, addr));
+        this->_mapMetaVars.insert(std::make_pair(varName, addr));
     }
 
     void _setRemoteUser(){
         std::string varName("REMOTE_USER=");
         std::string user("");
 
-        this->_mapEnvVar.insert(std::make_pair(varName, user));
+        this->_mapMetaVars.insert(std::make_pair(varName, user));
     }
 
     void _setAuthType(){
         std::string varName("AUTH_TYPE=");
         std::string authType("");
-
-        this->_mapEnvVar.insert(std::make_pair(varName, authType));
+        
+        if (_mapMetaVars.count("HTTP_AUTHORIZATION=") == 1){
+            std::string type(_mapMetaVars.find("HTTP_AUTHORIZATION=")->second);
+            size_t      begin;
+            size_t      end;
+            
+            begin = type.find(' ',0);
+            end = type.size() - begin;
+            type.erase(begin, end);
+            authType = type;
+        }
+        this->_mapMetaVars.insert(std::make_pair(varName, authType));
     }
 
     void _setContentType(){
         std::string varName("CONTENT_TYPE=");
         std::string contentType("");
 
-        this->_mapEnvVar.insert(std::make_pair(varName, contentType));
+        if (_mapMetaVars.count("HTTP_CONTENT_TYPE=") == 1)
+            contentType = _mapMetaVars.find("HTTP_CONTENT_TYPE=")->second;  
+        this->_mapMetaVars.insert(std::make_pair(varName, contentType));
     }
 
     void _setContentLength(){
         std::string varName("CONTENT_LENGTH=");
         std::string contentLength("");
 
-        this->_mapEnvVar.insert(std::make_pair(varName, contentLength));
+        if (_mapMetaVars.count("HTTP_CONTENT_LENGTH=") == 1)
+            contentLength = _mapMetaVars.find("HTTP_CONTENT_LENGTH=")->second;
+        this->_mapMetaVars.insert(std::make_pair(varName, contentLength));
     }
 
     void _setRequestUri(){
         std::string varName("REQUEST_URI=");
-        std::string uri(_encodedURL);
+        std::string uri("");
+        std::string scheme("http://");
+        std::string serverName(this->_mapMetaVars.find("SERVER_NAME=")->second);
+        serverName.append(":");
+        std::string serverPort(this->_mapMetaVars.find("SERVER_PORT=")->second);
+        std::string url(_encodedURL);
 
-        this->_mapEnvVar.insert(std::make_pair(varName, uri));
+        uri = scheme.append(serverName).append(serverPort).append(url);
+        this->_mapMetaVars.insert(std::make_pair(varName, uri));
     }
     
     void _setHtppVariables(std::map<std::string, std::string> &headers){
@@ -347,7 +358,7 @@ private:
 
         while (itb != headers.end()){
             varName = _formateVarName(itb->first);
-            this->_mapEnvVar.insert(std::make_pair(varName, itb->second));
+            this->_mapMetaVars.insert(std::make_pair(varName, itb->second));
             itb++;
         }
     }
@@ -366,6 +377,25 @@ private:
         formated.append("=");
         ret.append(formated);
         return(ret);
+    }
+
+    char **_createEnvVar(std::map<std::string, std::string>::iterator it){
+        char        **cEnvVar;
+        std::string join;
+        size_t      i;
+    
+        cEnvVar = new char *[this->_mapMetaVars.size() + 1];
+        i = 0;
+        it = this->_mapMetaVars.begin();
+        while(i < this->_mapMetaVars.size()){
+            cEnvVar[i] = new char [it->first.size() + it->second.size() + 1];
+            join = static_cast<std::string>(it->first).append(it->second);
+            strcpy(cEnvVar[i], join.c_str());
+            it++;
+            i++;
+        }
+        cEnvVar[i] = NULL;
+        return (cEnvVar);
     }
 };
 

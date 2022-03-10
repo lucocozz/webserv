@@ -111,7 +111,7 @@ class httpRequest{
 					return;
 				}
 				std::vector<std::string> res = split(_request.at(i), ": ");
-				if (res.size() < 3){
+				if (res.size() == 2){
 					std::pair<std::string, std::string> pair = std::make_pair(res.at(0), res.at(1));
 					this->_headers.insert(pair);
 				}
