@@ -43,8 +43,8 @@ class httpResponse{
 			//Mandatory HEADER (even if error)
 			this->_response.append("Server: 42webserv/0.0.1\r\n");
 			this->_response.append("Date: " + getActualTime() + "\r\n");
-			this->_response.append("Content-Type: " + _contentType + "\r\n"); //Need a functino to find the content-type
-			this->_response.append("Content-Length: " + itos(_content.length()) + "\r\n");
+			this->_response.append("Content-Type: " + this->_contentType + "\r\n"); //Need a functino to find the content-type
+			this->_response.append("Content-Length: " + itos(this->_content.length()) + "\r\n");
 			this->_response.append("Connection: close\r\n"); //close or keep-alive make an enum
 			//OPTIONNAL HEADERS (depending on method used if no error occurs)
 			if (this->_request.getStatus() / 100 == 2){
@@ -77,7 +77,7 @@ class httpResponse{
 			_content.append("<p><center>If you see this page, the 42webserv is successfully installed and working. Further configuration is required.</center></p>\n");
 			_content.append("<hr><center>42webserv/0.0.1</center>\n");
 			_content.append("</body>\n</html>");
-			_contentType = "text/html";
+			_contentType = getMimeTypes(this->_request.getPath().c_str());
 		}
 
 		std::string	_getStatusMessage(){

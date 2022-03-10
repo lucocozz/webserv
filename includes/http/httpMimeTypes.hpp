@@ -85,4 +85,16 @@ std::map<std::string, std::string>	initExtensionTypes(){
 
 std::map<std::string, std::string>	extensionTypes = initExtensionTypes();
 
+std::string							getMimeTypes(char const *path){
+	std::string tmp(path);
+
+	if (tmp.rfind(".") == std::string::npos)
+		return ("text/html");
+	std::map<std::string, std::string>::iterator it = extensionTypes.find(tmp.substr(tmp.rfind(".") + 1));
+	std::cout << "EXTENSION : " << tmp.substr(tmp.rfind(".")) << std::endl;
+	if (it == extensionTypes.end())
+		return ("text/html");
+	return ((*it).second);
+}
+
 #endif

@@ -31,7 +31,7 @@ std::vector<std::string>	split(std::string str, std::string delimiter){
 	return (ret);
 }
 
-bool						isPathExist(std::string const &path){
+bool						ifPathExist(std::string const &path){
 	struct stat buffer;
 	return (stat(path.c_str(), &buffer) == 0);
 }
@@ -71,7 +71,7 @@ std::string					getActualTime(){
 }
 
 //Last-Modified
-std::string		getFileModification(char const *path){
+std::string					getFileModification(char const *path){
 	struct stat sb;
 	lstat(path, &sb);
 	std::string timeInfo = ctime(&sb.st_mtime);
@@ -95,7 +95,7 @@ std::string		getFileModification(char const *path){
 }
 
 //ETag
-std::string		makeETag(char const *path){
+std::string					makeETag(char const *path){
 	struct stat sb;
 	lstat(path, &sb);
 	std::string ret;

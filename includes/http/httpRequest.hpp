@@ -142,7 +142,7 @@ class httpRequest{
 				return;
 				}
 			}
-			if (isPathExist(_path) == false){
+			if (ifPathExist(_path) == false){
 				this->_status = NOT_FOUND;
 				return;
 			}
