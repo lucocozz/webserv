@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:59:01 by user42            #+#    #+#             */
-/*   Updated: 2022/03/10 16:07:57 by user42           ###   ########.fr       */
+/*   Updated: 2022/03/10 17:13:23 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,7 +71,7 @@ std::string					makeETag(char const *path){
 	lstat(path, &sb);
 	std::string ret;
 
-	ret.append("\"");
+	ret.append("W/\"");
 	int mTime = sb.st_mtime;
 	std::stringstream mTimeStream;
 	mTimeStream << std::hex << mTime;
