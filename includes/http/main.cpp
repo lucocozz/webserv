@@ -6,16 +6,16 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/23 22:47:36 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/03/09 11:01:49 by user42           ###   ########.fr       */
+/*   Updated: 2022/03/10 15:06:36 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../socket/Epoll.hpp"
 #include "../socket/Socket.hpp"
 #include "../socket/EpollSocket.hpp"
+
 #include "../CGI/CGI.hpp"
 
-//httpRequest
 #include "../http/httpResponse.hpp"
 
 void	server(EpollSocket &local)
