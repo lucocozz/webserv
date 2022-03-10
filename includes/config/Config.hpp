@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/03 01:11:36 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/03/08 21:47:15 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/03/10 14:31:18 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,7 @@ private:
 	std::string					_filePath;
 
 public:
-	std::vector<ServerContext>	servers;
+	ServerContext	server;
 
 	Config(void): Lexer(), Parser() {}
 
@@ -77,7 +77,7 @@ private:
 	void	_parsingToData(void)
 	{
 		for (size_t i = 0; i < this->_parsed.size(); ++i)
-			this->servers.push_back(this->_parsedServerToData(this->_parsed[i].block));
+			this->server = this->_parsedServerToData(this->_parsed[i].block);
 	}
 
 	ServerContext	_parsedServerToData(const std::vector<Directive> &block)
