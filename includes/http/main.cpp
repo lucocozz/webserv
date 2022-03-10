@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/23 22:47:36 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/03/10 15:06:36 by user42           ###   ########.fr       */
+/*   Updated: 2022/03/10 15:18:04 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,9 +49,7 @@ void	server(EpollSocket &local)
 				}
 				else
 				{
-					std::string dataStr = socketEvent.recvData();
-					int	dataLen = dataStr.length();
-					std::pair<std::string, int>	data = std::make_pair(dataStr, dataLen);
+					std::pair<std::string, int>	data = socketEvent.recvData();
 					
 					//httpRequest/httpResponse
 					httpRequest 	request;
