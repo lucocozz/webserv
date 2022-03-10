@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/23 22:47:36 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/03/10 15:18:04 by user42           ###   ########.fr       */
+/*   Updated: 2022/03/10 15:54:22 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,7 @@
 
 #include "../CGI/CGI.hpp"
 
-#include "../http/httpResponse.hpp"
+#include "../http/response.hpp"
 
 void	server(EpollSocket &local)
 {

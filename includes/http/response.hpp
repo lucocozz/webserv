@@ -1,9 +1,23 @@
-#ifndef HTTPRESPONSE_HPP
-#define HTTPRESPONSE_HPP
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   response.hpp                                       :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
+/*   Updated: 2022/03/10 16:06:55 by user42           ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
-#include "httpRequest.hpp"
+#ifndef RESPONSE_HPP
+#define RESPONSE_HPP
+
 #include "../socket/Epoll.hpp"
-#include "httpMimeTypes.hpp"
+
+#include "request.hpp"
+#include "headersFunctions.hpp"
+#include "mimeTypes.hpp"
 
 class httpResponse{
 	public:

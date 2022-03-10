@@ -1,5 +1,17 @@
-#ifndef HTTPREQUEST_HPP
-#define HTTPREQUEST_HPP
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   request.hpp                                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2022/03/10 15:58:46 by user42            #+#    #+#             */
+/*   Updated: 2022/03/10 15:59:04 by user42           ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#ifndef REQUEST_HPP
+#define REQUEST_HPP
 
 #include <algorithm>
 #include <vector>
@@ -8,8 +20,8 @@
 
 #include <sys/stat.h>
 
-#include "httpStatus.hpp"
-#include "httpUtils.hpp"
+#include "statusCode.hpp"
+#include "utils.hpp"
 
 class httpRequest{
 	public:
