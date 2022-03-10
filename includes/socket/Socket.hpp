@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/16 22:47:17 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/03/08 17:29:58 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/03/10 01:22:05 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -171,7 +171,7 @@ public:
 		if (bytesReceived == -1)
 			throw (std::runtime_error(strerror(errno)));
 		std::cout << "Received " << bytesReceived << " bytes." << std::endl;
-		return (buffer);
+		return (std::string().append(buffer, bytesReceived));
 	}
 
 	int	sendData(std::string data, int flags = 0)
