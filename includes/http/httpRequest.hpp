@@ -95,7 +95,7 @@ class httpRequest{
 			if (requestLine.size() == 3){
 				this->_method = requestLine.at(0);
 				this->_path = requestLine.at(1);
-				this->_protocol = requestLine.at (2);
+				this->_protocol = requestLine.at(2);
 				this->_request.erase(_request.begin());
 			}
 			else
@@ -142,7 +142,7 @@ class httpRequest{
 				return;
 				}
 			}
-			if (isPathExist(_path) == false){
+			if (ifPathExist(_path) == false){
 				this->_status = NOT_FOUND;
 				return;
 			}

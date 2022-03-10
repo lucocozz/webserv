@@ -2,12 +2,12 @@
 #define HTTPRESPONSE_HPP
 
 #include "httpRequest.hpp"
-#include "../../includes/socket/Epoll.hpp"
+#include "../socket/Epoll.hpp"
+#include "httpMimeTypes.hpp"
 
 class httpResponse{
 	public:
 		httpResponse(){
-			this->_setStatusMessage();
 			return;
 		}
 
@@ -26,7 +26,6 @@ class httpResponse{
 			this->_buildStatusLine();
 			this->_buildHeaders();
 			this->_buildBody();
-
 			std::cout << std::endl << "SERVER RESPONSE :" << std::endl;
 			std::cout << _response << std::endl;
 		}
@@ -44,22 +43,19 @@ class httpResponse{
 			//Mandatory HEADER (even if error)
 			this->_response.append("Server: 42webserv/0.0.1\r\n");
 			this->_response.append("Date: " + getActualTime() + "\r\n");
-			this->_response.append("Content-Type: " + _contentType + "\r\n"); //Need a functino to find the content-type
-			this->_response.append("Content-Length: " + itos(_content.length()) + "\r\n");
+			this->_response.append("Content-Type: " + this->_contentType + "\r\n"); //Need a functino to find the content-type
+			this->_response.append("Content-Length: " + itos(this->_content.length()) + "\r\n");
 			this->_response.append("Connection: close\r\n"); //close or keep-alive make an enum
-
 			//OPTIONNAL HEADERS (depending on method used if no error occurs)
 			if (this->_request.getStatus() / 100 == 2){
 				this->_response.append("Last-Modified: " + getFileModification(this->_request.getPath().c_str()) + "\r\n");
-				//this->_response.append("Etag: " + hashETAG + "\r\n"); //Need more information on how generate/retrieve the Etag
+				this->_response.append("Etag: " + makeETag(this->_request.getPath().c_str()) + "\r\n");
 				this->_response.append("Accept-Ranges: bytes\r\n"); //Can be none but useless, only bytes ranges is defined by RFC
 			}
 		}
 
 		void _buildBody(){
 			this->_response.append("\r\n");
-
-			//this->_response.append("Response sent by 42 webserv\r\n");
 			this->_response.append(_content + "\r\n");
 		}
 
@@ -81,29 +77,14 @@ class httpResponse{
 			_content.append("<p><center>If you see this page, the 42webserv is successfully installed and working. Further configuration is required.</center></p>\n");
 			_content.append("<hr><center>42webserv/0.0.1</center>\n");
 			_content.append("</body>\n</html>");
-			//_content = "<html>Response sent by 42 webserv.</html>";
-			_contentType = "text/html";
-		}
-
-		//Status
-		void	_setStatusMessage(){
-			this->_statusMessage.insert(std::make_pair(OK, "OK"));
-			this->_statusMessage.insert(std::make_pair(CREATED, "Created"));
-			this->_statusMessage.insert(std::make_pair(BAD_REQUEST, "Bad Request"));
-			this->_statusMessage.insert(std::make_pair(NOT_FOUND, "Not Found"));
-			this->_statusMessage.insert(std::make_pair(LENGTH_REQUIRED, "Length Required"));
-			this->_statusMessage.insert(std::make_pair(INTERNAL_SERVER_ERROR, "Internal Server Error"));
-			this->_statusMessage.insert(std::make_pair(NOT_IMPLEMENTED, "Not Implemented"));
-			this->_statusMessage.insert(std::make_pair(SERVICE_UNAVAILABLE, "Service Unavailable"));
-			this->_statusMessage.insert(std::make_pair(HTTP_VERSION_NOT_SUPPORTED, "http Version Not Supported"));
+			_contentType = getMimeTypes(this->_request.getPath().c_str());
 		}
 
 		std::string	_getStatusMessage(){
-			return ((*_statusMessage.find(this->_request.getStatus())).second);
+			return ((*statusMessages.find(this->_request.getStatus())).second);
 		}
 
 		httpRequest						_request;
-		std::map<int, std::string> 		_statusMessage;
 
 		std::string						_content;
 		std::string						_contentType;

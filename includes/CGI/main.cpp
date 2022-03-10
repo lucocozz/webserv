@@ -10,9 +10,12 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "./Epoll.hpp"
-#include "./Socket.hpp"
-#include "./EpollSocket.hpp"
+#include "../socket/Epoll.hpp"
+#include "../socket/Socket.hpp"
+#include "../socket/EpollSocket.hpp"
+#include "CGI.hpp"
+#include "../http/httpResponse.hpp"
+#include "../http/httpRequest.hpp"
 
 // #include "../CGI/ClassCGI.hpp"
 
@@ -46,8 +49,23 @@ void	server(EpollSocket &local)
 			{
 				std::pair<std::string, int>	data = socketEvent.recvData();
 				std::cout << data.first << std::endl;
-				//CGI_startup temporaire
-				// CGI_startup(client, data);
+
+				//httpRequest/httpResponse
+				httpRequest 	request;
+				httpResponse	response;
+
+				if (data.second != 0){
+						//CGI_startup temporaire
+						CGI cgi(NULL, data);
+						int cgiRet = 0;
+						//httpRequest/httpResponse
+						request.treatRequest(data.first);
+						if (request.getPath().find(".php") != std::string::npos)
+							cgiRet =cgi.CGIStartup(request.getHeaders());
+						if (cgiRet == -1)
+							std::cerr << "CGI error" << std::endl;
+						response.buildResponse(request);
+					}
 				socketEvent.sendData("HTTP/1.1 401 Unauthorized\r\nWWW-Authenticate: Basic realm=\"Access to the staging site\"\r\nConnection: keep-alive\r\nContent-length: 0\r\n\r\n");
 			}
 		}

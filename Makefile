@@ -6,7 +6,7 @@
 #    By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2022/01/21 19:56:36 by lucocozz          #+#    #+#              #
-#    Updated: 2022/03/06 19:12:12 by lucocozz         ###   ########.fr        #
+#    Updated: 2022/03/09 16:58:06 by lucocozz         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -14,7 +14,7 @@ NAME := webserv
 
 WEBSERV_PATH := $(HOME)/.config/webserv/
 
-SRC := 	main.cpp
+SRC := 	main_server.cpp
 
 MAKE = make
 MAKEFLAGS += --no-print-directory
