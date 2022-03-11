@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:59:01 by user42            #+#    #+#             */
-/*   Updated: 2022/03/10 16:09:34 by user42           ###   ########.fr       */
+/*   Updated: 2022/03/11 15:15:49 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,9 +40,18 @@ std::vector<std::string>	split(std::string str, std::string delimiter){
 	return (ret);
 }
 
-bool						ifPathExist(std::string const &path){
-	struct stat buffer;
-	return (stat(path.c_str(), &buffer) == 0);
+bool						doesFileExist(std::string const &file){
+	//need to retrieve the server path
+	std::string serverPath = "/home/user42";
+	serverPath.append(file);
+	if (access(serverPath.c_str(), F_OK) == 0){
+		std::cout << "DEBUG : path = " << serverPath << " | ret = " << access(serverPath.c_str(), F_OK) << std::endl;
+		return true;
+	}
+	else{
+		std::cout << "DEBUG : path = " << serverPath << " | ret = " << access(serverPath.c_str(), F_OK) << std::endl;
+		return false;
+	}
 }
 
 std::string					itos(int nb){

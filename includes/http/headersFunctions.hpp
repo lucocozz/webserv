@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:59:01 by user42            #+#    #+#             */
-/*   Updated: 2022/03/10 17:13:23 by user42           ###   ########.fr       */
+/*   Updated: 2022/03/11 17:02:11 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,25 +42,35 @@ std::string					getActualTime(){
 }
 
 //Last-Modified
-std::string					getFileModification(char const *path){
+std::string					getFileModification(char const *path){\
+	//need to locat where i am from the server root to adapt the path
+	std::string pathFromHere = "../../../../../";
+	pathFromHere.append(path);
+
 	struct stat sb;
-	lstat(path, &sb);
+	lstat(pathFromHere.c_str(), &sb);
 	std::string timeInfo = ctime(&sb.st_mtime);
 	std::vector<std::string> vect = split(timeInfo, " ");
+	for (size_t i = 0; i < vect.size(); i++)
+		std::cout << i << " - " << vect.at(i) << std::endl;
 	std::string ret;
-	ret.append(vect.at(0) + ", ");
-	std::string daydate;
-	if (atoi(vect.at(3).c_str()) < 10)
-		daydate = "0" + vect.at(3);
-	else
-		daydate = vect.at(3);
-
-	ret.append(daydate + " ");
-	ret.append(vect.at(1) + " ");
-	std::string year = vect.at(5);
-	year.erase(year.end() - 1);
-	ret.append(year + " ");
-	ret.append(vect.at(4) + " GMT");
+	try {
+		ret.append(vect.at(0) + ", ");
+		std::string daydate;
+		if (atoi(vect.at(3).c_str()) < 10)
+			daydate = "0" + vect.at(2);
+		else
+			daydate = vect.at(2);
+		ret.append(daydate + " ");
+		ret.append(vect.at(1) + " ");
+		std::string year = vect.at(4);
+		year.erase(year.end() - 1);
+		ret.append(year + " ");
+		ret.append(vect.at(3) + " GMT");
+	}
+	catch (std::exception const &e){
+		ret.clear();
+	}
 
 	return (ret);
 }
@@ -72,15 +82,19 @@ std::string					makeETag(char const *path){
 	std::string ret;
 
 	ret.append("W/\"");
+	
 	int mTime = sb.st_mtime;
 	std::stringstream mTimeStream;
 	mTimeStream << std::hex << mTime;
 	ret.append(mTimeStream.str());
+	
 	ret.append("-");
+	
 	int sSize = sb.st_size;
 	std::stringstream sSizeStream;
 	sSizeStream << std::hex << sSize;
 	ret.append(sSizeStream.str());
+	
 	ret.append("\"");
 
 	return (ret);

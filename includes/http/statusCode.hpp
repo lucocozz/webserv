@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:57 by user42            #+#    #+#             */
-/*   Updated: 2022/03/10 15:59:04 by user42           ###   ########.fr       */
+/*   Updated: 2022/03/11 12:25:02 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,8 @@
 #define STATUSCODE_HPP
 
 #include <string>
+
+#include "utils.hpp"
 
 enum STATUS_CODE{
 	//Information
@@ -76,5 +78,22 @@ std::map<int, std::string>	initStatusMessages(){
 }
 
 std::map<int, std::string>	statusMessages = initStatusMessages();
+
+std::string	getStatusMessage(int status){
+	return ((*statusMessages.find(status)).second);
+}
+
+
+std::string	buildErrorPage(int status){
+	std::string ret;
+
+	std::string title = itos(status) + " " + getStatusMessage(status);
+	ret.append("<html>\n<head><title>" + title + "</title></head>\n");
+	ret.append("<body>\n<center><h1>" + title + "</h1></center>\n");
+	ret.append("<hr><center>42webserv/0.0.1</center>\n");
+	ret.append("</body>\n</html>");
+
+	return (ret);
+}
 
 #endif

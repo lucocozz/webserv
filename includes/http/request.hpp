@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:46 by user42            #+#    #+#             */
-/*   Updated: 2022/03/11 01:36:51 by user42           ###   ########.fr       */
+/*   Updated: 2022/03/11 15:08:32 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -159,7 +159,7 @@ class httpRequest{
 				//		if not check Transfert-Encoding header (must be chunked);
 				//			if not return 400 BAD_REQUEST
 			}
-			if (ifPathExist(_path) == false){
+			if (doesFileExist(_path) == false){
 				this->_status = NOT_FOUND;
 				return;
 			}
