@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:46 by user42            #+#    #+#             */
-/*   Updated: 2022/03/10 15:59:04 by user42           ###   ########.fr       */
+/*   Updated: 2022/03/11 01:36:51 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -137,7 +137,7 @@ class httpRequest{
 
 		//Checking
 		void	_check(){
-			if (this->_status != OK)
+			if (this->_status / 100 == 4 || this->_status / 100 == 5)
 				return;
 			this->_checkRequestLine();
 		}
@@ -150,9 +150,14 @@ class httpRequest{
 			else if (this->_method == "POST" && this->_body.empty() == true){
 				std::map<std::string, std::string>::iterator it(this->_headers.find("Content-Length"));
 				if (it == _headers.end()){
-				this->_status = LENGTH_REQUIRED;
-				return;
+					this->_status = LENGTH_REQUIRED;
+					return;
 				}
+				//Check if Content-Length > MAX_SIZE_CONTENT
+				//	if yes check if the body size == Content-Length
+				//		if yes return 413 REQUEST_ENTITY_TOO_LARGE
+				//		if not check Transfert-Encoding header (must be chunked);
+				//			if not return 400 BAD_REQUEST
 			}
 			if (ifPathExist(_path) == false){
 				this->_status = NOT_FOUND;
