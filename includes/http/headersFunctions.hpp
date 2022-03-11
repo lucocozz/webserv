@@ -48,13 +48,13 @@ std::string					getFileModification(char const *path){
 	std::string timeInfo = ctime(&sb.st_mtime);
 	std::vector<std::string> vect = split(timeInfo, " ");
 	std::string ret;
-
 	ret.append(vect.at(0) + ", ");
 	std::string daydate;
 	if (atoi(vect.at(3).c_str()) < 10)
 		daydate = "0" + vect.at(3);
 	else
 		daydate = vect.at(3);
+
 	ret.append(daydate + " ");
 	ret.append(vect.at(1) + " ");
 	std::string year = vect.at(5);
