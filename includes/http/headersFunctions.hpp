@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:59:01 by user42            #+#    #+#             */
-/*   Updated: 2022/03/11 17:02:11 by user42           ###   ########.fr       */
+/*   Updated: 2022/03/11 18:23:32 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,17 +42,11 @@ std::string					getActualTime(){
 }
 
 //Last-Modified
-std::string					getFileModification(char const *path){\
-	//need to locat where i am from the server root to adapt the path
-	std::string pathFromHere = "../../../../../";
-	pathFromHere.append(path);
-
+std::string					getFileModification(std::string &path){\
 	struct stat sb;
-	lstat(pathFromHere.c_str(), &sb);
+	lstat(path.c_str(), &sb);
 	std::string timeInfo = ctime(&sb.st_mtime);
 	std::vector<std::string> vect = split(timeInfo, " ");
-	for (size_t i = 0; i < vect.size(); i++)
-		std::cout << i << " - " << vect.at(i) << std::endl;
 	std::string ret;
 	try {
 		ret.append(vect.at(0) + ", ");
@@ -76,9 +70,9 @@ std::string					getFileModification(char const *path){\
 }
 
 //ETag
-std::string					makeETag(char const *path){
+std::string					makeETag(std::string &path){
 	struct stat sb;
-	lstat(path, &sb);
+	lstat(path.c_str(), &sb);
 	std::string ret;
 
 	ret.append("W/\"");

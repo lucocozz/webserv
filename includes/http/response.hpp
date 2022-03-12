@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/03/11 16:11:00 by user42           ###   ########.fr       */
+/*   Updated: 2022/03/12 02:00:57 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,9 @@
 #include "request.hpp"
 #include "headersFunctions.hpp"
 #include "mimeTypes.hpp"
+
+#include <fstream>
+#include <cstdio>
 
 class httpResponse{
 	public:
@@ -38,14 +41,18 @@ class httpResponse{
 			this->_request = request;
 			this->_status = request.getStatus();
 
+			//need to locat where i am from the server root to adapt the path
+			if (_pathToRoot.empty() == false)
+				_pathToRoot.clear();
+			_pathToRoot = "../../../../..";
+			_pathToRoot.append(this->_request.getPath());
 
 			//Methods
-			if (this->_contentNeedRefresh() == true && this->_request.getMethod() == "GET")
-				this->_retrieveContent();
-			else if (this->_request.getMethod() == "POST")
+			if (this->_request.getMethod() == "POST")
 				this->_uploadContent();
 			else if (this->_request.getMethod() == "DELETE")
-				this->_deleteContent();
+				this->_delete();
+			this->_retrieveContent();
 
 			//Build the response
 			this->_buildStatusLine();
@@ -79,8 +86,9 @@ class httpResponse{
 			this->_response.append("Connection: keep-alive\r\n"); //close or keep-alive make an enum
 			//OPTIONNAL HEADERS (depending on method used if no error occurs)
 			if (this->_status / 100 == 2 || this->_status / 100 == 3){
-				this->_response.append("Last-Modified: " + getFileModification(this->_request.getPath().c_str()) + "\r\n");
-				this->_response.append("Etag: " + makeETag(this->_request.getPath().c_str()) + "\r\n");
+				std::cout << "IF I REMOVE THIS OUTPUT IT CRASH" << std::endl;
+				this->_response.append("Last-Modified: " + getFileModification(this->_pathToRoot) + "\r\n");
+				this->_response.append("Etag: " + makeETag(this->_pathToRoot) + "\r\n");
 				this->_response.append("Accept-Ranges: bytes\r\n"); //Can be none but useless, only bytes ranges is defined by RFC
 			}
 		}
@@ -90,18 +98,17 @@ class httpResponse{
 			this->_response.append(this->_content + "\r\n");
 		}
 
-		//Check if the content is needed
 		bool	_contentNeedRefresh(){
 			//Si le ETag de la ressource correspond au champs If-None-Match on renvoie 304 et pas de content (Prioritaire sur If-Modified-Since)
 			if (this->_request.findHeader("If-None-Match").empty() == false){
-				if (this->_request.findHeader("If-None-Match") == makeETag(this->_request.getPath().c_str())){
+				if (this->_request.findHeader("If-None-Match") == makeETag(this->_pathToRoot)){
 					this->_status = NOT_MODIFIED;
 					return (false);
 				}
 			}
 			//Si la date de modification de la ressource correspond au champs If-Modified-Since on renvoie 304 et pas de content
 			if (this->_request.findHeader("If-Modified-Since").empty() == false){
-				if (this->_request.findHeader("If-Modified-Since") == getFileModification(this->_request.getPath().c_str())){
+				if (this->_request.findHeader("If-Modified-Since") == getFileModification(this->_pathToRoot)){
 					this->_status = NOT_MODIFIED;
 					return (false);
 				}
@@ -109,31 +116,62 @@ class httpResponse{
 			return (true);
 		}
 
-		//Retrive the content
+		/*
+			1. Retrieve a ressource
+			1.1 GET
+			2. Upload a ressource
+			3. DELETE
+		*/
+
+		//Retrieve a ressource
 		void	_retrieveContent(){
-			//Si il y a une erreur
+			//If there is an error
 			if (this->_status / 100 == 4 || this->_status / 100 == 5){
-				buildErrorPage(this->_status);
+				this->_contentType = "text/html";
+				this->_content.append(buildErrorPage(this->_status));
 				return;
 			}
-			//GET method
-			//_get(this->_request.getPath().c_str());
+			//If there is no error but need no content
+			else if (this->_status / 100 == 2 && this->_request.getMethod() != "GET")
+				return;
+
 			//Temporary
-			this->_content.append("<html>\n<head><title>Welcome to 42webserv</title></head>\n");
-			this->_content.append("<center><h3>" + itos(this->_status) + " " + getStatusMessage(this->_status) + "</h3></center>");
-			this->_content.append("<body>\n<center><h1>Welcome to 42webserv !</h1></center>\n");
-			this->_content.append("<p><center>If you see this page, the 42webserv is successfully installed and working. Further configuration is required.</center></p>\n");
-			this->_content.append("<hr><center>42webserv/0.0.1</center>\n");
-			this->_content.append("</body>\n</html>");
-			this->_contentType = getMimeTypes(this->_request.getPath().c_str());
+			if (this->_request.getMethod() == "GET" && this->_request.getPath() == "/"){
+				this->_content.append("<html>\n<head><title>Welcome to 42webserv</title></head>\n");
+				this->_content.append("<center><h3>" + itos(this->_status) + " " + getStatusMessage(this->_status) + "</h3></center>");
+				this->_content.append("<body>\n<center><h1>Welcome to 42webserv !</h1></center>\n");
+				this->_content.append("<p><center>If you see this page, the 42webserv is successfully installed and working. Further configuration is required.</center></p>\n");
+				this->_content.append("<hr><center>42webserv/0.0.1</center>\n");
+				this->_content.append("</body>\n</html>");
+				this->_contentType = getMimeTypes("text/html");
+			}
+			//GET method
+			else if (this->_request.getMethod() == "GET")
+				this->_get(this->_pathToRoot);
 		}
 
+		void	_get(std::string &path){
+			this->_contentType = getMimeTypes(path.c_str());
+			
+			std::ifstream indata(path.c_str());
+			std::stringstream buff;
+			buff << indata.rdbuf();
+			this->_content.append(buff.str());
+			//this->_content.append(path.c_str());
+		}
+
+		//Upload a ressource
 		void	_uploadContent(){
 			return;
 		}
 
-		void	_deleteContent(){
-			 return;
+		//Delete a ressource
+		void	_delete(){
+			if (remove(this->_pathToRoot.c_str()) != 0){
+				this->_status = METHOD_NOT_ALLOWED;
+				return;
+			}
+			return;
 		}
 
 		//Members
@@ -142,6 +180,7 @@ class httpResponse{
 		int								_status;
 		std::string						_content;
 		std::string						_contentType;
+		std::string						_pathToRoot;
 
 		std::string						_response;
 };//end of class httpResponse
