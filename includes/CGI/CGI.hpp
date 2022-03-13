@@ -11,10 +11,11 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <map>
+#include <exception>
 
-#include "../../includes/socket/Epoll.hpp"
-#include "../../includes/socket/Socket.hpp"
-#include "../../includes/socket/EpollSocket.hpp"
+#include "../socket/Epoll.hpp"
+#include "../socket/Socket.hpp"
+#include "../socket/EpollSocket.hpp"
 
 #include "URLDecoder.hpp"
 
@@ -67,52 +68,137 @@ private:
 
 public:
 
-    CGI(const SocketInfo ServerInfo, const RequestData &data): 
+    CGI(const SocketInfo ServerInfo, const RequestData &data, std::map<std::string, std::string> headers): 
     _serverInfo(ServerInfo),
     _headerSize(data.second),
     _headerContent(data.first),
     _encodedURL(_setURL()),
     _decodedURL(_decodeUrl()),
     _mapMetaVars(){
+        _setMapEnvVar(headers);
     }
 
     ~CGI(){
     }
 
-    std::map<std::string, std::string>  &getEnvVar() {
-        return (_mapMetaVars);
-    }
-
-
-    int CGIStartup(std::map<std::string, std::string> headers){
+    std::string CGIStartup(){
+        char                                                readBuffer[1024];
+        std::string                                         bodyResult;
         pid_t                                               pid;
-        std::map<const std::string, std::string>::iterator  itb;
+        int                                                 fds[2];
         char                                                **cMetaVar;
-        char *const                                         *nullArgs = NULL;
 
-        _setMapEnvVar(headers);
-        itb = this->_mapMetaVars.begin();
-        cMetaVar = _createEnvVar(itb);
+        cMetaVar = _createCMetaVar();
         std::cout << "vars " << std::endl;
         for (size_t i = 0;cMetaVar[i]; i++){
             std::cout << "envvar " << cMetaVar[i] << std::endl;
         }
-        std::string tmppath("/home/user42/webserv/includes/CGI/");
-        tmppath.append(_mapMetaVars.find("SCRIPT_NAME=")->second);
+        if (pipe(fds) < 0)
+            throw pipeError();
         if ((pid = fork()) == -1)
-            return (errno);
-        if (pid == 0){
-            execve(tmppath.c_str(), nullArgs, cMetaVar);
-            std::cerr << "Execve error code: " << errno << std::endl;
-            exit(errno);
+            throw forkError();
+
+        if (pid == 0)
+            childProcess(fds, cMetaVar);
+        
+        if (waitChild(pid) > 0)
+            throw execveError(errno);
+        
+        while (read(fds[1], readBuffer, 1024) > 0){
+            bodyResult += readBuffer;
+            bzero(readBuffer, 1024);
         }
-        waitpid(pid, NULL, 0);
+        bodyResult += readBuffer;
+        close(fds[0]);
+        close(fds[1]);
         for (size_t i = 0; cMetaVar[i]; i++)
             delete [] cMetaVar[i];
         delete [] cMetaVar;
-        return (errno);
+        return (bodyResult);
     }
 
+    char **_createCMetaVar(){
+        char                                                **cEnvVar;
+        size_t                                              i;
+        std::string                                         join;
+        std::map<const std::string, std::string>::iterator  itb;
+
+        itb = this->_mapMetaVars.begin();
+        cEnvVar = new char *[this->_mapMetaVars.size() + 1];
+        i = 0;
+        while(i < this->_mapMetaVars.size()){
+            cEnvVar[i] = new char [itb->first.size() + itb->second.size() + 1];
+            join = static_cast<std::string>(itb->first).append(itb->second);
+            strcpy(cEnvVar[i], join.c_str());
+            itb++;
+            i++;
+        }
+        cEnvVar[i] = NULL;
+        return (cEnvVar);
+    }
+
+    void childProcess(int fds[2], char **cMetaVar){
+        char *const *nullArgs = NULL;
+        std::string tmppath("/home/user42/webserv/includes/CGI/");
+
+        tmppath.append(_mapMetaVars.find("SCRIPT_NAME=")->second);
+
+        dup2(fds[0], 0);
+        close(fds[0]);
+            
+        //If post
+        dup2(fds[1], 1);
+        close (fds[1]);
+
+        if (chdir(_mapMetaVars.find("PATH_TRANSLATED=")->second.c_str()) == -1)
+            throw chdirError();
+        
+        execve(tmppath.c_str(), nullArgs, cMetaVar);
+        exit(errno);
+    }
+
+    int waitChild(pid_t pid){
+        int exitStatus;
+        int exitCode;
+
+        exitStatus = 0;
+        exitCode = 0;
+        waitpid(pid, &exitStatus, 0);
+        if (WIFEXITED(exitStatus))
+            exitCode = WEXITSTATUS(exitStatus);
+        return (exitCode);
+    }
+    
+    struct execveError : public std::exception{
+        execveError(int errorCode): _errorCode(errorCode){}
+
+        const char *what() const throw(){
+            std::string ret("execve error ");
+
+            ret += strerror(_errorCode);
+            return (ret.c_str());
+        }
+    private:
+        int _errorCode;
+    };
+
+    struct pipeError : public std::exception{
+        const char *what() const throw(){
+            return ("pipe error");
+        }
+    };
+
+    struct forkError : public std::exception{
+        const char *what() const throw(){
+            return ("fork error");
+        }
+    };
+
+    struct chdirError : public std::exception{
+        const char *what() const throw(){
+            return ("chdir error");
+        }
+    };
 
 private:
     void    _setMapEnvVar(std::map<std::string, std::string> headers){
@@ -377,25 +463,6 @@ private:
         formated.append("=");
         ret.append(formated);
         return(ret);
-    }
-
-    char **_createEnvVar(std::map<std::string, std::string>::iterator it){
-        char        **cEnvVar;
-        std::string join;
-        size_t      i;
-    
-        cEnvVar = new char *[this->_mapMetaVars.size() + 1];
-        i = 0;
-        it = this->_mapMetaVars.begin();
-        while(i < this->_mapMetaVars.size()){
-            cEnvVar[i] = new char [it->first.size() + it->second.size() + 1];
-            join = static_cast<std::string>(it->first).append(it->second);
-            strcpy(cEnvVar[i], join.c_str());
-            it++;
-            i++;
-        }
-        cEnvVar[i] = NULL;
-        return (cEnvVar);
     }
 };
 
