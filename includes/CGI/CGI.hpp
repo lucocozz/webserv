@@ -207,7 +207,6 @@ private:
         _setServerName(headers);
         _setGatewayInterface();
         _setHtppVariables(headers);
-
         _setServerProtocol();
         _setServerPort();
         _setRequestMethod();
