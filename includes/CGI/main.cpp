@@ -69,7 +69,14 @@ void	server(EpollSocket &local)
 
 						response.buildResponse(request);
 					}
-				socketEvent.sendData("HTTP/1.1 401 Unauthorized\r\nWWW-Authenticate: Basic realm=\"Access to the staging site\"\r\nConnection: keep-alive\r\nContent-length: 0\r\n\r\n");
+				std::cout << data.first << std::endl;
+				if (data.second == 0)
+				{
+					epoll.control(EPOLL_CTL_DEL, socketEvent);
+					socketEvent.closeSocket();
+				}
+				else
+					response.sendResponse(socketEvent);
 			}
 		}
 	}

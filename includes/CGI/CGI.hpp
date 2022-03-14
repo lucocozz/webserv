@@ -86,6 +86,7 @@ public:
         std::string                                         bodyResult;
         pid_t                                               pid;
         int                                                 fds[2];
+        int                                                 storeStd[2];
         char                                                **cMetaVar;
 
         cMetaVar = _createCMetaVar();
@@ -93,6 +94,9 @@ public:
         for (size_t i = 0;cMetaVar[i]; i++){
             std::cout << "envvar " << cMetaVar[i] << std::endl;
         }
+        storeStd[0] = dup(STDIN_FILENO);
+        storeStd[1] = dup(STDOUT_FILENO);
+
         if (pipe(fds) < 0)
             throw pipeError();
         if ((pid = fork()) == -1)
@@ -108,9 +112,12 @@ public:
             bodyResult += readBuffer;
             bzero(readBuffer, 1024);
         }
-        bodyResult += readBuffer;
+        dup2(storeStd[0], STDIN_FILENO);
+        dup2(storeStd[1], STDOUT_FILENO);
         close(fds[0]);
         close(fds[1]);
+        close(storeStd[0]);
+        close(storeStd[1]);
         for (size_t i = 0; cMetaVar[i]; i++)
             delete [] cMetaVar[i];
         delete [] cMetaVar;
@@ -139,21 +146,17 @@ public:
 
     void childProcess(int fds[2], char **cMetaVar){
         char *const *nullArgs = NULL;
-        std::string tmppath("/home/user42/webserv/includes/CGI/");
+        std::string path(_mapMetaVars.find("PATH_TRANSLATED=")->second.c_str());
 
-        tmppath.append(_mapMetaVars.find("SCRIPT_NAME=")->second);
-
+        path.erase(path.rfind('/') + 1, path.size() - path.rfind('/'));
         dup2(fds[0], 0);
         close(fds[0]);
             
-        //If post
-        dup2(fds[1], 1);
-        close (fds[1]);
-
-        if (chdir(_mapMetaVars.find("PATH_TRANSLATED=")->second.c_str()) == -1)
-            throw chdirError();
-        
-        execve(tmppath.c_str(), nullArgs, cMetaVar);
+        // //If post
+        // dup2(fds[1], 1);
+        // close (fds[1]);
+        chdir(path.c_str());  
+        execve(_mapMetaVars.find("SCRIPT_NAME=")->second.c_str(), nullArgs, cMetaVar);
         exit(errno);
     }
 
@@ -163,6 +166,7 @@ public:
 
         exitStatus = 0;
         exitCode = 0;
+        std::cerr << "waiting " << std::endl;
         waitpid(pid, &exitStatus, 0);
         if (WIFEXITED(exitStatus))
             exitCode = WEXITSTATUS(exitStatus);
