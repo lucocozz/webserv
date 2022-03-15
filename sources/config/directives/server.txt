@@ -1,6 +1,9 @@
 root
 index
 listen
+autoindex
 error_log
+error_page
 access_log
 server_name
+client_max_body_size

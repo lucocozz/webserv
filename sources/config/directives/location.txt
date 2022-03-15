@@ -1,3 +1,1 @@
-autoindex
-error_page
-client_max_body_size
+

@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/03 01:11:36 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/03/14 17:18:51 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/03/15 22:16:39 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,10 @@
 
 #ifndef DEFAULT_PORT
 # define DEFAULT_PORT "8080"
+#endif
+
+#ifndef DEFAULT_ROOT
+# define DEFAULT_ROOT "/var/www/"
 #endif
 
 struct LocationContext
@@ -82,6 +86,29 @@ private:
 	void	_checkConfig(void)
 	{
 		this->_checkPortValidity();
+		this->_checkDefaultErrorPage();
+		this->_checkDefaultRoot();
+	}
+
+	void	_checkDefaultRoot(void)
+	{
+		for (size_t i = 0; i < this->servers.size(); ++i)
+		{
+			if (this->servers[i].directives.find("root") == this->servers[i].directives.end())
+				this->servers[i].directives["root"].push_back(DEFAULT_ROOT);
+		}
+	}
+
+	void	_checkDefaultErrorPage(void)
+	{
+		for (size_t i = 0; i < this->servers.size(); ++i)
+		{
+			for (size_t j = 0; j < this->servers[i].locations.size(); ++j)
+			{
+				if (this->servers[i].locations[j].directives.find("error_page") == this->servers[i].locations[j].directives.end())
+					this->servers[i].locations[j].directives["error_page"].push_back(std::string(WEBSERV_PATH) + "/pages/error.html");
+			}
+		}
 	}
 
 	void	_checkPortValidity(void)

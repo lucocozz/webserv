@@ -6,7 +6,7 @@
 #    By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2022/01/21 19:56:36 by lucocozz          #+#    #+#              #
-#    Updated: 2022/03/14 16:50:41 by lucocozz         ###   ########.fr        #
+#    Updated: 2022/03/15 22:10:44 by lucocozz         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -14,6 +14,7 @@ NAME := webserv
 
 WEBSERV_PATH := $(HOME)/.config/webserv/
 DEFAULT_PORT := 8080
+DEFAULT_ROOT := /var/www/
 
 SRC := 	main.cpp	\
 		server.cpp
@@ -51,6 +52,6 @@ $(BUILD_DIR):
 	mkdir $@
 
 $(BUILD_DIR)/%.o: %.cpp | $(BUILD_DIR)
-	$(CXX) $(CXXFLAGS) $(INCLUDES_DIR:%=-I %) -D WEBSERV_PATH='"$(WEBSERV_PATH)"' -D DEFAULT_PORT='"$(DEFAULT_PORT)"' -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(INCLUDES_DIR:%=-I %) -D WEBSERV_PATH='"$(WEBSERV_PATH)"' -D DEFAULT_PORT='"$(DEFAULT_PORT)"' -D DEFAULT_ROOT='"$(DEFAULT_ROOT)"' -c $< -o $@
 
 .PHONY: all clean fclean re test
