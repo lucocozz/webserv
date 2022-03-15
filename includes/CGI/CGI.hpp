@@ -64,7 +64,10 @@ private:
     std::string                         _headerContent;
     std::string                         _encodedURL;
     std::string                         _decodedURL;
+    std::string                         _cgiExtension;
+    std::string                         _cgiBinary;
     std::map<std::string, std::string>  _mapMetaVars;
+
 
 public:
 
@@ -74,6 +77,8 @@ public:
     _headerContent(data.first),
     _encodedURL(_setURL()),
     _decodedURL(_decodeUrl()),
+    _cgiExtension(".php"),
+    _cgiBinary("php-cgi"),
     _mapMetaVars(){
         _setMapEnvVar(headers);
     }
@@ -104,10 +109,10 @@ public:
 
         if (pid == 0)
             childProcess(fds, cMetaVar);
-        
         if (waitChild(pid) > 0)
             throw execveError(errno);
-        
+        dup2(fds[1], STDOUT_FILENO);
+        close (fds[1]);
         while (read(fds[1], readBuffer, 1024) > 0){
             bodyResult += readBuffer;
             bzero(readBuffer, 1024);
@@ -125,38 +130,38 @@ public:
     }
 
     char **_createCMetaVar(){
-        char                                                **cEnvVar;
+        char                                                **CMetaVar;
         size_t                                              i;
         std::string                                         join;
         std::map<const std::string, std::string>::iterator  itb;
 
         itb = this->_mapMetaVars.begin();
-        cEnvVar = new char *[this->_mapMetaVars.size() + 1];
+        CMetaVar = new char *[this->_mapMetaVars.size() + 1];
         i = 0;
         while(i < this->_mapMetaVars.size()){
-            cEnvVar[i] = new char [itb->first.size() + itb->second.size() + 1];
+            CMetaVar[i] = new char [itb->first.size() + itb->second.size() + 1];
             join = static_cast<std::string>(itb->first).append(itb->second);
-            strcpy(cEnvVar[i], join.c_str());
+            strcpy(CMetaVar[i], join.c_str());
             itb++;
             i++;
         }
-        cEnvVar[i] = NULL;
-        return (cEnvVar);
+        CMetaVar[i] = NULL;
+        return (CMetaVar);
     }
 
     void childProcess(int fds[2], char **cMetaVar){
-        char *const *nullArgs = NULL;
-        std::string path(_mapMetaVars.find("PATH_TRANSLATED=")->second.c_str());
+        char **args = new char*[2];
+        std::string path("/home/user42/webserv/includes/CGI/cgi-bin");
 
-        path.erase(path.rfind('/') + 1, path.size() - path.rfind('/'));
-        dup2(fds[0], 0);
+        args[0] = strdupa(_mapMetaVars.find("SCRIPT_NAME=")->second.c_str());
+        args[1] = NULL;
+
+        dup2(fds[0], STDIN_FILENO);
         close(fds[0]);
-            
-        // //If post
-        // dup2(fds[1], 1);
-        // close (fds[1]);
-        chdir(path.c_str());  
-        execve(_mapMetaVars.find("SCRIPT_NAME=")->second.c_str(), nullArgs, cMetaVar);
+
+        chdir(path.c_str());
+        std::cerr << "CGI OUTPUT " <<  "args1 "<<  args[0] << std::endl;
+        execve("/usr/bin/php-cgi", args, cMetaVar);
         exit(errno);
     }
 
@@ -166,25 +171,27 @@ public:
 
         exitStatus = 0;
         exitCode = 0;
-        std::cerr << "waiting " << std::endl;
         waitpid(pid, &exitStatus, 0);
         if (WIFEXITED(exitStatus))
             exitCode = WEXITSTATUS(exitStatus);
         return (exitCode);
     }
     
-    struct execveError : public std::exception{
-        execveError(int errorCode): _errorCode(errorCode){}
+   class execveError: public std::exception {
 
-        const char *what() const throw(){
-            std::string ret("execve error ");
+    public:
+        execveError(int errorCode):
+        _errorMessage(strerror(errorCode))
+        {}
 
-            ret += strerror(_errorCode);
-            return (ret.c_str());
+        virtual ~execveError() throw () {}
+        const char* what() const throw () {
+            return (_errorMessage.c_str());
         }
     private:
-        int _errorCode;
-    };
+        std::string _errorMessage;
+
+};
 
     struct pipeError : public std::exception{
         const char *what() const throw(){
@@ -213,6 +220,7 @@ private:
         _setHtppVariables(headers);
         _setServerProtocol();
         _setServerPort();
+        _setRequestUri();
         _setRequestMethod();
         _setPathInfo();
         _setPathTranslated();
@@ -224,7 +232,7 @@ private:
         _setAuthType();
         _setContentType();
         _setContentLength();
-        _setRequestUri();
+        _setRedirectStatus();
 
     }
 
@@ -301,54 +309,33 @@ private:
     }
 
     void _setPathInfo(){
-        std::string         varName("PATH_INFO=");
-        std::string         pathInfo("/");
-        const std::string   cgiExtension(".php"); 
-        size_t              begin;
-        size_t              end;
+        std::string varName("PATH_INFO=");
+        std::string pathInfo("");
+        std::string uri(_mapMetaVars.find("REQUEST_URI=")->second);
         
-        begin = this->_decodedURL.find(cgiExtension, 0) + cgiExtension.size();
-        end =  _decodedURL.size() - begin;
-        if (end == 0 || (begin + 1 == cgiExtension.size())){
-            _mapMetaVars.insert(std::make_pair(varName, ""));
-            return ;
-        }
-        pathInfo = this->_decodedURL.substr(begin, end);
-        this->_mapMetaVars.insert(std::make_pair(varName, pathInfo));
+        this->_mapMetaVars.insert(std::make_pair(varName, uri));
     }
 
     void _setPathTranslated(){
         std::string varName("PATH_TRANSLATED=");
-        std::string path("");
-        std::string wd(get_current_dir_name());
-        size_t      eraseBegin;
-        size_t      eraseEnd;
+        std::string pathTranslated("");
+        std::string uri(_mapMetaVars.find("REQUEST_URI=")->second);
 
-        eraseBegin = _decodedURL.find(_mapMetaVars.find("PATH_INFO=")->second, 0);
-        eraseEnd = _decodedURL.size() - eraseBegin;
-        if (eraseBegin == 0){
-            _mapMetaVars.insert(std::make_pair(varName, wd.append(_decodedURL)));
-            return ;
-        }
-        path = _decodedURL.erase(eraseBegin, eraseEnd);
-        //wd should be the path from the root of the server
-        this->_mapMetaVars.insert(std::make_pair(varName, wd.append(path)));
+        this->_mapMetaVars.insert(std::make_pair(varName, uri));
     }
 
     void _setScriptName(){
         std::string varName("SCRIPT_NAME=");
-        std::string     name("");
-        size_t          begin;
-        size_t          end = 0;
+        std::string name("");
+        size_t      begin;
+        size_t      end = 0;
 
-        begin = this->_decodedURL.find("cgi-bin/", _decodedURL.find('/'));
+        begin = this->_decodedURL.rfind('/', _decodedURL.find(_cgiExtension)) + 1;
         if (begin == std::string::npos || end == std::string::npos){
             _mapMetaVars.insert(std::make_pair(varName, name));
             return ;
         }
-        begin += 8;
-        end = this->_decodedURL.find(".php", begin) - (begin - 5) - 1;
-        // may change depending on how the location is managed
+        end = (this->_decodedURL.find(_cgiExtension) + 4) - begin;
         name = this->_decodedURL.substr(begin, end);
         this->_mapMetaVars.insert(std::make_pair(varName, name));
     }
@@ -441,6 +428,13 @@ private:
         this->_mapMetaVars.insert(std::make_pair(varName, uri));
     }
     
+    void _setRedirectStatus(){
+        std::string varName("REDIRECT_STATUS=");
+        std::string status("200");
+
+        this->_mapMetaVars.insert(std::make_pair(varName, status));
+    }
+
     void _setHtppVariables(std::map<std::string, std::string> &headers){
         std::map<std::string, std::string>::iterator itb = headers.begin();
         std::string                                  varName;

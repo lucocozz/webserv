@@ -62,7 +62,8 @@ void	server(EpollSocket &local)
 								CGI cgi(NULL, data, request.getHeaders());
 								cgi.CGIStartup();
 							}
-							catch(std::exception &e){
+							catch(const std::exception &e){
+								std::cout << "catching " << std::endl;
 								std::cout << e.what() << std::endl;
 							}
 						}
