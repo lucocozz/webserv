@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/03 01:09:40 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/03/08 21:41:11 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/03/14 16:52:46 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -162,7 +162,7 @@ private:
 		std::ifstream	directivesFile;
 		std::string		path(WEBSERV_PATH);
 
-		path += ("config/directives/" + file);
+		path += ("directives/" + file);
 		directivesFile.open(path.c_str());
 		if (directivesFile.is_open() == false)
 			throw (std::runtime_error("Can't open file: " + path));
