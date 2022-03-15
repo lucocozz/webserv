@@ -6,53 +6,14 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/23 22:47:36 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/03/10 13:11:47 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/03/10 15:28:53 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "./Epoll.hpp"
-#include "./Socket.hpp"
-#include "./EpollSocket.hpp"
-
-// #include "../CGI/ClassCGI.hpp"
-
-void	server(EpollSocket &local)
-{
-	int			nfds;
-	Epoll		epoll;
-	EpollSocket	socketEvent;
-
-	local.events(EPOLLIN | EPOLLRDHUP);
-	epoll.control(EPOLL_CTL_ADD, local);
-	while (true)
-	{
-		nfds = epoll.wait();
-		for (int n = 0; n < nfds; ++n)
-		{
-			socketEvent = epoll.socketAt(n);
-			if (socketEvent.listener() == local.listener())
-			{
-				EpollSocket	client(local.acceptConnection(), EPOLLIN | EPOLLET | EPOLLRDHUP);
-
-				client.setNonBlocking();
-				epoll.control(EPOLL_CTL_ADD, client);
-			}
-			else if (socketEvent.events() & (EPOLLERR | EPOLLRDHUP | EPOLLHUP))
-			{
-				epoll.control(EPOLL_CTL_DEL, socketEvent);
-				socketEvent.closeSocket();
-			}
-			else if (socketEvent.events() & EPOLLIN)
-			{
-				std::pair<std::string, int>	data = socketEvent.recvData();
-				std::cout << data.first << std::endl;
-				//CGI_startup temporaire
-				// CGI_startup(client, data);
-				socketEvent.sendData("HTTP/1.1 401 Unauthorized\r\nWWW-Authenticate: Basic realm=\"Access to the staging site\"\r\nConnection: keep-alive\r\nContent-length: 0\r\n\r\n");
-			}
-		}
-	}
-}
+#include "Epoll.hpp"
+#include "Socket.hpp"
+#include "EpollSocket.hpp"
+#include "server.hpp"
 
 int	main()
 {
