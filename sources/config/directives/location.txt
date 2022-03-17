@@ -1,1 +1,2 @@
-
+cgi_extension
+cgi_binary

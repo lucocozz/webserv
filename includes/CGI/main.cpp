@@ -10,6 +10,8 @@
 /*                                                                            */
 /* ************************************************************************** */
 
+
+#include "../config/Config.hpp"
 #include "../socket/Epoll.hpp"
 #include "../socket/Socket.hpp"
 #include "../socket/EpollSocket.hpp"
@@ -17,9 +19,50 @@
 #include "../http/response.hpp"
 #include "../http/request.hpp"
 
-// #include "../CGI/ClassCGI.hpp"
+static void	handleConnection(Epoll &epoll, EpollSocket &local)
+{
+	EpollSocket	client(local.acceptConnection(), EPOLLIN | EPOLLET | EPOLLRDHUP);
 
-void	server(EpollSocket &local)
+	client.setNonBlocking();
+	epoll.control(EPOLL_CTL_ADD, client);
+}
+
+static void	handleDeconnection(Epoll &epoll, EpollSocket &client)
+{
+	epoll.control(EPOLL_CTL_DEL, client);
+	client.shutdownSocket();
+	client.closeSocket();
+}
+
+static void	handleInput(EpollSocket &client, const Config &serverConfig)
+{
+	std::pair<std::string, int>	data;
+	
+	data = client.recvData();
+	std::cout << data.first << std::endl;
+	//httpRequest/httpResponse
+	httpRequest 	request;
+	httpResponse	response;
+	request.treatRequest(data.first);
+	if (request.getPath().find(".php") != std::string::npos){
+		try{
+			//serverConfig.servers[0] ->  will change depending on what server we work on
+			//serverConfig.servers[0].locations[0] -> will change depending on what location we work on
+			std::pair<ServerContext, LocationContext > serverLocation = 
+			std::make_pair(serverConfig.servers[0], serverConfig.servers[0].locations[0]);
+
+			CGI cgi(data, request.getHeaders(), serverLocation);
+			cgi.CGIStartup();
+		}
+		catch(const std::exception &e){
+			std::cout << e.what() << std::endl;
+		}
+	}
+	response.buildResponse(request);
+	response.sendResponse(client);
+}
+
+void	server(EpollSocket &local, const Config &serverConfig)
 {
 	int			nfds;
 	Epoll		epoll;
@@ -34,57 +77,27 @@ void	server(EpollSocket &local)
 		{
 			socketEvent = epoll.socketAt(n);
 			if (socketEvent.listener() == local.listener())
-			{
-				EpollSocket	client(local.acceptConnection(), EPOLLIN | EPOLLET | EPOLLRDHUP);
-
-				client.setNonBlocking();
-				epoll.control(EPOLL_CTL_ADD, client);
-			}
+				handleConnection(epoll, local);
 			else if (socketEvent.events() & (EPOLLERR | EPOLLRDHUP | EPOLLHUP))
-			{
-				epoll.control(EPOLL_CTL_DEL, socketEvent);
-				socketEvent.closeSocket();
-			}
+				handleDeconnection(epoll, socketEvent);
 			else if (socketEvent.events() & EPOLLIN)
-			{
-				std::pair<std::string, int>	data = socketEvent.recvData();
-				std::cout << data.first << std::endl;
-
-				//httpRequest/httpResponse
-				httpRequest 	request;
-				httpResponse	response;
-
-				if (data.second != 0){
-						request.treatRequest(data.first);
-
-						if (request.getPath().find(".php") != std::string::npos){
-							try{
-								CGI cgi(NULL, data, request.getHeaders());
-								cgi.CGIStartup();
-							}
-							catch(const std::exception &e){
-								std::cout << "catching " << std::endl;
-								std::cout << e.what() << std::endl;
-							}
-						}
-
-						response.buildResponse(request);
-					}
-				std::cout << data.first << std::endl;
-				if (data.second == 0)
-				{
-					epoll.control(EPOLL_CTL_DEL, socketEvent);
-					socketEvent.closeSocket();
-				}
-				else
-					response.sendResponse(socketEvent);
-			}
+				handleInput(socketEvent, serverConfig);
 		}
 	}
 }
 
+
 int	main()
 {
+	Config	config;
+
+	try {
+		config.parse(std::string(WEBSERV_PATH) + "sites_availables/default.conf");
+		std::cout << config.servers[0].locations[0].directives.at("cgi_extension")[0] << std::endl;
+	}
+	catch (const std::exception &e) {
+		std::cerr << e.what() << std::endl;
+	}
 	try {
 		EpollSocket	local;
 
@@ -92,7 +105,7 @@ int	main()
 		local.setSockOpt(SOL_SOCKET, SO_REUSEADDR, 1);
 		local.bindSocket();
 		local.listenSocket();
-		server(local);
+		server(local, config);
 		local.closeSocket();
 	}
 	catch (const std::exception &e) {

@@ -54,12 +54,10 @@
 
 class CGI{
 public:
-    typedef             struct addrinfo             *SocketInfo;
-    typedef             std::pair<std::string, int> RequestData;
-
+    typedef             std::pair<std::string, int>                         requestData; 
+    typedef             std::pair<ServerContext, LocationContext >          serverLocation;
 private:
-    //SocketInfo      _clientInfo;
-    SocketInfo                          _serverInfo;
+    
     size_t                              _headerSize;
     std::string                         _headerContent;
     std::string                         _encodedURL;
@@ -71,16 +69,15 @@ private:
 
 public:
 
-    CGI(const SocketInfo ServerInfo, const RequestData &data, std::map<std::string, std::string> headers): 
-    _serverInfo(ServerInfo),
+    CGI(const requestData &data, std::map<std::string, std::string> headers, const serverLocation &serverLocation): 
     _headerSize(data.second),
     _headerContent(data.first),
     _encodedURL(_setURL()),
     _decodedURL(_decodeUrl()),
-    _cgiExtension(".php"),
-    _cgiBinary("php-cgi"),
+    _cgiExtension(serverLocation.second.directives.at("cgi_extension")[0]),
+    _cgiBinary(serverLocation.second.directives.at("cgi_binary")[0]),
     _mapMetaVars(){
-        _setMapEnvVar(headers);
+        _setMapEnvVar(headers, serverLocation.first);
     }
 
     ~CGI(){
@@ -160,7 +157,6 @@ public:
         close(fds[0]);
 
         chdir(path.c_str());
-        std::cerr << "CGI OUTPUT " <<  "args1 "<<  args[0] << std::endl;
         execve("/usr/bin/php-cgi", args, cMetaVar);
         exit(errno);
     }
@@ -212,14 +208,14 @@ public:
     };
 
 private:
-    void    _setMapEnvVar(std::map<std::string, std::string> headers){
+    void    _setMapEnvVar(std::map<std::string, std::string> headers, const ServerContext &serverInfo){
 
         _setServerSoftware();
         _setServerName(headers);
         _setGatewayInterface();
         _setHtppVariables(headers);
         _setServerProtocol();
-        _setServerPort();
+        _setServerPort(serverInfo.directives.find("listen")->second[1]);
         _setRequestUri();
         _setRequestMethod();
         _setPathInfo();
@@ -291,9 +287,8 @@ private:
         this->_mapMetaVars.insert(std::make_pair(varName, name_version));
     }
 
-    void _setServerPort(){
+    void _setServerPort(std::string port){
         std::string     varName("SERVER_PORT=");
-        std::string     port("8080");
 
         this->_mapMetaVars.insert(std::make_pair(varName, port));
     }
@@ -417,14 +412,8 @@ private:
 
     void _setRequestUri(){
         std::string varName("REQUEST_URI=");
-        std::string uri("");
-        std::string scheme("http://");
-        std::string serverName(this->_mapMetaVars.find("SERVER_NAME=")->second);
-        serverName.append(":");
-        std::string serverPort(this->_mapMetaVars.find("SERVER_PORT=")->second);
-        std::string url(_encodedURL);
+        std::string uri(_encodedURL);
 
-        uri = scheme.append(serverName).append(serverPort).append(url);
         this->_mapMetaVars.insert(std::make_pair(varName, uri));
     }
     
