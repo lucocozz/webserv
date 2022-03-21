@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/16 23:19:48 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/03/02 22:12:17 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/03/17 16:59:55 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,8 +14,8 @@
 # define EPOLLSOCKET_HPP
 
 #include <string>
-#include "./Socket.hpp"
-#include "./Epoll.hpp"
+#include <sys/epoll.h>
+#include "Socket.hpp"
 
 class EpollSocket: public Socket
 {

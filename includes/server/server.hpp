@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:19:24 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/03/10 15:25:59 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/03/17 16:20:45 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,4 +14,4 @@
 
 #include "EpollSocket.hpp"
 
-void	server(EpollSocket &local);
+void	server(std::vector<EpollSocket> &localServers, Config &config);
