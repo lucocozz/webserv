@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/03/21 18:56:04 by user42           ###   ########.fr       */
+/*   Updated: 2022/03/22 00:52:33 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,10 @@
 
 #include <fstream>
 #include <cstdio>
+
+#include <dirent.h>
+#include <sys/types.h>
+
 
 class httpResponse{
 	public:
@@ -42,11 +46,8 @@ class httpResponse{
 			this->_request = request;
 			this->_status = request.getStatus();
 
-			//DEBUG
-			std::cout << "SERVER NAME = " << this->_request.getServerName() << std::endl;
-			std::cout << "ROOT PATH = " << this->_request.getRootPath() << std::endl;
 			//need to locat where i am from the server root to adapt the path
-			
+			//this->_pathToRoot = this->_request.getRootPath() + this->_request.getPath() + "\r\n";
 			this->_pathToRoot = "../../../../..";
 			this->_pathToRoot.append(this->_request.getPath());
 
@@ -86,6 +87,8 @@ class httpResponse{
 			if (this->_status / 100 == 2 || this->_status / 100 == 3){
 				this->_response.append("Last-Modified: " + getFileModification(this->_pathToRoot) + "\r\n");
 				this->_response.append("Etag: " + makeETag(this->_pathToRoot) + "\r\n");
+				//this->_response.append("Last-Modified: " + getFileModification(this->_request.getRootPath() + this->_request.getPath() + "\r\n");
+				//this->_response.append("Etag: " + makeETag(this->_request.getRootPath() + this->_request.getPath() + "\r\n");
 				this->_response.append("Accept-Ranges: bytes\r\n"); //Can be none but useless, only bytes ranges is defined by RFC
 			}
 		}
@@ -95,14 +98,64 @@ class httpResponse{
 			this->_response.append(this->_content + "\r\n");
 		}
 
+		int			_statusIsCustom(int status){
+			std::vector<std::string> vecError = this->_request.getErrorPage().first;
+			size_t i;
+			for (i = 0; i < vecError.size(); i++){
+				char *charConfig = new char[(vecError.at(i) + ".html").size()];
+				char *charStatus = new char[(itos(status) + ".html").size()];
+				strcpy(charStatus, (itos(status) + ".html").c_str());
+				strcpy(charConfig, (vecError.at(i) + ".html").c_str());
+				if (match(charConfig, charStatus) == true){
+					delete [] charConfig;
+					delete [] charStatus;
+					return (i);
+				}
+				delete [] charConfig;
+				delete [] charStatus;
+			}
+			return (-1);
+		}
+
 		std::string	_buildErrorPage(int status){
 			std::string ret;
 
-			if (this->_request.getErrorPage().second == true){
-				//if (match(...) == true)
-					ret.append("Custom error page\n");
-				//else
-				//	ret.append(buildErrorPage(status));
+			if (this->_request.getErrorPage().second == true && this->_statusIsCustom(status) != -1){
+				std::string errorPagesPath = this->_request.getRootPath() + this->_request.getErrorPage().first.at( this->_request.getErrorPage().first.size() - 1);
+
+				DIR *rep = NULL;
+				struct dirent *fileRead = NULL;
+				rep = opendir(errorPagesPath.c_str());
+				if (rep == NULL){
+					this->_status = INTERNAL_SERVER_ERROR;
+					return (this->_buildErrorPage(INTERNAL_SERVER_ERROR));
+				}
+				else{
+					char *toCompare = new char[(itos(status) + ".html").size()];
+					strcpy(toCompare, (itos(status) + ".html").c_str());
+
+					while ((fileRead = readdir(rep)) != NULL){
+						if (match(toCompare, fileRead->d_name) == true){
+							std::ifstream indata((this->_request.getRootPath().c_str() + this->_request.getErrorPage().first.at(1) + fileRead->d_name).c_str());
+							std::stringstream buff;
+							buff << indata.rdbuf();
+							ret.append(buff.str());
+
+							delete[] toCompare;
+							if (closedir(rep) == -1){
+								this->_status = INTERNAL_SERVER_ERROR;
+								return (this->_buildErrorPage(INTERNAL_SERVER_ERROR));
+							}
+							return (ret);
+						}
+					}
+					delete[] toCompare;
+					if (closedir(rep) == -1){
+						this->_status = INTERNAL_SERVER_ERROR;
+						return (this->_buildErrorPage(INTERNAL_SERVER_ERROR));
+					}
+					ret.append(buildErrorPage(status));
+				}
 			}
 			else
 				ret.append(buildErrorPage(status));
@@ -114,6 +167,7 @@ class httpResponse{
 			//Si le ETag de la ressource correspond au champs If-None-Match on renvoie 304 et pas de content (Prioritaire sur If-Modified-Since)
 			if (this->_request.findHeader("If-None-Match").empty() == false){
 				if (this->_request.findHeader("If-None-Match") == makeETag(this->_pathToRoot)){
+				//if (this->_request.findHeader("If-None-Match") == makeETag(this->_request.getRootPath() + this->_request.getPath() + "\r\n")){
 					this->_status = NOT_MODIFIED;
 					return (false);
 				}
@@ -121,6 +175,7 @@ class httpResponse{
 			//Si la date de modification de la ressource correspond au champs If-Modified-Since on renvoie 304 et pas de content
 			if (this->_request.findHeader("If-Modified-Since").empty() == false){
 				if (this->_request.findHeader("If-Modified-Since") == getFileModification(this->_pathToRoot)){
+				//if (this->_request.findHeader("If-Modified-Since") == getFileModification(this->_request.getRootPath() + this->_request.getPath() + "\r\n")){
 					this->_status = NOT_MODIFIED;
 					return (false);
 				}
@@ -153,6 +208,7 @@ class httpResponse{
 			//GET method
 			else if (this->_request.getMethod() == "GET")
 				this->_get(this->_pathToRoot);
+				//this->_get(this->_request.getRootPath() + this->_request.getPath() + "\r\n");
 		}
 
 		void	_get(std::string &path){

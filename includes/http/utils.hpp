@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:59:01 by user42            #+#    #+#             */
-/*   Updated: 2022/03/11 18:23:32 by user42           ###   ########.fr       */
+/*   Updated: 2022/03/21 23:22:36 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,6 +57,18 @@ std::string					itos(int nb){
 	std::string ret;
 	str >> ret;
 	return (ret);
+}
+
+int							match(char *s1, char *s2){
+	if (*s1 != '\0' && *s2 == '*')
+		return (match(s1 + 1, s2) || match(s1, s2 + 1));
+	if (*s1 == '\0' && *s2 == '*')
+		return (match(s1, s2 + 1));
+	if (*s1 == *s2 && *s1 != '\0' && *s2 != '\0')
+		return (match(s1 + 1, s2 + 1));
+	if (*s1 == *s2 && *s1 == '\0' && *s2 == '\0')
+		return (1);
+	return (0);
 }
 
 #endif
