@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:57 by user42            #+#    #+#             */
-/*   Updated: 2022/03/11 12:25:02 by user42           ###   ########.fr       */
+/*   Updated: 2022/03/21 00:39:09 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,10 +83,8 @@ std::string	getStatusMessage(int status){
 	return ((*statusMessages.find(status)).second);
 }
 
-
-std::string	buildErrorPage(int status){
+std::string					buildErrorPage(int status){
 	std::string ret;
-
 	std::string title = itos(status) + " " + getStatusMessage(status);
 	ret.append("<html>\n<head><title>" + title + "</title></head>\n");
 	ret.append("<body>\n<center><h1>" + title + "</h1></center>\n");

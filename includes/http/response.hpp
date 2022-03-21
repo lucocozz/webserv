@@ -6,13 +6,14 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/03/12 02:00:57 by user42           ###   ########.fr       */
+/*   Updated: 2022/03/21 18:56:04 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef RESPONSE_HPP
 #define RESPONSE_HPP
 
+#include "../config/Config.hpp"
 #include "../socket/Epoll.hpp"
 
 #include "request.hpp"
@@ -36,16 +37,18 @@ class httpResponse{
 			socketEvent.sendData(this->_response);
 		}
 
-		void	buildResponse(httpRequest const &request){
-			//Retrieves header info
+		void	buildResponse(httpRequest const &request, Config const &config){
+			(void)config;
 			this->_request = request;
 			this->_status = request.getStatus();
 
+			//DEBUG
+			std::cout << "SERVER NAME = " << this->_request.getServerName() << std::endl;
+			std::cout << "ROOT PATH = " << this->_request.getRootPath() << std::endl;
 			//need to locat where i am from the server root to adapt the path
-			if (_pathToRoot.empty() == false)
-				_pathToRoot.clear();
-			_pathToRoot = "../../../../..";
-			_pathToRoot.append(this->_request.getPath());
+			
+			this->_pathToRoot = "../../../../..";
+			this->_pathToRoot.append(this->_request.getPath());
 
 			//Methods
 			if (this->_request.getMethod() == "POST")
@@ -60,17 +63,12 @@ class httpResponse{
 			this->_buildBody();
 
 			std::cout << std::endl << "SERVER RESPONSE :" << std::endl;
-			std::cout << _response << std::endl;
+			std::cout << this->_response << std::endl;
 		}
 
 	private:
 
-		/*
-			Build the response:
-			1. Build the status line (PROTOCOL CODE MESSAGE)
-			2. Build appropriate header (depending of the method used)
-			3. Mount the content retrieved in _content
-		*/
+		//Build response
 		void _buildStatusLine(){
 			this->_response.append("HTTP/1.1 ");
 			this->_response.append(itos(this->_status) + " ");
@@ -86,7 +84,6 @@ class httpResponse{
 			this->_response.append("Connection: keep-alive\r\n"); //close or keep-alive make an enum
 			//OPTIONNAL HEADERS (depending on method used if no error occurs)
 			if (this->_status / 100 == 2 || this->_status / 100 == 3){
-				std::cout << "IF I REMOVE THIS OUTPUT IT CRASH" << std::endl;
 				this->_response.append("Last-Modified: " + getFileModification(this->_pathToRoot) + "\r\n");
 				this->_response.append("Etag: " + makeETag(this->_pathToRoot) + "\r\n");
 				this->_response.append("Accept-Ranges: bytes\r\n"); //Can be none but useless, only bytes ranges is defined by RFC
@@ -96,6 +93,21 @@ class httpResponse{
 		void _buildBody(){
 			this->_response.append("\r\n");
 			this->_response.append(this->_content + "\r\n");
+		}
+
+		std::string	_buildErrorPage(int status){
+			std::string ret;
+
+			if (this->_request.getErrorPage().second == true){
+				//if (match(...) == true)
+					ret.append("Custom error page\n");
+				//else
+				//	ret.append(buildErrorPage(status));
+			}
+			else
+				ret.append(buildErrorPage(status));
+
+			return (ret);
 		}
 
 		bool	_contentNeedRefresh(){
@@ -116,19 +128,12 @@ class httpResponse{
 			return (true);
 		}
 
-		/*
-			1. Retrieve a ressource
-			1.1 GET
-			2. Upload a ressource
-			3. DELETE
-		*/
-
 		//Retrieve a ressource
 		void	_retrieveContent(){
 			//If there is an error
 			if (this->_status / 100 == 4 || this->_status / 100 == 5){
 				this->_contentType = "text/html";
-				this->_content.append(buildErrorPage(this->_status));
+				this->_content.append(this->_buildErrorPage(this->_status));
 				return;
 			}
 			//If there is no error but need no content
@@ -157,7 +162,6 @@ class httpResponse{
 			std::stringstream buff;
 			buff << indata.rdbuf();
 			this->_content.append(buff.str());
-			//this->_content.append(path.c_str());
 		}
 
 		//Upload a ressource
@@ -167,16 +171,17 @@ class httpResponse{
 
 		//Delete a ressource
 		void	_delete(){
-			if (remove(this->_pathToRoot.c_str()) != 0){
-				this->_status = METHOD_NOT_ALLOWED;
-				return;
-			}
+			//if (remove(this->_pathToRoot.c_str()) != 0){
+			//	this->_status = METHOD_NOT_ALLOWED;
+			//	return;
+			//}
 			return;
 		}
 
-		//Members
+		//Request
 		httpRequest						_request;
 
+		//Response
 		int								_status;
 		std::string						_content;
 		std::string						_contentType;
