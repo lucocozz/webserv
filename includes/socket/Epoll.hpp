@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/16 22:47:38 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/03/17 16:22:51 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/03/22 19:25:34 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,7 @@
 #include <iostream>
 #include <cstring>
 #include <cerrno>
+#include <csignal>
 #include "EpollSocket.hpp"
 
 class Epoll
@@ -65,6 +66,19 @@ public:
 		int	nfds;
 
 		nfds = epoll_wait(this->_epollFd, this->_eventList, this->_maxEvents, timeout);
+		if (nfds == -1 && errno != EINTR)
+			throw (std::runtime_error(strerror(errno)));
+		return (nfds);
+	}
+
+	int	pwait(int signums, int timeout = -1)
+	{
+		int			nfds;
+		sigset_t	sigset;
+
+		sigemptyset(&sigset);
+		sigaddset(&sigset, signums);
+		nfds = epoll_pwait(this->_epollFd, this->_eventList, this->_maxEvents, timeout, &sigset);
 		if (nfds == -1)
 			throw (std::runtime_error(strerror(errno)));
 		return (nfds);

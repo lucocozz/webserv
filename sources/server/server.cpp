@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:14:35 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/03/17 16:41:56 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/03/22 22:11:55 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,41 +14,18 @@
 #include "Socket.hpp"
 #include "EpollSocket.hpp"
 #include "Config.hpp"
+#include "server.hpp"
+#include "system.hpp"
 
-// #include "../CGI/ClassCGI.hpp"
+bool	g_running = true;
 
-static void	handleConnection(Epoll &epoll, EpollSocket &local)
+static void	initServer(std::vector<EpollSocket> &localServers, Epoll &epoll)
 {
-	EpollSocket	client(local.acceptConnection(), EPOLLIN | EPOLLET | EPOLLRDHUP);
-
-	client.setNonBlocking();
-	epoll.control(EPOLL_CTL_ADD, client);
-}
-
-static void	handleDeconnection(Epoll &epoll, EpollSocket &client)
-{
-	epoll.control(EPOLL_CTL_DEL, client);
-	client.shutdownSocket();
-	client.closeSocket();
-}
-
-static void	handleInput(EpollSocket &client)
-{
-	std::pair<std::string, int>	data;
-	
-	data = client.recvData();
-	std::cout << data.first << std::endl;
-	//CGI_startup temporaire
-	// CGI_startup(client, data);
-	client.sendData("HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Type: text/plain\r\nContent-Length: 27\r\n\r\nResponse sent by 42 webserv");
-}
-
-void	initServer(std::vector<EpollSocket> &localServers, Epoll &epoll)
-{
+	signal(SIGINT, handleSigint);
 	for (size_t i = 0; i < localServers.size(); ++i)
 	{
-		localServers[i].events(EPOLLIN | EPOLLET | EPOLLRDHUP);
 		localServers[i].setNonBlocking();
+		localServers[i].events(EPOLLIN | EPOLLET | EPOLLRDHUP);
 		epoll.control(EPOLL_CTL_ADD, localServers[i]);
 	}
 }
@@ -59,9 +36,9 @@ void	server(std::vector<EpollSocket> &localServers, Config &config)
 	Epoll		epoll;
 	EpollSocket	socketEvent;
 
-	initServer(localServers, epoll);
 	(void)config;
-	while (true)
+	initServer(localServers, epoll);
+	while (g_running == true)
 	{
 		nfds = epoll.wait();
 		for (int n = 0; n < nfds; ++n)
