@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/03/22 01:25:13 by user42           ###   ########.fr       */
+/*   Updated: 2022/03/22 17:49:49 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -206,12 +206,16 @@ class httpResponse{
 
 		void	_get(std::string &path){
 			if (this->_request.getPath() == "/"){
-				path.append(this->_request.getIndex());
-				this->_contentType = getMimeTypes(path.c_str());
-				std::ifstream indata(path.c_str());
-				std::stringstream buff;
-				buff << indata.rdbuf();
-				this->_content.append(buff.str());
+				this->_contentType = "text/html";
+				if (this->_request.getAutoindex() == true)
+					this->_content.append("Index of / (root)");
+				else{
+					path.append(this->_request.getIndex()[0]);
+					std::ifstream indata(path.c_str());
+					std::stringstream buff;
+					buff << indata.rdbuf();
+					this->_content.append(buff.str());
+				}
 			}
 			else{
 				this->_contentType = getMimeTypes(path.c_str());

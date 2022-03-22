@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:46 by user42            #+#    #+#             */
-/*   Updated: 2022/03/22 01:21:41 by user42           ###   ########.fr       */
+/*   Updated: 2022/03/22 17:52:54 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,6 +41,7 @@ class httpRequest{
 			this->_serverName = rhs.getServerName();
 			this->_rootPath = rhs.getRootPath();
 			this->_index = rhs.getIndex();
+			this->_autoindex = rhs.getAutoindex();
 			this->_errorPage = rhs.getErrorPage();
 			this->_maxBodySize = rhs.getMaxBodySize();
 			this->_bodySize = rhs.getBodySize();
@@ -101,8 +102,12 @@ class httpRequest{
 			return (this->_rootPath);
 		}
 
-		std::string									getIndex() const{
+		std::vector<std::string>					getIndex() const{
 			return (this->_index);
+		}
+
+		bool										getAutoindex() const{
+			return (this->_autoindex);
 		}
 
 		std::pair<size_t, bool>						getMaxBodySize() const{
@@ -143,10 +148,22 @@ class httpRequest{
 			//Retrieve server index
 			try{
 				std::vector<std::string> index = config.servers[0].directives.at("index");
-				this->_index = index[0];
+				this->_index = index;
 			}
 			catch (std::exception const &e){
-				this->_index = "default_index.html";
+				this->_index.push_back("default_index.html");
+			}
+
+			//Retrieve server autoindex
+			try{
+				std::string autoindex = config.servers[0].directives.at("autoindex")[0];
+				if (autoindex == "on")
+					this->_autoindex = true;
+				else
+					this->_autoindex = false;
+			}
+			catch (std::exception const &e){
+				this->_autoindex = false;
 			}
 
 			//Retrieve the body max size
@@ -263,7 +280,8 @@ class httpRequest{
 		//Config
 		std::string										_serverName;
 		std::string										_rootPath;
-		std::string										_index;
+		std::vector<std::string>						_index;
+		bool											_autoindex;
 		std::pair<std::vector<std::string>, bool>		_errorPage;
 		std::pair<size_t, bool>							_maxBodySize;							
 
