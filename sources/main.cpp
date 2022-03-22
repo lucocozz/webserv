@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/21 19:48:40 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/03/21 01:31:10 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/03/22 19:42:13 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,19 +42,17 @@ int	main(void)
 {
 	Config						config;
 	std::vector<EpollSocket>	localServers;
-	Socket	toto;
-	Socket	yolo;
 
 	try {
 		config.parse(std::string(WEBSERV_PATH) + "sites_availables/default.conf");
 		localServers = listenServers(config);
 		server(localServers, config);
-		for (size_t i = 0; i < localServers.size(); ++i)
-			localServers[i].closeSocket();
 	}
 	catch (const std::exception &e) {
 		std::cerr << e.what() << std::endl;
 	}
+	for (size_t i = 0; i < localServers.size(); ++i)
+		localServers[i].closeSocket();
 	return (0);
 }
 

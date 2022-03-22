@@ -6,7 +6,7 @@
 #    By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2022/01/21 19:56:36 by lucocozz          #+#    #+#              #
-#    Updated: 2022/03/15 22:10:44 by lucocozz         ###   ########.fr        #
+#    Updated: 2022/03/22 22:10:00 by lucocozz         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -16,8 +16,12 @@ WEBSERV_PATH := $(HOME)/.config/webserv/
 DEFAULT_PORT := 8080
 DEFAULT_ROOT := /var/www/
 
-SRC := 	main.cpp	\
-		server.cpp
+SRC := 	main.cpp				\
+		server.cpp				\
+		handleInput.cpp			\
+		handleConnection.cpp	\
+		handleDeconnection.cpp	\
+		handleSignal.cpp
 
 MAKE = make
 MAKEFLAGS += --no-print-directory

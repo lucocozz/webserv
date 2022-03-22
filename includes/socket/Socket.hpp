@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/16 22:47:17 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/03/21 01:22:37 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/03/22 21:54:57 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,16 +41,10 @@ public:
 		*this = rhs;
 	}
 
-	~Socket()
-	{
-		// if (this->_bindAddress != NULL)
-			// freeaddrinfo(this->_bindAddress);
-	}
+	~Socket() {}
 
 	Socket	&operator=(const Socket &rhs)
 	{
-		int	size;
-
 		if (this != &rhs)
 		{
 			this->_listenSocket = rhs._listenSocket;
@@ -58,11 +52,7 @@ public:
 				freeaddrinfo(this->_bindAddress);
 			this->_bindAddress = NULL;
 			if (rhs._bindAddress != NULL)
-			{
-				size = sizeof(rhs._bindAddress);
-				this->_bindAddress = new struct addrinfo[size];
-				memcpy(this->_bindAddress, rhs._bindAddress, size);
-			}
+				getaddrinfo(rhs._bindAddress->ai_canonname, NULL, NULL, &this->_bindAddress);
 		}
 		return (*this);
 	}
@@ -115,9 +105,11 @@ public:
 	
 	void	closeSocket(void)
 	{
-		std::cout << "Closing socket: " << this->getNameInfo(this->_listenSocket) << std::endl;
+		std::cout << "Closing socket" << std::endl;
 		if (close(this->_listenSocket) == -1)
 			throw (std::runtime_error(strerror(errno)));
+		if (this->_bindAddress != NULL)
+			freeaddrinfo(this->_bindAddress);
 		this->_listenSocket = 0;
 	}
 	
