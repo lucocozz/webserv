@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/03/22 00:52:33 by user42           ###   ########.fr       */
+/*   Updated: 2022/03/22 01:25:13 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -195,29 +195,31 @@ class httpResponse{
 			else if (this->_status / 100 == 2 && this->_request.getMethod() != "GET")
 				return;
 
-			//Temporary
-			if (this->_request.getMethod() == "GET" && this->_request.getPath() == "/"){
-				this->_content.append("<html>\n<head><title>Welcome to 42webserv</title></head>\n");
-				this->_content.append("<center><h3>" + itos(this->_status) + " " + getStatusMessage(this->_status) + "</h3></center>");
-				this->_content.append("<body>\n<center><h1>Welcome to 42webserv !</h1></center>\n");
-				this->_content.append("<p><center>If you see this page, the 42webserv is successfully installed and working. Further configuration is required.</center></p>\n");
-				this->_content.append("<hr><center>42webserv/0.0.1</center>\n");
-				this->_content.append("</body>\n</html>");
-				this->_contentType = getMimeTypes("text/html");
-			}
 			//GET method
-			else if (this->_request.getMethod() == "GET")
-				this->_get(this->_pathToRoot);
-				//this->_get(this->_request.getRootPath() + this->_request.getPath() + "\r\n");
+			//else if (this->_request.getMethod() == "GET")
+			if (this->_request.getMethod() == "GET"){
+				//this->_get(this->_pathToRoot);
+				std::string path = this->_request.getRootPath();
+				this->_get(path);
+			}
 		}
 
 		void	_get(std::string &path){
-			this->_contentType = getMimeTypes(path.c_str());
-			
-			std::ifstream indata(path.c_str());
-			std::stringstream buff;
-			buff << indata.rdbuf();
-			this->_content.append(buff.str());
+			if (this->_request.getPath() == "/"){
+				path.append(this->_request.getIndex());
+				this->_contentType = getMimeTypes(path.c_str());
+				std::ifstream indata(path.c_str());
+				std::stringstream buff;
+				buff << indata.rdbuf();
+				this->_content.append(buff.str());
+			}
+			else{
+				this->_contentType = getMimeTypes(path.c_str());
+				std::ifstream indata(path.c_str());
+				std::stringstream buff;
+				buff << indata.rdbuf();
+				this->_content.append(buff.str());
+			}
 		}
 
 		//Upload a ressource
