@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/03/22 17:49:49 by user42           ###   ########.fr       */
+/*   Updated: 2022/03/22 23:41:01 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,7 @@
 #include "request.hpp"
 #include "headersFunctions.hpp"
 #include "mimeTypes.hpp"
+#include "autoindex.hpp"
 
 #include <fstream>
 #include <cstdio>
@@ -208,7 +209,7 @@ class httpResponse{
 			if (this->_request.getPath() == "/"){
 				this->_contentType = "text/html";
 				if (this->_request.getAutoindex() == true)
-					this->_content.append("Index of / (root)");
+					this->_content.append(buildAutoIndex(this->_request.getRootPath(), this->_request.getIndex()));
 				else{
 					path.append(this->_request.getIndex()[0]);
 					std::ifstream indata(path.c_str());
