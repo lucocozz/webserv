@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/16 22:47:17 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/03/22 21:54:57 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/03/23 18:44:06 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,11 +48,7 @@ public:
 		if (this != &rhs)
 		{
 			this->_listenSocket = rhs._listenSocket;
-			if (this->_bindAddress != NULL)
-				freeaddrinfo(this->_bindAddress);
-			this->_bindAddress = NULL;
-			if (rhs._bindAddress != NULL)
-				getaddrinfo(rhs._bindAddress->ai_canonname, NULL, NULL, &this->_bindAddress);
+			this->_bindAddress = rhs._bindAddress;
 		}
 		return (*this);
 	}
@@ -81,10 +77,6 @@ public:
 		hints.ai_family = family;
 		hints.ai_socktype = socktype;
 		hints.ai_flags = flags;
-		hints.ai_canonname = NULL;
-		hints.ai_addr = NULL;
-		hints.ai_next = NULL;
-		hints.ai_addrlen = 0;
 		getaddrinfo(NULL, port.c_str(), &hints, &this->_bindAddress);
 		this->_listenSocket = socket(this->_bindAddress->ai_family,
 			this->_bindAddress->ai_socktype, this->_bindAddress->ai_protocol);
@@ -108,15 +100,21 @@ public:
 		std::cout << "Closing socket" << std::endl;
 		if (close(this->_listenSocket) == -1)
 			throw (std::runtime_error(strerror(errno)));
-		if (this->_bindAddress != NULL)
-			freeaddrinfo(this->_bindAddress);
 		this->_listenSocket = 0;
+		this->freeAddrInfo();
 	}
 	
 	void	shutdownSocket(int how = SHUT_RDWR)
 	{
 		if (shutdown(this->_listenSocket, how) == -1)
 			throw (std::runtime_error(strerror(errno)));
+	}
+
+	void	freeAddrInfo(void)
+	{
+		if (this->_bindAddress != NULL)
+			freeaddrinfo(this->_bindAddress);
+		this->_bindAddress = NULL;
 	}
 
 
