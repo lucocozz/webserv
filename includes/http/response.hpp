@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/03/22 23:41:01 by user42           ###   ########.fr       */
+/*   Updated: 2022/03/23 18:56:51 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,7 +48,6 @@ class httpResponse{
 			this->_status = request.getStatus();
 
 			//need to locat where i am from the server root to adapt the path
-			//this->_pathToRoot = this->_request.getRootPath() + this->_request.getPath() + "\r\n";
 			this->_pathToRoot = "../../../../..";
 			this->_pathToRoot.append(this->_request.getPath());
 
@@ -84,12 +83,11 @@ class httpResponse{
 			this->_response.append("Content-Type: " + this->_contentType + "\r\n");
 			this->_response.append("Content-Length: " + itos(this->_content.size()) + "\r\n");
 			this->_response.append("Connection: keep-alive\r\n"); //close or keep-alive make an enum
+			//std::cout << "IF I REMOVE THIS COUT IT CRASH" << std::endl;
 			//OPTIONNAL HEADERS (depending on method used if no error occurs)
 			if (this->_status / 100 == 2 || this->_status / 100 == 3){
-				this->_response.append("Last-Modified: " + getFileModification(this->_pathToRoot) + "\r\n");
-				this->_response.append("Etag: " + makeETag(this->_pathToRoot) + "\r\n");
-				//this->_response.append("Last-Modified: " + getFileModification(this->_request.getRootPath() + this->_request.getPath() + "\r\n");
-				//this->_response.append("Etag: " + makeETag(this->_request.getRootPath() + this->_request.getPath() + "\r\n");
+				//this->_response.append("Last-Modified: " + getFileModification(this->_pathToRoot) + "\r\n");
+				//this->_response.append("Etag: " + makeETag(this->_pathToRoot) + "\r\n");
 				this->_response.append("Accept-Ranges: bytes\r\n"); //Can be none but useless, only bytes ranges is defined by RFC
 			}
 		}
@@ -219,6 +217,8 @@ class httpResponse{
 				}
 			}
 			else{
+				path.erase(path.end() - 1);
+				path.append(this->_request.getPath());
 				this->_contentType = getMimeTypes(path.c_str());
 				std::ifstream indata(path.c_str());
 				std::stringstream buff;

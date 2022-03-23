@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:46 by user42            #+#    #+#             */
-/*   Updated: 2022/03/22 17:52:54 by user42           ###   ########.fr       */
+/*   Updated: 2022/03/23 17:56:54 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -264,10 +264,10 @@ class httpRequest{
 					return;
 				}
 			}
-			if (doesFileExist(_path) == false){
-				this->_status = NOT_FOUND;
-				return;
-			}
+			//if (doesFileExist(this->_path) == false){
+			//	this->_status = NOT_FOUND;
+			//	return;
+			//}
 			if (this->_protocol != "HTTP/1.1"){
 				this->_status = HTTP_VERSION_NOT_SUPPORTED;
 				return;
