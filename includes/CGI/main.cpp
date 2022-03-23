@@ -19,11 +19,13 @@
 #include "../http/response.hpp"
 #include "../http/request.hpp"
 
-static void	handleConnection(Epoll &epoll, EpollSocket &local)
+static void	handleConnection(Epoll &epoll, EpollSocket &local, std::pair<std::string, std::string> &clientInfo)
 {
 	EpollSocket	client(local.acceptConnection(), EPOLLIN | EPOLLET | EPOLLRDHUP);
 
 	client.setNonBlocking();
+	clientInfo.first = client.getNameInfo(client.listener(), NI_NUMERICHOST);
+	clientInfo.second = client.getNameInfo(client.listener());
 	epoll.control(EPOLL_CTL_ADD, client);
 }
 
@@ -34,7 +36,7 @@ static void	handleDeconnection(Epoll &epoll, EpollSocket &client)
 	client.closeSocket();
 }
 
-static void	handleInput(EpollSocket &client, const Config &serverConfig)
+static void	handleInput(EpollSocket &client, const Config &serverConfig, const std::pair<std::string, std::string> &clientInfo)
 {
 	std::pair<std::string, int>	data;
 	
@@ -43,7 +45,7 @@ static void	handleInput(EpollSocket &client, const Config &serverConfig)
 	//httpRequest/httpResponse
 	httpRequest 	request;
 	httpResponse	response;
-	request.treatRequest(data.first);
+	request.treatRequest(data.first, serverConfig);
 	if (request.getPath().find(".php") != std::string::npos){
 		try{
 			//serverConfig.servers[0] ->  will change depending on what server we work on
@@ -51,14 +53,14 @@ static void	handleInput(EpollSocket &client, const Config &serverConfig)
 			std::pair<ServerContext, LocationContext > serverLocation = 
 			std::make_pair(serverConfig.servers[0], serverConfig.servers[0].locations[0]);
 
-			CGI cgi(data, request.getHeaders(), serverLocation);
+			CGI cgi(data, request.getHeaders(), serverLocation, clientInfo);
 			cgi.CGIStartup();
 		}
 		catch(const std::exception &e){
 			std::cout << e.what() << std::endl;
 		}
 	}
-	response.buildResponse(request);
+	response.buildResponse(request, serverConfig);
 	response.sendResponse(client);
 }
 
@@ -67,6 +69,7 @@ void	server(EpollSocket &local, const Config &serverConfig)
 	int			nfds;
 	Epoll		epoll;
 	EpollSocket	socketEvent;
+	std::pair<std::string, std::string> clientInfo;
 
 	local.events(EPOLLIN | EPOLLRDHUP);
 	epoll.control(EPOLL_CTL_ADD, local);
@@ -77,11 +80,11 @@ void	server(EpollSocket &local, const Config &serverConfig)
 		{
 			socketEvent = epoll.socketAt(n);
 			if (socketEvent.listener() == local.listener())
-				handleConnection(epoll, local);
+				handleConnection(epoll, local, clientInfo);
 			else if (socketEvent.events() & (EPOLLERR | EPOLLRDHUP | EPOLLHUP))
 				handleDeconnection(epoll, socketEvent);
 			else if (socketEvent.events() & EPOLLIN)
-				handleInput(socketEvent, serverConfig);
+				handleInput(socketEvent, serverConfig, clientInfo);
 		}
 	}
 }
