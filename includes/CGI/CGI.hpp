@@ -19,46 +19,13 @@
 
 #include "URLDecoder.hpp"
 
-
-/**
- * constructor: CGI(const SocketInfo ServerInfo, const RequestData &data) 
- * @brief Fill all the CGI datas: _serverInfo, _headerSize, _headerContent, _decodedURL
- * 
- * @param the info to fill the CGI's datas with
- * @return void
- */
-
-/**
- * envs setter:void  create_envs()
- * @brief Creates all the CGI envs with their respective function
- * 
- * @param none
- * @return void
- */
-
-/**
- * CGI startup:void  CGI_startup(struct addrinfo *ServerInfo, std::pair<std::string, int> Header)
- * @brief Init and start the CGI
- * 
- * @param Infos that the CGI needs to set its envs variables
- * @return void
- */
-
-/**
- * decoder: std::string    decodeUrl()
- * @brief Sets the _decodedURL variable with the decode URL
- * 
- * @param Infos None
- * @return Decoded URL as a std::string
- */
-
 class CGI{
 public:
     typedef             std::pair<std::string, int>                         requestData; 
     typedef             std::pair<ServerContext, LocationContext >          serverLocation;
     typedef             std::pair<std::string, std::string>                 clientInfo;
+
 private:
-    
     size_t                              _headerSize;
     std::string                         _headerContent;
     std::string                         _encodedURL;
@@ -149,7 +116,7 @@ public:
         char **args = new char*[3];
 
         //temporary
-        std::string path(_mapMetaVars.find("PATH_TRANSLATED=")->second);
+        std::string path("/home/user42/webserv/sources/cgiphp");
 
         args[0] = strdupa(_cgiBinary.c_str());
         args[1] = strdupa(_mapMetaVars.find("SCRIPT_NAME=")->second.c_str());
@@ -164,6 +131,7 @@ public:
         close(fdPost[1]);
 
         chdir(path.c_str());
+        std::cerr << "currentdir " << get_current_dir_name() << std::endl;
         execve(args[0], args, cMetaVar);
         exit(errno);
     }

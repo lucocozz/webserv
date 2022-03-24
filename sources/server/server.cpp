@@ -35,7 +35,6 @@ void	server(std::vector<EpollSocket> &localServers, Config &config)
 	Epoll		epoll;
 	EpollSocket	socketEvent;
 
-	(void)config;
 	initServer(localServers, epoll);
 	while (g_running == true)
 	{
@@ -48,8 +47,7 @@ void	server(std::vector<EpollSocket> &localServers, Config &config)
 			else if (socketEvent.events() & (EPOLLERR | EPOLLRDHUP | EPOLLHUP))
 				handleDeconnection(epoll, socketEvent);
 			else if (socketEvent.events() & EPOLLIN)
-				handleInput(socketEvent);
+				handleInput(socketEvent, config);
 		}
-		break;
 	}
 }
