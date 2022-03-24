@@ -7,9 +7,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include <string>
-#include <iostream>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <iostream>
 #include <map>
 #include <exception>
 
@@ -30,9 +30,9 @@ private:
     std::string                         _headerContent;
     std::string                         _encodedURL;
     std::string                         _decodedURL;
-    std::string                         _cgiExtension;
-    std::string                         _cgiBinary;
     std::map<std::string, std::string>  _mapMetaVars;
+    ServerContext                       _serverContext;
+    LocationContext                     _locationContext;
 
 
 public:
@@ -42,9 +42,9 @@ public:
     _headerContent(data.first),
     _encodedURL(_setURL()),
     _decodedURL(_decodeUrl()),
-    _cgiExtension(serverLocation.second.directives.at("cgi_extension")[0]),
-    _cgiBinary(serverLocation.second.directives.at("cgi_binary")[0]),
-    _mapMetaVars(){
+    _mapMetaVars(),
+    _serverContext(serverLocation.first),
+    _locationContext(serverLocation.second){
         _setMapEnvVar(headers, serverLocation, clientInfo);
     }
 
@@ -52,12 +52,13 @@ public:
     }
 
     std::string CGIStartup(){
-        char                                                readBuffer[1024];
-        std::string                                         bodyResult;
-        pid_t                                               pid;
-        int                                                 fdsGet[2];
-        int                                                 fdsPost[2];
-        char                                                **cMetaVar;
+        char         readBuffer[1024];
+        std::string  bodyResult;
+        pid_t        pid;
+        int          fdsGet[2];
+        int          fdsPost[2];
+        int          childExitStatus = 0;                                    
+        char         **cMetaVar;
 
         cMetaVar = _createCMetaVar();
         std::cout << "vars " << std::endl;
@@ -83,9 +84,9 @@ public:
         }
         close(fdsGet[0]);
         std::cout << "bodyResult: " << std::endl << bodyResult << std::endl;
-
-        if (waitChild(pid) > 0)
-            throw execveError(errno);
+        
+        if ((childExitStatus = waitChild(pid)) > 0)
+            throw execveError(childExitStatus);
         for (size_t i = 0; cMetaVar[i]; i++)
             delete [] cMetaVar[i];
         delete [] cMetaVar;
@@ -115,10 +116,11 @@ public:
     void childProcess(int fdGet[2], int fdPost[2], char **cMetaVar){
         char **args = new char*[3];
 
-        //temporary
-        std::string path("/home/user42/webserv/sources/cgiphp");
+        //tmp should be the first arg of location args[0]
+        std::string tmp("ubuntucgitester/");
+        std::string path(_serverContext.directives.at("root")[0] + tmp);
 
-        args[0] = strdupa(_cgiBinary.c_str());
+        args[0] = strdupa(_locationContext.directives.at("cgi_binary")[0].c_str());
         args[1] = strdupa(_mapMetaVars.find("SCRIPT_NAME=")->second.c_str());
         args[2] = NULL;
 
@@ -131,7 +133,7 @@ public:
         close(fdPost[1]);
 
         chdir(path.c_str());
-        std::cerr << "currentdir " << get_current_dir_name() << std::endl;
+        std::cerr << "currentdir " << get_current_dir_name() << "cgi binary: " << args[0]  << " cgi script name: " << args[1] <<  std::endl;
         execve(args[0], args, cMetaVar);
         exit(errno);
     }
@@ -299,15 +301,16 @@ private:
     void _setScriptName(){
         std::string varName("SCRIPT_NAME=");
         std::string name("");
+        std::string cgiExtension(_locationContext.directives.at("cgi_extension")[0]);
         size_t      begin;
         size_t      end = 0;
 
-        begin = this->_decodedURL.rfind('/', _decodedURL.find(_cgiExtension)) + 1;
+        begin = this->_decodedURL.rfind('/', _decodedURL.find(cgiExtension)) + 1;
         if (begin == std::string::npos || end == std::string::npos){
             _mapMetaVars.insert(std::make_pair(varName, name));
             return ;
         }
-        end = (this->_decodedURL.find(_cgiExtension) + 4) - begin;
+        end = (this->_decodedURL.find(cgiExtension) + 4) - begin;
         name = this->_decodedURL.substr(begin, end);
         this->_mapMetaVars.insert(std::make_pair(varName, name));
     }

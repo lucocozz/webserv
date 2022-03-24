@@ -71,7 +71,7 @@ void	handleInput(EpollSocket &client, const Config &serverConfig)
 			cgi.CGIStartup();
 		}
 		catch(const std::exception &e){
-			std::cout << e.what() << std::endl;
+			std::cout << "Cgi failed: " << e.what() << std::endl;
 		}
 	}
 	response.buildResponse(request, serverConfig);
