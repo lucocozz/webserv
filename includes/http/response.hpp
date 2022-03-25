@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/03/24 13:11:54 by user42           ###   ########.fr       */
+/*   Updated: 2022/03/25 01:14:16 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,7 +50,10 @@ class httpResponse{
 			//need to locat where i am from the server root to adapt the path
 			this->_rootToFile = this->_request.getRootPath();
 			this->_rootToFile.erase(this->_rootToFile.end() - 1);
-			this->_rootToFile.append(this->_request.getPath());
+			if (this->_request.getPath() == "/" && this->_request.getAutoindex() == true)
+				this->_rootToFile.append(this->_request.getIndex()[0]);
+			else
+				this->_rootToFile.append(this->_request.getPath());
 
 			//Methods
 			if (this->_request.getMethod() == "POST")
@@ -86,8 +89,10 @@ class httpResponse{
 			this->_response.append("Connection: keep-alive\r\n"); //close or keep-alive make an enum
 			//OPTIONNAL HEADERS (depending on method used if no error occurs)
 			if (this->_status / 100 == 2 || this->_status / 100 == 3){
-				this->_response.append("Last-Modified: " + getFileModification(this->_rootToFile) + "\r\n");
-				this->_response.append("Etag: " + makeETag(this->_rootToFile) + "\r\n");
+				if (this->_request.getAutoindex() == false){
+					this->_response.append("Last-Modified: " + getFileModification(this->_rootToFile) + "\r\n");
+					this->_response.append("Etag: " + makeETag(this->_rootToFile) + "\r\n");
+				}
 				this->_response.append("Accept-Ranges: bytes\r\n"); //Can be none but useless, only bytes ranges is defined by RFC
 			}
 		}
@@ -206,7 +211,6 @@ class httpResponse{
 				if (this->_request.getAutoindex() == true)
 					this->_content.append(buildAutoIndex(this->_request.getRootPath(), this->_request.getIndex()));
 				else{
-					path.append(this->_request.getIndex()[0]);
 					std::ifstream indata(path.c_str());
 					std::stringstream buff;
 					buff << indata.rdbuf();

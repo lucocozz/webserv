@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:46 by user42            #+#    #+#             */
-/*   Updated: 2022/03/23 17:56:54 by user42           ###   ########.fr       */
+/*   Updated: 2022/03/24 23:55:53 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -244,7 +244,6 @@ class httpRequest{
 				return;
 			this->_checkRequestLine();
 
-			//this->_checkBody();
 			//Check if the body size exceed the max body size
 			if (this->_maxBodySize.second == true && this->_maxBodySize.first < this->_bodySize){
 				this->_status = REQUEST_ENTITY_TOO_LARGE;
@@ -264,10 +263,6 @@ class httpRequest{
 					return;
 				}
 			}
-			//if (doesFileExist(this->_path) == false){
-			//	this->_status = NOT_FOUND;
-			//	return;
-			//}
 			if (this->_protocol != "HTTP/1.1"){
 				this->_status = HTTP_VERSION_NOT_SUPPORTED;
 				return;
