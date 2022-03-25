@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:14:35 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/03/23 18:45:19 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/03/23 20:02:45 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,6 +50,5 @@ void	server(std::vector<EpollSocket> &localServers, Config &config)
 			else if (socketEvent.events() & EPOLLIN)
 				handleInput(socketEvent);
 		}
-		break;
 	}
 }

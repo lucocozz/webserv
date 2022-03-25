@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/03 01:09:40 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/03/14 16:52:46 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/03/25 09:58:51 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,10 +75,32 @@ public:
 
 		this->_checkBrackets(tokens);
 		this->_parsed = this->_parseDirective(tokens, i);
+		// this->_directiveInclude(this->_parsed);
 		this->_checkParsing();
 	}
 
 private:
+	// void	_directiveInclude(std::vector<Directive> &directives)
+	// {
+	// 	std::vector<Directive>	include;
+
+	// 	for (size_t i = 0; i < directives.size(); ++i)
+	// 	{
+	// 		if (directives[i].block.size() > 0)
+	// 			this->_directiveInclude(directives[i].block);
+	// 		if (directives[i].literal == "include")
+	// 		{
+	// 			include = this->_parseInclude(directives[i].args[0]);
+	// 			directives.insert(directives.begin() + i + 1, include.begin(), include.end());
+	// 		}
+	// 	}
+	// }
+
+	// std::vector<Directive>	_parseInclude(std::string path)
+	// {
+	// 	(void)path;
+	// }
+
 	void	_checkParsing(void)
 	{
 		for (size_t i = 0; i < this->_parsed.size(); ++i)

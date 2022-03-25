@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/16 22:47:17 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/03/23 18:44:06 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/03/23 20:01:29 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -98,9 +98,12 @@ public:
 	void	closeSocket(void)
 	{
 		std::cout << "Closing socket" << std::endl;
-		if (close(this->_listenSocket) == -1)
-			throw (std::runtime_error(strerror(errno)));
-		this->_listenSocket = 0;
+		if (this->_listenSocket != 0)
+		{
+			if (close(this->_listenSocket) == -1)
+				throw (std::runtime_error(strerror(errno)));
+			this->_listenSocket = 0;
+		}
 		this->freeAddrInfo();
 	}
 	

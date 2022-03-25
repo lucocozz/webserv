@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/16 23:19:48 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/03/23 19:14:14 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/03/23 19:58:05 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,11 +32,13 @@ public:
 
 	explicit EpollSocket(struct epoll_event infoEvent): Socket(infoEvent.data.fd)
 	{
+		bzero(&this->_infoEvent, sizeof(this->_infoEvent));
 		this->_infoEvent = infoEvent;
 	}
 	
 	EpollSocket(const EpollSocket &socket): Socket(socket)
 	{
+		bzero(&this->_infoEvent, sizeof(this->_infoEvent));
 		this->_infoEvent = socket._infoEvent;
 	}
 
