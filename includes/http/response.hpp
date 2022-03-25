@@ -28,7 +28,7 @@
 #include <cstdio>
 #include <dirent.h>
 #include <sys/types.h>
-
+#include "../CGI/CGI.hpp"
 /*
 	httpResponse class :
 */
@@ -73,7 +73,7 @@ class httpResponse{
 			- Send the response to the client
 		*/
 
-		void	buildResponse(httpRequest const &request, Config const &config){
+		void	buildResponse(httpRequest const &request, Config const &config, const std::pair<std::string, std::string> &clientInfo){
 			(void)config;
 			this->_request = request;
 			this->_status = request.getStatus();
@@ -90,7 +90,7 @@ class httpResponse{
 				this->_uploadContent();
 			else if (this->_request.getMethod() == "DELETE")
 				this->_delete();
-			this->_retrieveContent();
+			this->_retrieveContent(config, clientInfo, request.getHeaders());
 
 			this->_buildStatusLine();
 			this->_buildHeaders();
@@ -241,7 +241,7 @@ class httpResponse{
 			- GET Method
 		*/
 
-		void	_retrieveContent(){
+		void	_retrieveContent(const Config &serverConfig, const std::pair<std::string, std::string> &clientInfo, const std::map<std::string, std::string> &headers){
 			if (this->_status / 100 == 4 || this->_status / 100 == 5){
 				this->_contentType = "text/html";
 				this->_content.append(this->_buildErrorPage(this->_status));
@@ -253,7 +253,7 @@ class httpResponse{
 			//GET method
 			if (this->_request.getMethod() == "GET"){
 				std::string path = this->_request.getRootPath();
-				this->_get(path);
+				this->_get(path, serverConfig, clientInfo, headers);
 			}
 		}
 
@@ -275,8 +275,43 @@ class httpResponse{
 			return (true);
 		}
 
-		void	_get(std::string &path){
-			if (this->_request.getPath() == "/"){
+		static std::pair<bool,LocationContext>  getLocation(std::string path, std::vector<LocationContext> serverLocation){
+		std::pair<bool,LocationContext> locationPair = std::make_pair(true, serverLocation[0]);
+		
+		for (size_t i = 0; i < serverLocation.size(); i++){
+			if ((path.find(serverLocation[i].args[0]) != std::string::npos) && 
+				(serverLocation[i].directives.count("cgi_extension") == 1) &&
+				(serverLocation[i].directives.count("cgi_binary") == 1)){
+				locationPair.second = serverLocation[i];
+				return(locationPair);
+			}
+		}
+		locationPair.first = false;
+		return (locationPair);
+		}
+
+		void	_get(std::string &path, const Config &serverConfig, const std::pair<std::string, std::string> &clientInfo, const std::map<std::string, std::string> &headers){
+			std::pair<bool,LocationContext> locationResult = 
+				getLocation(this->_request.getPath(), serverConfig.servers[0].locations);
+			
+			if (locationResult.first == true){
+				try{
+					std::cout << "path " << this->_request.getPath() << std::endl;
+					std::string cgiResponse;
+					//serverConfig.servers[0] ->  will change depending on what server we work on
+					std::pair<ServerContext, LocationContext > serverLocation = 
+						std::make_pair(serverConfig.servers[0], locationResult.second);
+
+					CGI cgi(this->_request.getPath(), headers, serverLocation, clientInfo, "GET");
+					cgiResponse = cgi.CGIStartup();
+					this->_content.append(cgiResponse);
+					this->_contentType = "text/html";
+				}
+				catch(const std::exception &e){
+					std::cout << "Cgi failed: " << e.what() << std::endl;
+				}
+			}
+			else if (this->_request.getPath() == "/"){
 				this->_contentType = "text/html";
 				if (this->_request.getAutoindex() == true)
 					this->_content.append(buildAutoIndex(this->_request.getRootPath(), this->_request.getIndex()));

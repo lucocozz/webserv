@@ -16,39 +16,6 @@
 #include "request.hpp"
 #include "response.hpp"
 
-static bool checkExtension(const std::string &filePath, const std::string &path, const std::string &extension){
-	//filePath should be the args[0] of the location 
-	std::string	scriptExtension;
-	size_t 		begin;
-	size_t 		end;
-	size_t		cnt;
-
-	begin = path.find('.', path.find(filePath, 0) + filePath.size());
-	end = begin + 1;
-	cnt = end;
-	while (isalpha(path[cnt]))
-		cnt++;
-	end = cnt - end + 1;
-	scriptExtension = path.substr(begin, end);
-	if (extension.size() == scriptExtension.size() &&
-		extension.compare(scriptExtension) == 0)
-		return (true);
-	return (false);
-}
-
-static std::pair<bool,LocationContext>  getLocation(std::string path, std::vector<LocationContext> serverLocation){
-	std::pair<bool,LocationContext> locationPair = std::make_pair(true, serverLocation[0]);
-
-	for (size_t i = 0; i < serverLocation.size(); i++){
-		if (path.find(serverLocation[i].directives.at("cgi_extension")[0]) != std::string::npos &&
-			checkExtension("/cgiphp/", path, serverLocation[i].directives.at("cgi_extension")[0]) == true){
-			return(locationPair);
-		}
-		locationPair.second = serverLocation[i];
-	}
-	locationPair.first = false;
-	return (locationPair);
-}
 
 void	handleInput(EpollSocket &client, const Config &serverConfig)
 {
@@ -59,21 +26,6 @@ void	handleInput(EpollSocket &client, const Config &serverConfig)
 
 	data = client.recvData();
 	request.treatRequest(data.first, serverConfig);
-	//serverConfig.servers[0] ->  will change depending on what server we work on
-	std::pair<bool,LocationContext> locationResult = getLocation(request.getPath(), serverConfig.servers[0].locations);
-	if (locationResult.first != false){
-		try{
-			//serverConfig.servers[0] ->  will change depending on what server we work on
-			std::pair<ServerContext, LocationContext > serverLocation = 
-			std::make_pair(serverConfig.servers[0], locationResult.second);
-
-			CGI cgi(data, request.getHeaders(), serverLocation, clientInfo);
-			cgi.CGIStartup();
-		}
-		catch(const std::exception &e){
-			std::cout << "Cgi failed: " << e.what() << std::endl;
-		}
-	}
-	response.buildResponse(request, serverConfig);
+	response.buildResponse(request, serverConfig, clientInfo);
 	response.sendResponse(client);
 }
