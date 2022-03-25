@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:14:35 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/03/22 22:11:55 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/03/23 18:45:19 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,7 +24,6 @@ static void	initServer(std::vector<EpollSocket> &localServers, Epoll &epoll)
 	signal(SIGINT, handleSigint);
 	for (size_t i = 0; i < localServers.size(); ++i)
 	{
-		localServers[i].setNonBlocking();
 		localServers[i].events(EPOLLIN | EPOLLET | EPOLLRDHUP);
 		epoll.control(EPOLL_CTL_ADD, localServers[i]);
 	}
@@ -36,7 +35,6 @@ void	server(std::vector<EpollSocket> &localServers, Config &config)
 	Epoll		epoll;
 	EpollSocket	socketEvent;
 
-	(void)config;
 	initServer(localServers, epoll);
 	while (g_running == true)
 	{
@@ -49,7 +47,7 @@ void	server(std::vector<EpollSocket> &localServers, Config &config)
 			else if (socketEvent.events() & (EPOLLERR | EPOLLRDHUP | EPOLLHUP))
 				handleDeconnection(epoll, socketEvent);
 			else if (socketEvent.events() & EPOLLIN)
-				handleInput(socketEvent);
+				handleInput(socketEvent, config);
 		}
 	}
 }

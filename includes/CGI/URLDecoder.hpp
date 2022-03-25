@@ -6,45 +6,6 @@
 #include <map>
 #include <cstdlib>
 
-/**
- * constructor: URLDecoder() 
- * @brief Fill a std::map container with all the encoded values and their hexadecimal value
- * @param none
- * @return void
- */
-
-/**
- * decoder: decoder() 
- * @brief Turn the encodedURL into a decoded url assigned to _decodedURL
- * 
- * @param the encoded url as a std::string
- * @return void
- */
-
-/**
- * decodedURL getter: std::string &getDecodedURL()
- * @brief Return the decodedURL
- * 
- * @param none
- * @return decodedURL as a const std::string
- */
-
-/**
- * map filler: void    _fillMap(const char c, short hex)
- * @brief Used to insert _reservedChars into map
- * 
- * @param the reserved char as const char and its hexdecimal value as a short
- * @return void
- */
-
-/**
- * reservedChar checker: bool isReservedChar(const char c)
- * @brief Check if the char passed in parametter is a reservedchar
- * 
- * @param the char to check
- * @return a boolean wether c is a reserved char or not
- */
-
 class URLDecoder
 {
 public:

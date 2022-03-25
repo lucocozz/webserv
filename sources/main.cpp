@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/21 19:48:40 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/03/22 19:42:13 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/03/23 18:45:42 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,7 @@ static std::vector<EpollSocket>	listenServers(Config &config)
 		std::cout << "Creating server: " << config.servers[i].directives.at("server_name")[0] << std::endl;
 		std::cout << "listening " << listen[0] << ":" << listen[1] << std::endl;
 		serverSocket.createSocket(AF_INET, SOCK_STREAM, listen[1]);
+		serverSocket.setNonBlocking();
 		serverSocket.setSockOpt(SOL_SOCKET, SO_REUSEADDR, 1);
 		serverSocket.bindSocket();
 		serverSocket.listenSocket();

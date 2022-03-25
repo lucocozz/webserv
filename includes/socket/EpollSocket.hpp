@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/16 23:19:48 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/03/17 16:59:55 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/03/23 19:14:14 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,6 +25,7 @@ private:
 public:
 	explicit EpollSocket(int fd = 0, uint32_t events = 0): Socket(fd)
 	{
+		bzero(&this->_infoEvent, sizeof(this->_infoEvent));
 		this->_infoEvent.data.fd = fd;
 		this->_infoEvent.events = events;
 	}
