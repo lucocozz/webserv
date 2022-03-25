@@ -57,7 +57,7 @@ public:
             if (this->_decodedURL[i] == '%'){
                 char *end = const_cast<char *>((this->_decodedURL.c_str() + i + 3));
                 atoiRes = std::strtol((this->_decodedURL.c_str() + i + 1), &end, 16);
-                if (_isReservedChar(static_cast<const char>(atoiRes)) == true){
+                if (_isReservedChar(static_cast<char>(atoiRes)) == true){
                     this->_decodedURL.replace((i), 3, 1, atoiRes);
                 }
             }

@@ -1,0 +1,5 @@
+server {
+	listen 8082;
+
+	server_name test.com;
+}
