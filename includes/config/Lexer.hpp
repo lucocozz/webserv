@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/03 01:06:41 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/03/08 01:52:34 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/03/25 10:03:47 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -122,7 +122,7 @@ private:
 
 	bool	_isKeyword(const char &c)
 	{
-		std::string	charset = "_./$";
+		std::string	charset = "_./$-";
 
 		if (std::isalnum(c) > 0 || charset.find(c) != std::string::npos)
 			return (true);

@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/03 01:11:36 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/03/15 22:16:39 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/03/25 10:16:16 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -164,22 +164,20 @@ private:
 		for (size_t i = 0; i < block.size(); ++i)
 		{
 			if (block[i].literal == "location")
-				server.locations.push_back(this->_parsedLocationToData(block[i].block));
+				server.locations.push_back(this->_parsedLocationToData(block[i]));
 			else
 				server.directives[block[i].literal] = block[i].args;
 		}
 		return (server);
 	}
 
-	LocationContext	_parsedLocationToData(const std::vector<Directive> &block)
+	LocationContext	_parsedLocationToData(const Directive &directive)
 	{
 		LocationContext			location;
 
-		for (size_t i = 0; i < block.size(); ++i)
-		{
-			location.args = block[i].args;
-			location.directives[block[i].literal] = block[i].args;
-		}
+		location.args = directive.args;
+		for (size_t i = 0; i < directive.block.size(); ++i)
+			location.directives[directive.block[i].literal] = directive.block[i].args;
 		return (location);
 	}
 };

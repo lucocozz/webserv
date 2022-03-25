@@ -6,7 +6,7 @@
 #    By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2022/01/21 19:56:36 by lucocozz          #+#    #+#              #
-#    Updated: 2022/03/22 22:10:00 by lucocozz         ###   ########.fr        #
+#    Updated: 2022/03/23 20:01:50 by lucocozz         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -21,7 +21,8 @@ SRC := 	main.cpp				\
 		handleInput.cpp			\
 		handleConnection.cpp	\
 		handleDeconnection.cpp	\
-		handleSignal.cpp
+		handleSignal.cpp		\
+		listenServers.cpp
 
 MAKE = make
 MAKEFLAGS += --no-print-directory
