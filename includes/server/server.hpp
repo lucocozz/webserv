@@ -19,7 +19,7 @@
 
 extern bool	g_running;
 
-void						handleInput(EpollSocket &client, Config &config);
+void						handleInput(EpollSocket &client, const Config &serverConfig);
 void						handleConnection(Epoll &epoll, EpollSocket &client);
 void						handleDeconnection(Epoll &epoll, EpollSocket &client);
 std::vector<EpollSocket>	listenServers(Config &config);
