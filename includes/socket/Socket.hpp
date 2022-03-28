@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/16 22:47:17 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/03/23 20:01:29 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/03/28 23:36:09 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,13 +30,14 @@
 class Socket
 {
 protected:
+	std::string		_port;
 	int				_listenSocket;
 	struct addrinfo	*_bindAddress;
 
 public:
-	explicit Socket(int fd = 0): _listenSocket(fd), _bindAddress(NULL) {}
+	explicit Socket(int fd = 0): _port(""), _listenSocket(fd), _bindAddress(NULL) {}
 
-	Socket(const Socket &rhs): _listenSocket(0), _bindAddress(NULL)
+	Socket(const Socket &rhs): _port(""), _listenSocket(0), _bindAddress(NULL)
 	{
 		*this = rhs;
 	}
@@ -47,6 +48,7 @@ public:
 	{
 		if (this != &rhs)
 		{
+			this->_port = rhs._port;
 			this->_listenSocket = rhs._listenSocket;
 			this->_bindAddress = rhs._bindAddress;
 		}
@@ -62,6 +64,11 @@ public:
 		return (this->_listenSocket);
 	}
 
+	std::string	port(void) const
+	{
+		return (this->_port);
+	}
+
 
 
 
@@ -73,6 +80,7 @@ public:
 		if (this->_listenSocket != 0)
 			throw (std::runtime_error("Socket already created"));
 		std::cout << "Creating socket..." << std::endl;
+		this->_port = port;
 		bzero(&hints, sizeof(hints));
 		hints.ai_family = family;
 		hints.ai_socktype = socktype;
@@ -129,7 +137,10 @@ public:
 			throw (std::runtime_error("Socket have not been created yet"));
 		std::cout << "Binding socket to address..." << std::endl;
 		if (bind(this->listener(), this->_bindAddress->ai_addr, this->_bindAddress->ai_addrlen) == -1)
+		{
+			this->closeSocket();
 			throw (std::runtime_error(strerror(errno)));
+		}
 	}
 
 	void	listenSocket(int backlog = 10)
@@ -150,7 +161,7 @@ public:
 		socketClient = accept(this->_listenSocket, (struct sockaddr*)&clientAddress, &clientLen);
 		if (socketClient == -1)
 			throw (std::runtime_error(strerror(errno)));
-		std::cout << "Client is connected as: " << this->getNameInfo(socketClient) << std::endl;
+		std::cout << "Client is connected as: " << this->_getNameInfo(socketClient) << std::endl;
 		return (socketClient);
 	}
 
@@ -184,8 +195,12 @@ public:
 
 
 
+	std::string	getNameInfo(int flags = 0) const
+	{
+		this->_getNameInfo(this->_listenSocket, flags);
+	}
 
-	std::string	getNameInfo(int socketFd, int flags = 0) const
+	std::string	_getNameInfo(int socketFd, int flags = 0) const
 	{
 		socklen_t				hostLen;
 		struct sockaddr_storage	hostAddress;
@@ -201,7 +216,7 @@ public:
 
 	bool	operator==(const Socket &rhs)
 	{
-		return (this->listener() == rhs.listener());
+		return (this->listener() == rhs.listener() && this->port() == rhs.port());
 	}
 };
 

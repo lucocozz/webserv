@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/03 01:09:40 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/03/25 09:58:51 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/03/25 17:41:24 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -90,6 +90,8 @@ private:
 	// 			this->_directiveInclude(directives[i].block);
 	// 		if (directives[i].literal == "include")
 	// 		{
+	// 			if (directives[i].args.size() != 1)
+	// 				throw (std::runtime_error(this->_errorMsg(directives[i].line, "include: 1 argument expected")));
 	// 			include = this->_parseInclude(directives[i].args[0]);
 	// 			directives.insert(directives.begin() + i + 1, include.begin(), include.end());
 	// 		}
@@ -98,7 +100,10 @@ private:
 
 	// std::vector<Directive>	_parseInclude(std::string path)
 	// {
+	// 	std::vector<Directive>	directives;
+
 	// 	(void)path;
+	// 	return (directives);
 	// }
 
 	void	_checkParsing(void)

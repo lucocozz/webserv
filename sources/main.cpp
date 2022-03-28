@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/21 19:48:40 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/03/23 21:34:19 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/03/28 22:02:13 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,7 @@ int	main(void)
 		server(localServers, config);
 	}
 	catch (const std::exception &e) {
-		std::cerr << e.what() << std::endl;
+		std::cerr << "Error: " << e.what() << std::endl;
 	}
 	for (size_t i = 0; i < localServers.size(); ++i)
 		localServers[i].closeSocket();
