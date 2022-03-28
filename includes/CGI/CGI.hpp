@@ -58,6 +58,7 @@ public:
                 end++;
             }
             strStatus.append(begin, end);
+            std::cout << "strStatus |" << strStatus << "|" <<std::endl;
             return (atoi(strStatus.c_str()));
         }
         return (status);

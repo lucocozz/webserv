@@ -16,7 +16,6 @@
 #include "request.hpp"
 #include "response.hpp"
 
-
 void	handleInput(EpollSocket &client, const Config &serverConfig)
 {
 	std::pair<std::string, int>					data;
