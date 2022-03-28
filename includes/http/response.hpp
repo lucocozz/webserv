@@ -277,7 +277,7 @@ class httpResponse{
 
 		static std::pair<bool,LocationContext>  getLocation(std::string path, std::vector<LocationContext> serverLocation){
 		std::pair<bool,LocationContext> locationPair = std::make_pair(true, serverLocation[0]);
-		
+
 		for (size_t i = 0; i < serverLocation.size(); i++){
 			if ((path.find(serverLocation[i].args[0]) != std::string::npos) && 
 				(serverLocation[i].directives.count("cgi_extension") == 1) &&
@@ -296,18 +296,19 @@ class httpResponse{
 			
 			if (locationResult.first == true){
 				try{
-					std::cout << "path " << this->_request.getPath() << std::endl;
-					std::string cgiResponse;
+					std::pair<std::string, int> cgiResponse;
 					//serverConfig.servers[0] ->  will change depending on what server we work on
 					std::pair<ServerContext, LocationContext > serverLocation = 
 						std::make_pair(serverConfig.servers[0], locationResult.second);
 
 					CGI cgi(this->_request.getPath(), headers, serverLocation, clientInfo, "GET");
 					cgiResponse = cgi.CGIStartup();
-					this->_content.append(cgiResponse);
+					this->_content.append(cgiResponse.first);
 					this->_contentType = "text/html";
+					this->_status = cgiResponse.second;
 				}
 				catch(const std::exception &e){
+					this->_status = 500;
 					std::cout << "Cgi failed: " << e.what() << std::endl;
 				}
 			}

@@ -48,14 +48,29 @@ public:
     ~CGI(){
     }
 
-    std::string CGIStartup(){
-        char         readBuffer[1024];
-        std::string  bodyResult;
-        pid_t        pid;
-        int          fdsGet[2];
-        int          fdsPost[2];
-        int          childExitStatus = 0;                                    
-        char         **cMetaVar;
+    int checkStatus(std::string response){
+        int status = 0;
+        if (response.find("Status:") != std::string::npos){
+            std::string strStatus;
+            std::string::iterator begin = response.begin() + (response.find("Status:") + 8);
+            std::string::iterator end = begin;
+            for (int i = 0; i < 3; i++){
+                end++;
+            }
+            strStatus.append(begin, end);
+            return (atoi(strStatus.c_str()));
+        }
+        return (status);
+    }
+
+    std::pair<std::string, int> CGIStartup(){
+        char                            readBuffer[1024];
+        std::pair<std::string, int>     cgiResponse;
+        pid_t                           pid;
+        int                             fdsGet[2];
+        int                             fdsPost[2];
+        int                             childExitStatus = 0;                                    
+        char                            **cMetaVar;
 
         cMetaVar = _createCMetaVar();
         std::cout << "vars " << std::endl;
@@ -77,22 +92,26 @@ public:
         close(fdsGet[1]);
 		bzero(readBuffer, 1024);
         while (read(fdsGet[0], readBuffer, 1024) > 0){
-            bodyResult += readBuffer;
+            cgiResponse.first += readBuffer;
             bzero(readBuffer,1024);
         }
-		bodyResult += readBuffer;
+		cgiResponse.first += readBuffer;
         close(fdsGet[0]);
-		std::cout << "BODYRESULT: " << bodyResult << std::endl;
-		//check if header contain status before trimming it 
-		std::string::iterator begin = bodyResult.begin();
-		std::string::iterator end = begin + bodyResult.find("\r\n\r\n") + 4;
-		bodyResult.erase(begin, end);
+		std::cout << "BODYRESULT: " << cgiResponse.first << std::endl;
+        int status = checkStatus(cgiResponse.first);
+        if (status > 0){
+            cgiResponse.second = status;
+            return (cgiResponse);
+        }
+		std::string::iterator begin = cgiResponse.first.begin();
+		std::string::iterator end = begin + cgiResponse.first.find("\r\n\r\n") + 4;
+		cgiResponse.first.erase(begin, end);
         if ((childExitStatus = waitChild(pid)) > 0)
             throw execveError(childExitStatus);
         for (size_t i = 0; cMetaVar[i]; i++)
             delete [] cMetaVar[i];
         delete [] cMetaVar;
-        return (bodyResult);
+        return (cgiResponse);
     }
 
     char **_createCMetaVar(){
@@ -118,10 +137,10 @@ public:
     void childProcess(int fdGet[2], int fdPost[2], char **cMetaVar){
         char **args = new char*[3];
 
-        std::string path(_serverContext.directives.at("root")[0] + _locationContext.args[0]);
+        std::string path(this->_serverContext.directives.at("root")[0] + this->_locationContext.args[0]);
 
-        args[0] = strdupa(_locationContext.directives.at("cgi_binary")[0].c_str());
-        args[1] = strdupa(_mapMetaVars.find("SCRIPT_NAME=")->second.c_str());
+        args[0] = strdupa(this->_locationContext.directives.at("cgi_binary")[0].c_str());
+        args[1] = strdupa(this->_mapMetaVars.find("SCRIPT_NAME=")->second.c_str());
         args[2] = NULL;
 
         close(fdGet[0]);
@@ -228,7 +247,7 @@ private:
         std::string varName("SERVER_NAME=");
         std::string name("");
 
-        name = _serverContext.directives.at("server_name")[0];
+        name = this->_serverContext.directives.at("server_name")[0];
         this->_mapMetaVars.insert(std::make_pair(varName, name));
     }
 
@@ -261,7 +280,7 @@ private:
 
     void _setPathInfo(){
         std::string varName("PATH_INFO=");
-        std::string pathInfo(_mapMetaVars.find("REQUEST_URI=")->second);
+        std::string pathInfo(this->_mapMetaVars.find("REQUEST_URI=")->second);
 
 		if (pathInfo.find('?') != std::string::npos){
 			std::string::iterator begin;
@@ -277,8 +296,8 @@ private:
     void _setPathTranslated(){
         std::string varName("PATH_TRANSLATED=");
         std::string pathTranslated("");
-		std::string root(_serverContext.directives.at("root")[0]);
-        std::string uri(_mapMetaVars.find("REQUEST_URI=")->second);
+		std::string root(this->_serverContext.directives.at("root")[0]);
+        std::string uri(this->_mapMetaVars.find("REQUEST_URI=")->second);
 
 		if (*--root.end() == '/')
 			root.erase(--root.end());
@@ -297,11 +316,11 @@ private:
     void _setScriptName(){
         std::string				varName("SCRIPT_NAME=");
         std::string             name("");
-        std::string             cgiFile(_locationContext.args[0]);
+        std::string             cgiFile(this->_locationContext.args[0]);
         std::string::iterator   begin;
         std::string::iterator	end;
 
-		begin = _decodedURL.begin() + (_decodedURL.find(cgiFile) + cgiFile.size());
+		begin = this->_decodedURL.begin() + (this->_decodedURL.find(cgiFile) + cgiFile.size());
 		end = begin;
 		while (*end != '/' && *end != '?' && *end != '\0')
 			end++;
@@ -318,7 +337,7 @@ private:
 			std::string::iterator	begin;
 			std::string::iterator	end;
 			
-			begin = _decodedURL.begin() + (_decodedURL.find('?') + 1);
+			begin = this->_decodedURL.begin() + (this->_decodedURL.find('?') + 1);
 			end = begin;
 			while (*end != '/' && *end != '\0')
 				end++;
@@ -353,7 +372,7 @@ private:
         std::string authType("");
         
         if (_mapMetaVars.count("HTTP_AUTHORIZATION=") == 1){
-            std::string 			type(_mapMetaVars.find("HTTP_AUTHORIZATION=")->second);
+            std::string 			type(this->_mapMetaVars.find("HTTP_AUTHORIZATION=")->second);
             std::string::iterator	begin;
             std::string::iterator	end;
             
@@ -379,13 +398,13 @@ private:
         std::string contentLength("");
 
         if (_mapMetaVars.count("HTTP_CONTENT_LENGTH=") == 1)
-            contentLength = _mapMetaVars.find("HTTP_CONTENT_LENGTH=")->second;
+            contentLength = this->_mapMetaVars.find("HTTP_CONTENT_LENGTH=")->second;
         this->_mapMetaVars.insert(std::make_pair(varName, contentLength));
     }
 
     void _setRequestUri(){
         std::string varName("REQUEST_URI=");
-        std::string uri(_encodedURL);
+        std::string uri(this->_encodedURL);
 
         this->_mapMetaVars.insert(std::make_pair(varName, uri));
     }
