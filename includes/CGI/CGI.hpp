@@ -24,6 +24,7 @@ public:
 private:
     std::string                         _encodedURL;
     std::string                         _decodedURL;
+    std::string                         _requestBody;
     std::map<std::string, std::string>  _mapMetaVars;
     ServerContext                       _serverContext;
     LocationContext                     _locationContext;
@@ -32,10 +33,12 @@ private:
 public:
 
     CGI(const std::string &url, std::map<std::string, std::string> headers, 
+        const std::string &body,
 		const serverLocation &serverLocation, const clientInfo &clientInfo,
 		const std::string &method): 
     _encodedURL(url),
     _decodedURL(_decodeUrl()),
+    _requestBody(body),
     _mapMetaVars(),
     _serverContext(serverLocation.first),
     _locationContext(serverLocation.second){
@@ -66,13 +69,17 @@ public:
         if (pid == 0)
             this->_childProcess(fdToChild, fdToParent, cMetaVar);
 
+        if (_mapMetaVars.find("REQUEST_METHOD=")->second.compare("POST") == 0){
+            write(fdToChild[1], _requestBody.c_str(),  _requestBody.size());
+        }
+
         close(fdToChild[0]);
         close(fdToChild[1]);
 
         cgiResponse.first = this->_getCgiOutput(fdToParent);
         cgiResponse.second = this->_getCgiReturnStatus(cgiResponse.first);
-        this->_getCgiOutputBody(cgiResponse.first);
-
+        if (cgiResponse.second == 200)
+            this->_getCgiOutputBody(cgiResponse.first);
         if ((childExitStatus = this->_waitChild(pid)) > 0)
             throw execveError(childExitStatus);
         for (size_t i = 0; cMetaVar[i]; i++)
@@ -413,7 +420,7 @@ private:
     }
 
     int _getCgiReturnStatus(std::string response){
-        int status = 0;
+        int status = 200;
         if (response.find("Status:") != std::string::npos){
             std::string strStatus;
             std::string::iterator begin = response.begin() + (response.find("Status:") + 8);
@@ -428,14 +435,17 @@ private:
     }
 
     std::string _getCgiOutput(int fdToParent[2]){
-        char        readBuffer[1024];
+        char        readBuffer[1024 + 1];
+        int         nbRead = 0;
         std::string cgiOutput;
 
         close(fdToParent[1]);
 		bzero(readBuffer, 1024);
-        while (read(fdToParent[0], readBuffer, 1024) > 0){
+        nbRead = read(fdToParent[0], readBuffer, 1024);
+        while (nbRead > 0){
             cgiOutput += readBuffer;
-            bzero(readBuffer,1024);
+            bzero(readBuffer,1024 + 1);
+            nbRead = read(fdToParent[0], readBuffer, 1024);
         }
         cgiOutput += readBuffer;
         return (cgiOutput);
@@ -444,9 +454,14 @@ private:
     void _getCgiOutputBody(std::string &cgiOutput){
         std::string::iterator begin;
 		std::string::iterator end;
+        size_t                htmlOpen;
 
+        htmlOpen = (cgiOutput.find("<") - 1);
         begin = cgiOutput.begin();
-        end = begin + (cgiOutput.find("<") - 1);
+        if (htmlOpen != std::string::npos)
+            end = begin + htmlOpen;
+        else
+            end = begin;
         cgiOutput.erase(begin, end);
     }
 };
