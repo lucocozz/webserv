@@ -279,13 +279,13 @@ class httpResponse{
 		std::pair<bool,LocationContext> locationPair = std::make_pair(true, serverLocation[0]);
 
 		for (size_t i = 0; i < serverLocation.size(); i++){
-			if ((path.find(serverLocation[i].args[0]) != std::string::npos) && 
-				(serverLocation[i].directives.count("cgi_extension") == 1) &&
+			if ((path.append("/").find(serverLocation[i].args[0]) != std::string::npos) && 
 				(serverLocation[i].directives.count("cgi_binary") == 1)){
 				locationPair.second = serverLocation[i];
 				return(locationPair);
 			}
 		}
+		std::cout << "pas loca " << serverLocation[0].args[0] << std::endl;
 		locationPair.first = false;
 		return (locationPair);
 		}
@@ -293,7 +293,6 @@ class httpResponse{
 		void	_get(std::string &path, const Config &serverConfig, const std::pair<std::string, std::string> &clientInfo, const std::map<std::string, std::string> &headers){
 			std::pair<bool,LocationContext> locationResult = 
 				getLocation(this->_request.getPath(), serverConfig.servers[0].locations);
-			
 			if (locationResult.first == true){
 				try{
 					std::pair<std::string, int> cgiResponse;
@@ -302,7 +301,7 @@ class httpResponse{
 						std::make_pair(serverConfig.servers[0], locationResult.second);
 
 					CGI cgi(this->_request.getPath(), headers, serverLocation, clientInfo, "GET");
-					cgiResponse = cgi.CGIStartup();
+					cgiResponse = cgi.cgiHandler();
 					this->_content.append(cgiResponse.first);
 					this->_contentType = "text/html";
 					this->_status = cgiResponse.second;

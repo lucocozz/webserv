@@ -2,11 +2,8 @@
 # define CLASS_CGI_HPP
 
 #include <unistd.h>
-#include <stdio.h>
 #include <errno.h>
-#include <string.h>
 #include <stdlib.h>
-#include <string>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <iostream>
@@ -48,126 +45,41 @@ public:
     ~CGI(){
     }
 
-    int checkStatus(std::string response){
-        int status = 0;
-        if (response.find("Status:") != std::string::npos){
-            std::string strStatus;
-            std::string::iterator begin = response.begin() + (response.find("Status:") + 8);
-            std::string::iterator end = begin;
-            for (int i = 0; i < 3; i++){
-                end++;
-            }
-            strStatus.append(begin, end);
-            std::cout << "strStatus |" << strStatus << "|" <<std::endl;
-            return (atoi(strStatus.c_str()));
-        }
-        return (status);
-    }
-
-    std::pair<std::string, int> CGIStartup(){
-        char                            readBuffer[1024];
+    std::pair<std::string, int> cgiHandler(){
         std::pair<std::string, int>     cgiResponse;
         pid_t                           pid;
-        int                             fdsGet[2];
-        int                             fdsPost[2];
+        int                             fdToChild[2];
+        int                             fdToParent[2];
         int                             childExitStatus = 0;                                    
         char                            **cMetaVar;
 
-        cMetaVar = _createCMetaVar();
-        std::cout << "vars " << std::endl;
-        for (size_t i = 0;cMetaVar[i]; i++){
-            std::cout << "envvar " << cMetaVar[i] << std::endl;
+        cMetaVar = this->_createCMetaVar();
+        for (size_t i = 0; cMetaVar[i]; i++){
+            std::cout << cMetaVar[i] << std::endl;
         }
-
-        if (pipe(fdsGet) < 0)
+        if (pipe(fdToChild) < 0)
             throw pipeError();
-        if (pipe(fdsPost) < 0)
+        if (pipe(fdToParent) < 0)
             throw pipeError();
         if ((pid = fork()) == -1)
             throw forkError();
-
         if (pid == 0)
-            childProcess(fdsGet, fdsPost, cMetaVar);
+            this->_childProcess(fdToChild, fdToParent, cMetaVar);
 
-        //reading in pipes
-        close(fdsGet[1]);
-		bzero(readBuffer, 1024);
-        while (read(fdsGet[0], readBuffer, 1024) > 0){
-            cgiResponse.first += readBuffer;
-            bzero(readBuffer,1024);
-        }
-		cgiResponse.first += readBuffer;
-        close(fdsGet[0]);
-		std::cout << "BODYRESULT: " << cgiResponse.first << std::endl;
-        int status = checkStatus(cgiResponse.first);
-        if (status > 0){
-            cgiResponse.second = status;
-            return (cgiResponse);
-        }
-		std::string::iterator begin = cgiResponse.first.begin();
-		std::string::iterator end = begin + cgiResponse.first.find("\r\n\r\n") + 4;
-		cgiResponse.first.erase(begin, end);
-        if ((childExitStatus = waitChild(pid)) > 0)
+        close(fdToChild[0]);
+        close(fdToChild[1]);
+
+        cgiResponse.first = this->_getCgiOutput(fdToParent);
+        cgiResponse.second = this->_getCgiReturnStatus(cgiResponse.first);
+        this->_getCgiOutputBody(cgiResponse.first);
+
+        if ((childExitStatus = this->_waitChild(pid)) > 0)
             throw execveError(childExitStatus);
         for (size_t i = 0; cMetaVar[i]; i++)
             delete [] cMetaVar[i];
         delete [] cMetaVar;
+        close(fdToParent[0]);
         return (cgiResponse);
-    }
-
-    char **_createCMetaVar(){
-        char                                                **CMetaVar;
-        size_t                                              i;
-        std::string                                         join;
-        std::map<const std::string, std::string>::iterator  itb;
-
-        itb = this->_mapMetaVars.begin();
-        CMetaVar = new char *[this->_mapMetaVars.size() + 1];
-        i = 0;
-        while(i < this->_mapMetaVars.size()){
-            CMetaVar[i] = new char [itb->first.size() + itb->second.size() + 1];
-            join = static_cast<std::string>(itb->first).append(itb->second);
-            strcpy(CMetaVar[i], join.c_str());
-            itb++;
-            i++;
-        }
-        CMetaVar[i] = NULL;
-        return (CMetaVar);
-    }
-
-    void childProcess(int fdGet[2], int fdPost[2], char **cMetaVar){
-        char **args = new char*[3];
-
-        std::string path(this->_serverContext.directives.at("root")[0] + this->_locationContext.args[0]);
-
-        args[0] = strdupa(this->_locationContext.directives.at("cgi_binary")[0].c_str());
-        args[1] = strdupa(this->_mapMetaVars.find("SCRIPT_NAME=")->second.c_str());
-        args[2] = NULL;
-
-        close(fdGet[0]);
-        dup2(fdGet[1], STDOUT_FILENO);
-        close(fdGet[1]);
-
-        close(fdPost[0]);
-        dup2(fdPost[1], STDIN_FILENO);
-        close(fdPost[1]);
-
-        chdir(path.c_str());
-        std::cerr << "currentdir " << get_current_dir_name() << " cgi binary: " << args[0]  << " cgi script name: " << args[1] <<  std::endl;
-        execve(args[0], args, cMetaVar);
-        exit(errno);
-    }
-
-    int waitChild(pid_t pid){
-        int exitStatus;
-        int exitCode;
-
-        exitStatus = 0;
-        exitCode = 0;
-        waitpid(pid, &exitStatus, 0);
-        if (WIFEXITED(exitStatus))
-            exitCode = WEXITSTATUS(exitStatus);
-        return (exitCode);
     }
     
    class execveError: public std::exception {
@@ -442,6 +354,100 @@ private:
         formated.append("=");
         ret.append(formated);
         return(ret);
+    }
+
+    char **_createCMetaVar(){
+        char                                                **CMetaVar;
+        size_t                                              i;
+        std::string                                         join;
+        std::map<const std::string, std::string>::iterator  itb;
+
+        itb = this->_mapMetaVars.begin();
+        CMetaVar = new char *[this->_mapMetaVars.size() + 1];
+        i = 0;
+        while(i < this->_mapMetaVars.size()){
+            CMetaVar[i] = new char [itb->first.size() + itb->second.size() + 1];
+            join = static_cast<std::string>(itb->first).append(itb->second);
+            strcpy(CMetaVar[i], join.c_str());
+            itb++;
+            i++;
+        }
+        CMetaVar[i] = NULL;
+        return (CMetaVar);
+    }
+
+    void _childProcess(int fdToChild[2], int fdToParent[2], char **cMetaVar){
+        char        **args = new char*[3];
+        std::string cgiLocationPath;
+
+        args[0] = strdupa(this->_locationContext.directives.at("cgi_binary")[0].c_str());
+        args[1] = strdupa(this->_mapMetaVars.find("SCRIPT_NAME=")->second.c_str());
+        args[2] = NULL;
+
+        cgiLocationPath = this->_serverContext.directives.at("root")[0] + this->_locationContext.args[0];
+
+        close(fdToParent[0]);
+        dup2(fdToParent[1], STDOUT_FILENO);
+        close(fdToParent[1]);
+
+        close(fdToChild[1]);
+        dup2(fdToChild[0], STDIN_FILENO);
+        close(fdToChild[0]);
+
+        chdir(cgiLocationPath.c_str());
+        std::cerr << "currentdir " << get_current_dir_name() << " cgi binary: " << args[0]  << " cgi script name: " << args[1] <<  std::endl;
+        execve(args[0], args, cMetaVar);
+        exit(errno);
+    }
+
+    int _waitChild(pid_t pid){
+        int exitStatus;
+        int exitCode;
+
+        exitStatus = 0;
+        exitCode = 0;
+        waitpid(pid, &exitStatus, 0);
+        if (WIFEXITED(exitStatus))
+            exitCode = WEXITSTATUS(exitStatus);
+        return (exitCode);
+    }
+
+    int _getCgiReturnStatus(std::string response){
+        int status = 0;
+        if (response.find("Status:") != std::string::npos){
+            std::string strStatus;
+            std::string::iterator begin = response.begin() + (response.find("Status:") + 8);
+            std::string::iterator end = begin;
+            for (int i = 0; i < 3; i++){
+                end++;
+            }
+            strStatus.append(begin, end);
+            return (atoi(strStatus.c_str()));
+        }
+        return (status);
+    }
+
+    std::string _getCgiOutput(int fdToParent[2]){
+        char        readBuffer[1024];
+        std::string cgiOutput;
+
+        close(fdToParent[1]);
+		bzero(readBuffer, 1024);
+        while (read(fdToParent[0], readBuffer, 1024) > 0){
+            cgiOutput += readBuffer;
+            bzero(readBuffer,1024);
+        }
+        cgiOutput += readBuffer;
+        return (cgiOutput);
+    }
+
+    void _getCgiOutputBody(std::string &cgiOutput){
+        std::string::iterator begin;
+		std::string::iterator end;
+
+        begin = cgiOutput.begin();
+        end = begin + (cgiOutput.find("<") - 1);
+        cgiOutput.erase(begin, end);
     }
 };
 
