@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/16 22:47:17 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/03/28 23:36:09 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/03/29 02:26:36 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -197,7 +197,7 @@ public:
 
 	std::string	getNameInfo(int flags = 0) const
 	{
-		this->_getNameInfo(this->_listenSocket, flags);
+		return (this->_getNameInfo(this->_listenSocket, flags));
 	}
 
 	std::string	_getNameInfo(int socketFd, int flags = 0) const
@@ -216,7 +216,7 @@ public:
 
 	bool	operator==(const Socket &rhs)
 	{
-		return (this->listener() == rhs.listener() && this->port() == rhs.port());
+		return (this->listener() == rhs.listener());
 	}
 };
 
