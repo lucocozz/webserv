@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:46 by user42            #+#    #+#             */
-/*   Updated: 2022/03/25 02:11:45 by user42           ###   ########.fr       */
+/*   Updated: 2022/03/30 15:53:35 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -115,7 +115,7 @@ class httpRequest{
 
 		std::string									getRootPath() const{return (this->_rootPath);}
 
-		std::vector<std::string>					getIndex() const{return (this->_index);}
+		std::string									getIndex() const{return (this->_index);}
 
 		bool										getAutoindex() const{return (this->_autoindex);}
 
@@ -156,10 +156,14 @@ class httpRequest{
 			}
 			try{
 				std::vector<std::string> index = config.servers[0].directives.at("index");
-				this->_index = index;
+
+				std::cout << "DEBUG index " << index.at(0);
+				//FIND THE INDEX
+
+				this->_index = index.at(0);
 			}
 			catch (std::exception const &e){
-				this->_index.push_back("default_index.html");
+				this->_index = "default_index.html";
 			}
 			try{
 				std::string autoindex = config.servers[0].directives.at("autoindex")[0];
@@ -260,6 +264,11 @@ class httpRequest{
 				this->_status = REQUEST_ENTITY_TOO_LARGE;
 				return;
 			}
+			//Check if the host is specified
+			if (this->findHeader("Host").empty() == true){
+				this->_status = BAD_REQUEST;
+				return;
+			}
 		}
 
 		void	_checkRequestLine(){
@@ -290,7 +299,7 @@ class httpRequest{
 		//Config
 		std::string										_serverName;
 		std::string										_rootPath;
-		std::vector<std::string>						_index;
+		std::string										_index;
 		bool											_autoindex;
 		std::pair<std::vector<std::string>, bool>		_errorPage;
 		std::pair<size_t, bool>							_maxBodySize;							

@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:59:01 by user42            #+#    #+#             */
-/*   Updated: 2022/03/21 23:22:36 by user42           ###   ########.fr       */
+/*   Updated: 2022/03/30 14:44:04 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,6 +69,31 @@ int							match(char *s1, char *s2){
 	if (*s1 == *s2 && *s1 == '\0' && *s2 == '\0')
 		return (1);
 	return (0);
+}
+
+bool	isPathDirectory(std::string const &path){
+	struct stat s;
+	stat(path.c_str(), &s);
+	if (s.st_mode & S_IFDIR)
+		return (true);
+	return (false);
+}
+
+std::string buildUrl(std::string host, std::string path, std::string fileName){
+	std::string ret;
+
+	ret.append("http://");
+	ret.append(host);
+	if (path != "/")
+		ret.append(path);
+	if (fileName.empty() == false){
+		if (*(ret.end() - 1) != '/')
+			ret.append("/");
+		ret.append(fileName);
+	}
+	std::cout << "DEBUG " << host << " | " << path << " | " << fileName << std::endl;
+
+	return (ret);
 }
 
 #endif

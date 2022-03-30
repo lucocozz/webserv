@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/03/25 02:21:08 by user42           ###   ########.fr       */
+/*   Updated: 2022/03/30 15:54:02 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -82,7 +82,7 @@ class httpResponse{
 			this->_rootToFile = this->_request.getRootPath();
 			this->_rootToFile.erase(this->_rootToFile.end() - 1);
 			if (this->_request.getPath() == "/" && this->_request.getAutoindex() == true)
-				this->_rootToFile.append(this->_request.getIndex()[0]);
+				this->_rootToFile.append(this->_request.getIndex());
 			else
 				this->_rootToFile.append(this->_request.getPath());
 
@@ -290,6 +290,60 @@ class httpResponse{
 		return (locationPair);
 		}
 
+		std::string		_buildAutoIndex(std::string rootPath, std::string path){
+			std::string ret;
+			ret.append("<html>\r\n");
+			ret.append("<head>\r\n");
+			ret.append("</head>\r\n");
+			ret.append("<body>\r\n");
+			ret.append("<h1>Index of " + path + "</h1>\r\n");
+			ret.append("<hr>\r\n");
+
+			DIR *rep = NULL;
+			struct dirent *fileRead = NULL;
+			rep = opendir((rootPath + path).c_str());
+			if (rep == NULL){
+				this->_status = INTERNAL_SERVER_ERROR;
+				return (this->_buildErrorPage(INTERNAL_SERVER_ERROR));
+			}
+			else{
+				ret.append("<ul>\r\n");
+				//Go to parent dir
+				(void)rootPath;
+				if (path == rootPath)
+					ret.append("<li><a href=\"" + buildUrl(this->_request.findHeader("Host"), path, "") + "\">../</a></li>\r\n");
+				else{
+					ret.append("<li><a href=\"");
+					ret.append(buildUrl(this->_request.findHeader("Host"), path, ".."));
+					ret.append("\">../</a></li>\r\n");
+				}
+
+				//Listing
+				while ((fileRead = readdir(rep)) != NULL){
+					if (strlen(fileRead->d_name) != 0 && fileRead->d_name[0] != '.'){
+						ret.append("<li><a href=\"");
+						ret.append(buildUrl(this->_request.findHeader("Host"), path, fileRead->d_name));
+						ret.append("\">");
+						ret.append(fileRead->d_name);
+						if (fileRead->d_type == DT_DIR)
+							ret.append("/</a></li>\r\n");
+						else
+							ret.append("</a></li>\r\n");
+					}
+				}
+
+				ret.append("</ul>\r\n");
+				if (closedir(rep) == -1){
+					this->_status = INTERNAL_SERVER_ERROR;
+					return (this->_buildErrorPage(INTERNAL_SERVER_ERROR));
+				}
+			}
+
+			ret.append("</body>\r\n");
+			ret.append("</html>\r\n");
+			return (ret);
+		}
+
 		void	_get(std::string &path, const Config &serverConfig, const std::pair<std::string, std::string> &clientInfo, const std::map<std::string, std::string> &headers){
 			std::pair<bool,LocationContext> locationResult = 
 				getLocation(this->_request.getPath(), serverConfig.servers[0].locations);
@@ -312,10 +366,14 @@ class httpResponse{
 					std::cout << "Cgi failed: " << e.what() << std::endl;
 				}
 			}
+			//If request path is root
 			else if (this->_request.getPath() == "/"){
 				this->_contentType = "text/html";
+				path.append(this->_request.getIndex());
+				//Listing the directories from the root
 				if (this->_request.getAutoindex() == true)
-					this->_content.append(buildAutoIndex(this->_request.getRootPath(), this->_request.getIndex()));
+					this->_content.append(this->_buildAutoIndex(this->_request.getRootPath(), this->_request.getPath()));
+				//Get the index page
 				else{
 					std::ifstream indata(path.c_str());
 					std::stringstream buff;
@@ -326,11 +384,15 @@ class httpResponse{
 			else{
 				path.erase(path.end() - 1);
 				path.append(this->_request.getPath());
-				this->_contentType = getMimeTypes(path.c_str());
-				std::ifstream indata(path.c_str());
-				std::stringstream buff;
-				buff << indata.rdbuf();
-				this->_content.append(buff.str());
+				if (this->_request.getAutoindex() == true && isPathDirectory(path) == true)
+					this->_content.append(this->_buildAutoIndex(this->_request.getRootPath(), this->_request.getPath()));
+				else{
+					this->_contentType = getMimeTypes(path.c_str());
+					std::ifstream indata(path.c_str());
+					std::stringstream buff;
+					buff << indata.rdbuf();
+					this->_content.append(buff.str());
+				}
 			}
 		}
 
