@@ -85,9 +85,8 @@ class httpResponse{
 				this->_rootToFile.append(this->_request.getIndex());
 			else
 				this->_rootToFile.append(this->_request.getPath());
-
 			if (this->_request.getMethod() == "POST")
-				this->_uploadContent();
+				this->_uploadContent(request.getPath(), config, clientInfo, request.getHeaders());
 			else if (this->_request.getMethod() == "DELETE")
 				this->_delete();
 			this->_retrieveContent(config, clientInfo, request.getHeaders());
@@ -279,8 +278,7 @@ class httpResponse{
 		std::pair<bool,LocationContext> locationPair = std::make_pair(true, serverLocation[0]);
 
 		for (size_t i = 0; i < serverLocation.size(); i++){
-			if ((path.find(serverLocation[i].args[0]) != std::string::npos) && 
-				(serverLocation[i].directives.count("cgi_extension") == 1) &&
+			if ((path.append("/").find(serverLocation[i].args[0]) != std::string::npos) && 
 				(serverLocation[i].directives.count("cgi_binary") == 1)){
 				locationPair.second = serverLocation[i];
 				return(locationPair);
@@ -347,7 +345,6 @@ class httpResponse{
 		void	_get(std::string &path, const Config &serverConfig, const std::pair<std::string, std::string> &clientInfo, const std::map<std::string, std::string> &headers){
 			std::pair<bool,LocationContext> locationResult = 
 				getLocation(this->_request.getPath(), serverConfig.servers[0].locations);
-			
 			if (locationResult.first == true){
 				try{
 					std::pair<std::string, int> cgiResponse;
@@ -355,15 +352,20 @@ class httpResponse{
 					std::pair<ServerContext, LocationContext > serverLocation = 
 						std::make_pair(serverConfig.servers[0], locationResult.second);
 
-					CGI cgi(this->_request.getPath(), headers, serverLocation, clientInfo, "GET");
-					cgiResponse = cgi.CGIStartup();
+					CGI cgi(this->_request.getPath(), headers, this->_request.getBody(), serverLocation, clientInfo, "GET");
+					cgiResponse = cgi.cgiHandler();
 					this->_content.append(cgiResponse.first);
 					this->_contentType = "text/html";
 					this->_status = cgiResponse.second;
 				}
 				catch(const std::exception &e){
+					std::string exception(e.what());
+					if (exception.find("No such file or directory") != std::string::npos){
+						this->_status = 404;
+						return;
+					}
 					this->_status = 500;
-					std::cout << "Cgi failed: " << e.what() << std::endl;
+					std::cerr << "Cgi failed: " << exception << std::endl;
 				}
 			}
 			//If request path is root
@@ -400,7 +402,27 @@ class httpResponse{
 			Upload a ressource :
 		*/
 
-		void	_uploadContent(){
+		void	_uploadContent(const std::string &path, const Config &serverConfig, const std::pair<std::string, std::string> &clientInfo, const std::map<std::string, std::string> &headers){
+			std::pair<bool,LocationContext> locationResult = 
+				getLocation(this->_request.getPath(), serverConfig.servers[0].locations);
+			if (locationResult.first == true){
+				try{
+					std::pair<std::string, int> cgiResponse;
+					//serverConfig.servers[0] ->  will change depending on what server we work on
+					std::pair<ServerContext, LocationContext > serverLocation = 
+						std::make_pair(serverConfig.servers[0], locationResult.second);
+
+					CGI cgi(path, headers, this->_request.getBody() , serverLocation, clientInfo, "POST");
+					cgiResponse = cgi.cgiHandler();
+					this->_content.append(cgiResponse.first);
+					this->_contentType = "text/html";
+					this->_status = cgiResponse.second;
+				}
+				catch(const std::exception &e){
+					this->_status = 500;
+					std::cerr << "Cgi failed: " << e.what() << std::endl;
+				}
+			}
 			return;
 		}
 

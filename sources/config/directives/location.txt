@@ -1,2 +1,3 @@
 cgi_extension
 cgi_binary
+upload_location
