@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/03 01:09:40 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/03/25 17:41:24 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/03/30 08:33:41 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,37 +75,10 @@ public:
 
 		this->_checkBrackets(tokens);
 		this->_parsed = this->_parseDirective(tokens, i);
-		// this->_directiveInclude(this->_parsed);
 		this->_checkParsing();
 	}
 
 private:
-	// void	_directiveInclude(std::vector<Directive> &directives)
-	// {
-	// 	std::vector<Directive>	include;
-
-	// 	for (size_t i = 0; i < directives.size(); ++i)
-	// 	{
-	// 		if (directives[i].block.size() > 0)
-	// 			this->_directiveInclude(directives[i].block);
-	// 		if (directives[i].literal == "include")
-	// 		{
-	// 			if (directives[i].args.size() != 1)
-	// 				throw (std::runtime_error(this->_errorMsg(directives[i].line, "include: 1 argument expected")));
-	// 			include = this->_parseInclude(directives[i].args[0]);
-	// 			directives.insert(directives.begin() + i + 1, include.begin(), include.end());
-	// 		}
-	// 	}
-	// }
-
-	// std::vector<Directive>	_parseInclude(std::string path)
-	// {
-	// 	std::vector<Directive>	directives;
-
-	// 	(void)path;
-	// 	return (directives);
-	// }
-
 	void	_checkParsing(void)
 	{
 		for (size_t i = 0; i < this->_parsed.size(); ++i)
