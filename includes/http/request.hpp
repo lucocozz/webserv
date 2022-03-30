@@ -24,6 +24,7 @@
 #include <utility>
 #include <sys/stat.h>
 
+#include "../server/Server.hpp"
 #include "../config/Config.hpp"
 #include "statusCode.hpp"
 #include "utils.hpp"
@@ -81,8 +82,8 @@ class httpRequest{
 			- Return the specified header if found
 		*/
 
-		void	treatRequest(std::string const &rawRequest, Config const &config){
-			this->_retrieveConfigInfo(config);
+		void	treatRequest(std::string const &rawRequest, Server const &server){
+			this->_retrieveConfigInfo(server);
 			this->_parse(rawRequest);
 
 			this->_check();
@@ -138,9 +139,9 @@ class httpRequest{
 			-	Retrieve the needed config info
 		*/
 
-		void	_retrieveConfigInfo(Config const &config){
+		void	_retrieveConfigInfo(Server const &server){
 			try{
-				std::vector<std::string> server_name = config.servers[0].directives.at("server_name");
+				std::vector<std::string> server_name = server.context.directives.at("server_name");
 				this->_serverName = server_name[0];
 			}
 			catch (std::exception const &e){
@@ -149,14 +150,14 @@ class httpRequest{
 				this->_serverName = "server";
 			}
 			try{
-				std::vector<std::string> root_path = config.servers[0].directives.at("root");
+				std::vector<std::string> root_path = server.context.directives.at("root");
 				this->_rootPath = root_path[0];
 			}
 			catch (std::exception const &e){
 				this->_rootPath = "/";
 			}
 			try{
-				std::vector<std::string> index = config.servers[0].directives.at("index");
+				std::vector<std::string> index = server.context.directives.at("index");
 
 				//FIND THE INDEX
 
@@ -166,7 +167,7 @@ class httpRequest{
 				this->_index = "default_index.html";
 			}
 			try{
-				std::string autoindex = config.servers[0].directives.at("autoindex")[0];
+				std::string autoindex = server.context.directives.at("autoindex")[0];
 				if (autoindex == "on")
 					this->_autoindex = true;
 				else
@@ -176,14 +177,14 @@ class httpRequest{
 				this->_autoindex = false;
 			}
 			try{
-				this->_maxBodySize.first = atoi((config.servers[0].directives.at("client_max_body_size")[0]).c_str());
+				this->_maxBodySize.first = atoi((server.context.directives.at("client_max_body_size")[0]).c_str());
 				this->_maxBodySize.second = true;
 			}
 			catch (std::exception const &e){
 				this->_maxBodySize.second = false;
 			}
 			try{
-				this->_errorPage.first = config.servers[0].directives.at("error_page");
+				this->_errorPage.first = server.context.directives.at("error_page");
 				this->_errorPage.second = true;
 			}
 			catch (std::exception const &e){

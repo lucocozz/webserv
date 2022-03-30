@@ -41,9 +41,10 @@ static Server	findServerSocket(std::vector<Server> &localServers, EpollSocket &s
 
 
 static	Server	findServerFromClient(std::vector<Server> &localServers, EpollSocket &socketEvent)
-{
+{	
 	for (size_t i = 0; i < localServers.size(); ++i)
 	{
+		std::cout << "clientsize " << localServers[i].clients.size() << std::endl;
 		for (size_t j = 0; j < localServers[i].clients.size(); ++j)
 		{
 			if (localServers[i].clients[j].listener() == socketEvent.listener())

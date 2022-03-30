@@ -24,10 +24,9 @@ void	handleInput(Server &server, EpollSocket &socketEvent)
 	httpRequest 								request;
 	httpResponse								response;
 
-	(void)server;
 	data = socketEvent.recvData();
 	std::cout << data.first << std::endl;
-	// request.treatRequest(data.first, server.context);
-	// response.buildResponse(request, server.context, clientInfo);
-	// response.sendResponse(socketEvent);
+	request.treatRequest(data.first, server);
+	response.buildResponse(request, server, clientInfo);
+	response.sendResponse(socketEvent);
 }

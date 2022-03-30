@@ -68,6 +68,12 @@ public:
             throw forkError();
         if (pid == 0)
             this->_childProcess(fdToChild, fdToParent, cMetaVar);
+        
+        for (size_t i = 0; cMetaVar[i]; i++)
+            delete [] cMetaVar[i];
+        delete [] cMetaVar;
+
+        std::cout << "requestbody |" << _requestBody << "|" <<std::endl;
 
         if (_mapMetaVars.find("REQUEST_METHOD=")->second.compare("POST") == 0){
             write(fdToChild[1], _requestBody.c_str(),  _requestBody.size());
@@ -75,16 +81,13 @@ public:
 
         close(fdToChild[0]);
         close(fdToChild[1]);
-
         cgiResponse.first = this->_getCgiOutput(fdToParent);
+        std::cout << "CGI REP " << cgiResponse.first << std::endl;
+        if ((childExitStatus = this->_waitChild(pid)) > 0)
+            throw execveError(childExitStatus);
         cgiResponse.second = this->_getCgiReturnStatus(cgiResponse.first);
         if (cgiResponse.second == 200)
             this->_getCgiOutputBody(cgiResponse.first);
-        if ((childExitStatus = this->_waitChild(pid)) > 0)
-            throw execveError(childExitStatus);
-        for (size_t i = 0; cMetaVar[i]; i++)
-            delete [] cMetaVar[i];
-        delete [] cMetaVar;
         close(fdToParent[0]);
         return (cgiResponse);
     }
@@ -440,7 +443,7 @@ private:
         std::string cgiOutput;
 
         close(fdToParent[1]);
-		bzero(readBuffer, 1024);
+		bzero(readBuffer, 1024 + 1);
         nbRead = read(fdToParent[0], readBuffer, 1024);
         while (nbRead > 0){
             cgiOutput += readBuffer;
@@ -456,7 +459,8 @@ private:
 		std::string::iterator end;
         size_t                htmlOpen;
 
-        htmlOpen = (cgiOutput.find("<") - 1);
+        std::cout << "find " << cgiOutput.find("\r\n\r\n") << std::endl;
+        htmlOpen = (cgiOutput.find("\r\n\r\n"));
         begin = cgiOutput.begin();
         if (htmlOpen != std::string::npos)
             end = begin + htmlOpen;

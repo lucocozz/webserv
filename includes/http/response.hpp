@@ -23,6 +23,7 @@
 #include "headersFunctions.hpp"
 #include "mimeTypes.hpp"
 #include "autoindex.hpp"
+#include "../server/Server.hpp"
 
 #include <fstream>
 #include <cstdio>
@@ -73,8 +74,7 @@ class httpResponse{
 			- Send the response to the client
 		*/
 
-		void	buildResponse(httpRequest const &request, Config const &config, const std::pair<std::string, std::string> &clientInfo){
-			(void)config;
+		void	buildResponse(httpRequest const &request, Server const &server, const std::pair<std::string, std::string> &clientInfo){
 			this->_request = request;
 			this->_status = request.getStatus();
 
@@ -86,10 +86,10 @@ class httpResponse{
 			else
 				this->_rootToFile.append(this->_request.getPath());
 			if (this->_request.getMethod() == "POST")
-				this->_uploadContent(request.getPath(), config, clientInfo, request.getHeaders());
+				this->_uploadContent(request.getPath(), server, clientInfo, request.getHeaders());
 			else if (this->_request.getMethod() == "DELETE")
 				this->_delete();
-			this->_retrieveContent(config, clientInfo, request.getHeaders());
+			this->_retrieveContent(server, clientInfo, request.getHeaders());
 
 			this->_buildStatusLine();
 			this->_buildHeaders();
@@ -240,7 +240,7 @@ class httpResponse{
 			- GET Method
 		*/
 
-		void	_retrieveContent(const Config &serverConfig, const std::pair<std::string, std::string> &clientInfo, const std::map<std::string, std::string> &headers){
+		void	_retrieveContent(const Server &server, const std::pair<std::string, std::string> &clientInfo, const std::map<std::string, std::string> &headers){
 			if (this->_status / 100 == 4 || this->_status / 100 == 5){
 				this->_contentType = "text/html";
 				this->_content.append(this->_buildErrorPage(this->_status));
@@ -252,7 +252,7 @@ class httpResponse{
 			//GET method
 			if (this->_request.getMethod() == "GET"){
 				std::string path = this->_request.getRootPath();
-				this->_get(path, serverConfig, clientInfo, headers);
+				this->_get(path, server, clientInfo, headers);
 			}
 		}
 
@@ -274,18 +274,20 @@ class httpResponse{
 			return (true);
 		}
 
-		static std::pair<bool,LocationContext>  getLocation(std::string path, std::vector<LocationContext> serverLocation){
-		std::pair<bool,LocationContext> locationPair = std::make_pair(true, serverLocation[0]);
+		static std::pair<bool,LocationContext>  getLocation(std::string path,const std::vector<LocationContext> &serverLocation){
+			LocationContext init;
 
-		for (size_t i = 0; i < serverLocation.size(); i++){
-			if ((path.append("/").find(serverLocation[i].args[0]) != std::string::npos) && 
-				(serverLocation[i].directives.count("cgi_binary") == 1)){
-				locationPair.second = serverLocation[i];
-				return(locationPair);
+			std::pair<bool,LocationContext> locationPair = std::make_pair(true, init);
+			std::cout << "locationisze " << serverLocation.size() << std::endl;
+			for (size_t i = 0; i < serverLocation.size(); i++){
+				if ((path.append("/").find(serverLocation[i].args[0]) != std::string::npos) && 
+					(serverLocation[i].directives.count("cgi_binary") == 1)){
+					locationPair.second = serverLocation[i];
+					return(locationPair);
+				}
 			}
-		}
-		locationPair.first = false;
-		return (locationPair);
+			locationPair.first = false;
+			return (locationPair);
 		}
 
 		std::string		_buildAutoIndex(std::string rootPath, std::string path){
@@ -336,21 +338,21 @@ class httpResponse{
 					return (this->_buildErrorPage(INTERNAL_SERVER_ERROR));
 				}
 			}
-
+			ret.append("<form enctype=\"multipart/form-data\" action=\"/python-cgi/upload.py\" method=\"post\"><input type=\"hidden\" name=\"MAX_FILE_SIZE\" value=\"30000\" />Envoyez ce fichier : <input name=\"userfile\" type=\"file\" /><input type=\"submit\" value=\"Envoyer le fichier\" /></form>");
 			ret.append("</body>\r\n");
 			ret.append("</html>\r\n");
 			return (ret);
 		}
 
-		void	_get(std::string &path, const Config &serverConfig, const std::pair<std::string, std::string> &clientInfo, const std::map<std::string, std::string> &headers){
+		void	_get(std::string &path, const Server &server, const std::pair<std::string, std::string> &clientInfo, const std::map<std::string, std::string> &headers){
+			std::cout << "servname " << server.context.directives.at("server_name")[0] << std::endl;
 			std::pair<bool,LocationContext> locationResult = 
-				getLocation(this->_request.getPath(), serverConfig.servers[0].locations);
+				getLocation(this->_request.getPath(), server.context.locations);
 			if (locationResult.first == true){
 				try{
 					std::pair<std::string, int> cgiResponse;
-					//serverConfig.servers[0] ->  will change depending on what server we work on
 					std::pair<ServerContext, LocationContext > serverLocation = 
-						std::make_pair(serverConfig.servers[0], locationResult.second);
+						std::make_pair(server.context, locationResult.second);
 
 					CGI cgi(this->_request.getPath(), headers, this->_request.getBody(), serverLocation, clientInfo, "GET");
 					cgiResponse = cgi.cgiHandler();
@@ -402,15 +404,14 @@ class httpResponse{
 			Upload a ressource :
 		*/
 
-		void	_uploadContent(const std::string &path, const Config &serverConfig, const std::pair<std::string, std::string> &clientInfo, const std::map<std::string, std::string> &headers){
+		void	_uploadContent(const std::string &path, const Server &server, const std::pair<std::string, std::string> &clientInfo, const std::map<std::string, std::string> &headers){
 			std::pair<bool,LocationContext> locationResult = 
-				getLocation(this->_request.getPath(), serverConfig.servers[0].locations);
+				getLocation(this->_request.getPath(), server.context.locations);
 			if (locationResult.first == true){
 				try{
 					std::pair<std::string, int> cgiResponse;
-					//serverConfig.servers[0] ->  will change depending on what server we work on
 					std::pair<ServerContext, LocationContext > serverLocation = 
-						std::make_pair(serverConfig.servers[0], locationResult.second);
+						std::make_pair(server.context, locationResult.second);
 
 					CGI cgi(path, headers, this->_request.getBody() , serverLocation, clientInfo, "POST");
 					cgiResponse = cgi.cgiHandler();

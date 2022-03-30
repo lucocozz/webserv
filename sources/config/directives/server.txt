@@ -7,3 +7,4 @@ error_page
 access_log
 server_name
 client_max_body_size
+upload
