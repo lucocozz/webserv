@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:46 by user42            #+#    #+#             */
-/*   Updated: 2022/03/30 15:53:35 by user42           ###   ########.fr       */
+/*   Updated: 2022/03/30 17:01:22 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -86,6 +86,7 @@ class httpRequest{
 			this->_parse(rawRequest);
 
 			this->_check();
+			std::cout << "DEBUG POST " << getBody() << std::endl;
 		}
 
 		std::string		findHeader(std::string key){
@@ -157,7 +158,6 @@ class httpRequest{
 			try{
 				std::vector<std::string> index = config.servers[0].directives.at("index");
 
-				std::cout << "DEBUG index " << index.at(0);
 				//FIND THE INDEX
 
 				this->_index = index.at(0);
@@ -210,9 +210,14 @@ class httpRequest{
 
 		void	_parseBody(std::string const &rawRequest){
 			std::vector<std::string> sep = split(rawRequest, "\r\n\r\n");
+
 			if (sep.size() == 2){
 				this->_body = sep.at(1);
 				this->_bodySize = _body.size();
+			}
+			else if (sep.size() > 2){
+				for (size_t i = 1; i < sep.size(); i++)
+					this->_body.append(sep.at(i));
 			}
 			this->_request = split(sep.at(0), "\r\n");
 		}
@@ -260,10 +265,10 @@ class httpRequest{
 			this->_checkRequestLine();
 
 			//Check if the body size exceed the max body size
-			if (this->_maxBodySize.second == true && this->_maxBodySize.first < this->_bodySize){
-				this->_status = REQUEST_ENTITY_TOO_LARGE;
-				return;
-			}
+			//if (this->_maxBodySize.second == true && this->_maxBodySize.first < this->_bodySize){
+			//	this->_status = REQUEST_ENTITY_TOO_LARGE;
+			//	return;
+			//}
 			//Check if the host is specified
 			if (this->findHeader("Host").empty() == true){
 				this->_status = BAD_REQUEST;

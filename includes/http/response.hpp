@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/03/30 15:54:02 by user42           ###   ########.fr       */
+/*   Updated: 2022/03/30 16:33:23 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -219,8 +219,8 @@ class httpResponse{
 			for (i = 0; i < vecError.size(); i++){
 				char *charConfig = new char[(vecError.at(i) + ".html").size()];
 				char *charStatus = new char[(itos(status) + ".html").size()];
-				strcpy(charStatus, (itos(status) + ".html").c_str());
-				strcpy(charConfig, (vecError.at(i) + ".html").c_str());
+				strncpy(charStatus, (itos(status) + ".html").c_str(), (itos(status) + ".html").size());
+				strncpy(charConfig, (vecError.at(i) + ".html").c_str(), (vecError.at(i) + ".html").size());
 				if (match(charConfig, charStatus) == true){
 					delete [] charConfig;
 					delete [] charStatus;
