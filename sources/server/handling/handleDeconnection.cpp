@@ -1,26 +1,23 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   server.hpp                                         :+:      :+:    :+:   */
+/*   handleDeconnection.cpp                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/03/10 15:19:24 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/03/25 10:19:51 by lucocozz         ###   ########.fr       */
+/*   Created: 2022/03/22 21:59:57 by lucocozz          #+#    #+#             */
+/*   Updated: 2022/03/30 19:29:33 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#pragma once
-
-#include <vector>
-#include "Config.hpp"
 #include "Epoll.hpp"
+#include "Server.hpp"
 #include "EpollSocket.hpp"
 
-extern bool	g_running;
-
-void						handleInput(EpollSocket &client, const Config &serverConfig);
-void						handleConnection(Epoll &epoll, EpollSocket &client);
-void						handleDeconnection(Epoll &epoll, EpollSocket &client);
-std::vector<EpollSocket>	listenServers(Config &config);
-void						server(std::vector<EpollSocket> &localServers, Config &config);
+void	handleDeconnection(Server &server, EpollSocket &socketEvent, Epoll &epoll)
+{
+	epoll.control(EPOLL_CTL_DEL, socketEvent);
+	socketEvent.shutdownSocket();
+	socketEvent.closeSocket();
+	std::remove(server.clients.begin(), server.clients.end(), socketEvent);
+}

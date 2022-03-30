@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/22 21:55:31 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/03/29 14:25:22 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/03/30 19:33:51 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,18 +14,20 @@
 #include "Config.hpp"
 #include "CGI.hpp"
 #include "request.hpp"
+#include "Server.hpp"
 #include "response.hpp"
 
-void	handleInput(EpollSocket &client, const Config &serverConfig)
+void	handleInput(Server &server, EpollSocket &socketEvent)
 {
 	std::pair<std::string, int>					data;
-	const std::pair<std::string, std::string> 	clientInfo(client.getNameInfo(NI_NUMERICHOST), client.getNameInfo());
+	const std::pair<std::string, std::string> 	clientInfo(socketEvent.getNameInfo(NI_NUMERICHOST), socketEvent.getNameInfo());
 	httpRequest 								request;
 	httpResponse								response;
 
-	data = client.recvData();
+	(void)server;
+	data = socketEvent.recvData();
 	std::cout << data.first << std::endl;
-	request.treatRequest(data.first, serverConfig);
-	response.buildResponse(request, serverConfig, clientInfo);
-	response.sendResponse(client);
+	// request.treatRequest(data.first, server.context);
+	// response.buildResponse(request, server.context, clientInfo);
+	// response.sendResponse(socketEvent);
 }

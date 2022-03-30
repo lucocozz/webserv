@@ -6,7 +6,7 @@
 #    By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2022/01/21 19:56:36 by lucocozz          #+#    #+#              #
-#    Updated: 2022/03/30 08:23:43 by lucocozz         ###   ########.fr        #
+#    Updated: 2022/03/30 15:51:44 by lucocozz         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -21,13 +21,13 @@ DEF := CONFIG_FILE_NAME WEBSERV_PATH DEFAULT_PORT DEFAULT_ROOT
 
 DEFINES = $(addprefix -D ,$(foreach tmp,$(DEF),$(tmp)='$($(tmp))'))
 
-SRC := 	main.cpp				\
-		server.cpp				\
-		handleInput.cpp			\
-		handleConnection.cpp	\
-		handleDeconnection.cpp	\
-		handleSignal.cpp		\
-		listenServers.cpp
+SRC := 	main.cpp					\
+		serverCore.cpp				\
+		handleInput.cpp				\
+		handleConnection.cpp		\
+		handleDeconnection.cpp		\
+		handleSignal.cpp			\
+		createServers.cpp
 
 MAKE = make
 MAKEFLAGS += --no-print-directory
