@@ -6,7 +6,7 @@
 #    By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2022/01/21 19:56:36 by lucocozz          #+#    #+#              #
-#    Updated: 2022/03/30 15:51:44 by lucocozz         ###   ########.fr        #
+#    Updated: 2022/03/31 00:19:07 by lucocozz         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -32,7 +32,7 @@ SRC := 	main.cpp					\
 MAKE = make
 MAKEFLAGS += --no-print-directory
 CXX := c++
-CXXFLAGS := -Wall -Wextra -Werror -MMD -MD -std=c++98 -Wpedantic -g3 -fsanitize=address
+CXXFLAGS := -Wall -Wextra -Werror -MMD -MD -std=c++98 -Wpedantic -g3
 BUILD_DIR := .build
 INCLUDES_DIR := $(shell find includes -type d)
 SOURCE_DIR := sources

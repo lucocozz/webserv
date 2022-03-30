@@ -6,12 +6,11 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/16 23:19:48 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/03/23 19:58:05 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/03/31 00:28:52 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef EPOLLSOCKET_HPP
-# define EPOLLSOCKET_HPP
+#pragma once
 
 #include <string>
 #include <sys/epoll.h>
@@ -70,6 +69,11 @@ public:
 	{
 		return (this->_infoEvent.events);
 	}
+	
+	uint32_t events(void) const
+	{
+		return (this->_infoEvent.events);
+	}
 
 	struct epoll_event	&infoEvent(void)
 	{
@@ -77,4 +81,7 @@ public:
 	}
 };
 
-#endif
+inline bool	operator==(const EpollSocket &lhs, const EpollSocket &rhs)
+{
+	return (lhs.listener() == rhs.listener() && lhs.events() == rhs.events());
+}

@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/03 01:11:36 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/03/25 10:16:16 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/03/31 00:24:22 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,11 +31,21 @@ struct LocationContext
 	std::map<std::string, std::vector<std::string> >	directives;
 };
 
+inline bool	operator==(const LocationContext &lhs, const LocationContext &rhs)
+{
+	return (lhs.args == rhs.args && lhs.directives == rhs.directives);
+}
+
 struct ServerContext
 {
 	std::map<std::string, std::vector<std::string> >	directives;
 	std::vector<LocationContext>						locations;
 };
+
+inline bool	operator==(const ServerContext &lhs, const ServerContext &rhs)
+{
+	return (lhs.directives == rhs.directives && lhs.locations == rhs.locations);
+}
 
 class Config: public Lexer, public Parser
 {
