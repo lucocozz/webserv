@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/16 22:47:17 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/03/29 02:26:36 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/03/30 16:29:33 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,14 +30,13 @@
 class Socket
 {
 protected:
-	std::string		_port;
 	int				_listenSocket;
 	struct addrinfo	*_bindAddress;
 
 public:
-	explicit Socket(int fd = 0): _port(""), _listenSocket(fd), _bindAddress(NULL) {}
+	explicit Socket(int fd = 0): _listenSocket(fd), _bindAddress(NULL) {}
 
-	Socket(const Socket &rhs): _port(""), _listenSocket(0), _bindAddress(NULL)
+	Socket(const Socket &rhs): _listenSocket(0), _bindAddress(NULL)
 	{
 		*this = rhs;
 	}
@@ -48,7 +47,6 @@ public:
 	{
 		if (this != &rhs)
 		{
-			this->_port = rhs._port;
 			this->_listenSocket = rhs._listenSocket;
 			this->_bindAddress = rhs._bindAddress;
 		}
@@ -64,11 +62,6 @@ public:
 		return (this->_listenSocket);
 	}
 
-	std::string	port(void) const
-	{
-		return (this->_port);
-	}
-
 
 
 
@@ -80,7 +73,6 @@ public:
 		if (this->_listenSocket != 0)
 			throw (std::runtime_error("Socket already created"));
 		std::cout << "Creating socket..." << std::endl;
-		this->_port = port;
 		bzero(&hints, sizeof(hints));
 		hints.ai_family = family;
 		hints.ai_socktype = socktype;
@@ -219,4 +211,3 @@ public:
 		return (this->listener() == rhs.listener());
 	}
 };
-

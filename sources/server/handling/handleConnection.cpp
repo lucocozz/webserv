@@ -1,21 +1,24 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   handleDeconnection.cpp                             :+:      :+:    :+:   */
+/*   handleConnection.cpp                               :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/03/22 21:59:57 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/03/22 22:00:13 by lucocozz         ###   ########.fr       */
+/*   Created: 2022/03/22 21:58:10 by lucocozz          #+#    #+#             */
+/*   Updated: 2022/03/30 19:26:56 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Epoll.hpp"
+#include "Server.hpp"
 #include "EpollSocket.hpp"
 
-void	handleDeconnection(Epoll &epoll, EpollSocket &client)
+void	handleConnection(Server &server, EpollSocket &socketEvent, Epoll &epoll)
 {
-	epoll.control(EPOLL_CTL_DEL, client);
-	client.shutdownSocket();
-	client.closeSocket();
+	EpollSocket	client(socketEvent.acceptConnection(), EPOLLIN | EPOLLET | EPOLLRDHUP);
+
+	client.setNonBlocking();
+	server.clients.push_back(client);
+	epoll.control(EPOLL_CTL_ADD, client);
 }

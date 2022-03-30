@@ -6,23 +6,28 @@
 #    By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2022/01/21 19:56:36 by lucocozz          #+#    #+#              #
-#    Updated: 2022/03/23 20:01:50 by lucocozz         ###   ########.fr        #
+#    Updated: 2022/03/30 15:51:44 by lucocozz         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 NAME := webserv
 
-WEBSERV_PATH := $(HOME)/.config/webserv/
-DEFAULT_PORT := 8080
-DEFAULT_ROOT := /var/www/
+CONFIG_FILE_NAME := "webserv.conf"
+WEBSERV_PATH := "$(HOME)/.config/webserv/"
+DEFAULT_PORT := "8080"
+DEFAULT_ROOT := "/var/www/"
 
-SRC := 	main.cpp				\
-		server.cpp				\
-		handleInput.cpp			\
-		handleConnection.cpp	\
-		handleDeconnection.cpp	\
-		handleSignal.cpp		\
-		listenServers.cpp
+DEF := CONFIG_FILE_NAME WEBSERV_PATH DEFAULT_PORT DEFAULT_ROOT
+
+DEFINES = $(addprefix -D ,$(foreach tmp,$(DEF),$(tmp)='$($(tmp))'))
+
+SRC := 	main.cpp					\
+		serverCore.cpp				\
+		handleInput.cpp				\
+		handleConnection.cpp		\
+		handleDeconnection.cpp		\
+		handleSignal.cpp			\
+		createServers.cpp
 
 MAKE = make
 MAKEFLAGS += --no-print-directory
@@ -57,6 +62,6 @@ $(BUILD_DIR):
 	mkdir $@
 
 $(BUILD_DIR)/%.o: %.cpp | $(BUILD_DIR)
-	$(CXX) $(CXXFLAGS) $(INCLUDES_DIR:%=-I %) -D WEBSERV_PATH='"$(WEBSERV_PATH)"' -D DEFAULT_PORT='"$(DEFAULT_PORT)"' -D DEFAULT_ROOT='"$(DEFAULT_ROOT)"' -c $< -o $@
+	$(CXX) $(DEFINES) $(CXXFLAGS) $(INCLUDES_DIR:%=-I %) -c $< -o $@
 
 .PHONY: all clean fclean re test

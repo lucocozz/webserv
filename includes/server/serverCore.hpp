@@ -1,22 +1,27 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   handleConnection.cpp                               :+:      :+:    :+:   */
+/*   serverCore.hpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/03/22 21:58:10 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/03/22 21:59:31 by lucocozz         ###   ########.fr       */
+/*   Created: 2022/03/10 15:19:24 by lucocozz          #+#    #+#             */
+/*   Updated: 2022/03/30 19:33:00 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#pragma once
+
+#include <vector>
+#include "Config.hpp"
 #include "Epoll.hpp"
 #include "EpollSocket.hpp"
+#include "Server.hpp"
 
-void	handleConnection(Epoll &epoll, EpollSocket &local)
-{
-	EpollSocket	client(local.acceptConnection(), EPOLLIN | EPOLLET | EPOLLRDHUP);
+extern bool	g_running;
 
-	client.setNonBlocking();
-	epoll.control(EPOLL_CTL_ADD, client);
-}
+std::vector<Server>			createServers(Config &config);
+void						handleConnection(Server &server, EpollSocket &socketEvent, Epoll &epoll);
+void						handleDeconnection(Server &server, EpollSocket &socketEvent, Epoll &epoll);
+void						handleInput(Server &server, EpollSocket &socketEvent);
+void						serverCore(std::vector<Server> &localServers);
