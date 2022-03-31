@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/03/30 16:33:23 by user42           ###   ########.fr       */
+/*   Updated: 2022/03/31 19:39:42 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,6 @@
 #include "request.hpp"
 #include "headersFunctions.hpp"
 #include "mimeTypes.hpp"
-#include "autoindex.hpp"
 #include "../server/Server.hpp"
 
 #include <fstream>
@@ -30,6 +29,7 @@
 #include <dirent.h>
 #include <sys/types.h>
 #include "../CGI/CGI.hpp"
+
 /*
 	httpResponse class :
 */
@@ -154,7 +154,6 @@ class httpResponse{
 				this->_response.append("Accept-Ranges: bytes\r\n");
 			}
 		}
-
 
 		void _buildBody(){
 			this->_response.append("\r\n");
@@ -294,6 +293,8 @@ class httpResponse{
 			std::string ret;
 			ret.append("<html>\r\n");
 			ret.append("<head>\r\n");
+			ret.append("<style></style>\r\n");
+			ret.append("<title>Index of " + path + "</title>\r\n");
 			ret.append("</head>\r\n");
 			ret.append("<body>\r\n");
 			ret.append("<h1>Index of " + path + "</h1>\r\n");
@@ -307,38 +308,49 @@ class httpResponse{
 				return (this->_buildErrorPage(INTERNAL_SERVER_ERROR));
 			}
 			else{
-				ret.append("<ul>\r\n");
 				//Go to parent dir
-				(void)rootPath;
+				ret.append("<pre>\r\n");
 				if (path == rootPath)
-					ret.append("<li><a href=\"" + buildUrl(this->_request.findHeader("Host"), path, "") + "\">../</a></li>\r\n");
+					ret.append("<a href=\"" + buildUrl(this->_request.findHeader("Host"), path, "") + "\"><p>../</p></a>\r\n");
 				else{
-					ret.append("<li><a href=\"");
+					ret.append("<a href=\"");
 					ret.append(buildUrl(this->_request.findHeader("Host"), path, ".."));
-					ret.append("\">../</a></li>\r\n");
+					ret.append("\">../</a>\r\n");
 				}
 
 				//Listing
 				while ((fileRead = readdir(rep)) != NULL){
 					if (strlen(fileRead->d_name) != 0 && fileRead->d_name[0] != '.'){
-						ret.append("<li><a href=\"");
+
+						ret.append("<a href=\"");
 						ret.append(buildUrl(this->_request.findHeader("Host"), path, fileRead->d_name));
 						ret.append("\">");
 						ret.append(fileRead->d_name);
 						if (fileRead->d_type == DT_DIR)
-							ret.append("/</a></li>\r\n");
+							ret.append("/");
+						ret.append("</a>");
+						for (size_t i = strlen(fileRead->d_name); i < ((fileRead->d_type == DT_DIR) ? 64 : 65); i++)
+							ret.append(" ");
+						
+						ret.append(getFileModification(buildPathTo(rootPath, path, fileRead->d_name)));
+						for (size_t i = getFileModification(buildPathTo(rootPath, path, fileRead->d_name)).size(); i < 65; i++)
+							ret.append(" ");
+
+						if (fileRead->d_type == DT_DIR)
+							ret.append("-");
 						else
-							ret.append("</a></li>\r\n");
+							ret.append(getFileSize(buildPathTo(rootPath, path, fileRead->d_name)));
+						ret.append("\r\n");
 					}
 				}
-
-				ret.append("</ul>\r\n");
+				ret.append("</pre>\r\n");
 				if (closedir(rep) == -1){
 					this->_status = INTERNAL_SERVER_ERROR;
 					return (this->_buildErrorPage(INTERNAL_SERVER_ERROR));
 				}
 			}
-			ret.append("<form enctype=\"multipart/form-data\" action=\"/python-cgi/upload.py\" method=\"post\"><input type=\"hidden\" name=\"MAX_FILE_SIZE\" value=\"30000\" />Envoyez ce fichier : <input name=\"userfile\" type=\"file\" /><input type=\"submit\" value=\"Envoyer le fichier\" /></form>");
+			ret.append("<hr>\r\n");
+			//ret.append("<form enctype=\"multipart/form-data\" action=\"/python-cgi/upload.py\" method=\"post\"><input type=\"hidden\" name=\"MAX_FILE_SIZE\" value=\"30000\" />Envoyez ce fichier : <input name=\"userfile\" type=\"file\" /><input type=\"submit\" value=\"Envoyer le fichier\" /></form>");
 			ret.append("</body>\r\n");
 			ret.append("</html>\r\n");
 			return (ret);

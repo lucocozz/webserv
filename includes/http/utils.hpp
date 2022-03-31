@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:59:01 by user42            #+#    #+#             */
-/*   Updated: 2022/03/30 14:44:04 by user42           ###   ########.fr       */
+/*   Updated: 2022/03/31 18:05:58 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -91,7 +91,24 @@ std::string buildUrl(std::string host, std::string path, std::string fileName){
 			ret.append("/");
 		ret.append(fileName);
 	}
-	std::cout << "DEBUG " << host << " | " << path << " | " << fileName << std::endl;
+
+	return (ret);
+}
+
+std::string buildPathTo(std::string rootPath, std::string path, std::string fileName){
+	std::string ret;
+
+	ret.append(rootPath);
+	if (path != "/")
+		ret.append(path);
+	//Si il y a 2 / j'enleve celui du path
+	else if (*(ret.end() - 1) == '/' && *(path.begin()) == '/')
+		path.erase(path.begin());
+	if (fileName.empty() == false){
+		if (*(ret.end() - 1) != '/')
+			ret.append("/");
+		ret.append(fileName);
+	}
 
 	return (ret);
 }

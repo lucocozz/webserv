@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:59:01 by user42            #+#    #+#             */
-/*   Updated: 2022/03/11 18:23:32 by user42           ###   ########.fr       */
+/*   Updated: 2022/03/31 18:51:13 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,7 +42,7 @@ std::string					getActualTime(){
 }
 
 //Last-Modified
-std::string					getFileModification(std::string &path){\
+std::string					getFileModification(std::string path){\
 	struct stat sb;
 	lstat(path.c_str(), &sb);
 	std::string timeInfo = ctime(&sb.st_mtime);
@@ -65,6 +65,14 @@ std::string					getFileModification(std::string &path){\
 	catch (std::exception const &e){
 		ret.clear();
 	}
+
+	return (ret);
+}
+
+std::string					getFileSize(std::string path){\
+	struct stat sb;
+	lstat(path.c_str(), &sb);
+	std::string ret(itos(sb.st_size));
 
 	return (ret);
 }
