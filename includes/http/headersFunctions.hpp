@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:59:01 by user42            #+#    #+#             */
-/*   Updated: 2022/03/31 18:51:13 by user42           ###   ########.fr       */
+/*   Updated: 2022/03/31 23:25:04 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,7 +51,7 @@ std::string					getFileModification(std::string path){\
 	try {
 		ret.append(vect.at(0) + ", ");
 		std::string daydate;
-		if (atoi(vect.at(3).c_str()) < 10)
+		if (atoi(vect.at(2).c_str()) < 10)
 			daydate = "0" + vect.at(2);
 		else
 			daydate = vect.at(2);
