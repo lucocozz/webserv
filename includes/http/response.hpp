@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/03/31 19:39:42 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/01 00:44:50 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,6 @@
 #include "../config/Config.hpp"
 #include "../socket/Epoll.hpp"
 #include "request.hpp"
-#include "headersFunctions.hpp"
 #include "mimeTypes.hpp"
 #include "../server/Server.hpp"
 
@@ -291,59 +290,22 @@ class httpResponse{
 
 		std::string		_buildAutoIndex(std::string rootPath, std::string path){
 			std::string ret;
-			ret.append("<html>\r\n");
-			ret.append("<head>\r\n");
-			ret.append("<style></style>\r\n");
-			ret.append("<title>Index of " + path + "</title>\r\n");
-			ret.append("</head>\r\n");
+			ret.append("<html>\r\n<head>\r\n");
+			ret.append("<title>Index of " + path + "</title>\r\n</head>\r\n");
+
 			ret.append("<body>\r\n");
 			ret.append("<h1>Index of " + path + "</h1>\r\n");
 			ret.append("<hr>\r\n");
 
 			DIR *rep = NULL;
 			struct dirent *fileRead = NULL;
-			rep = opendir((rootPath + path).c_str());
+			rep = opendir(buildPathTo(rootPath, path, "").c_str());
 			if (rep == NULL){
 				this->_status = INTERNAL_SERVER_ERROR;
 				return (this->_buildErrorPage(INTERNAL_SERVER_ERROR));
 			}
 			else{
-				//Go to parent dir
-				ret.append("<pre>\r\n");
-				if (path == rootPath)
-					ret.append("<a href=\"" + buildUrl(this->_request.findHeader("Host"), path, "") + "\"><p>../</p></a>\r\n");
-				else{
-					ret.append("<a href=\"");
-					ret.append(buildUrl(this->_request.findHeader("Host"), path, ".."));
-					ret.append("\">../</a>\r\n");
-				}
-
-				//Listing
-				while ((fileRead = readdir(rep)) != NULL){
-					if (strlen(fileRead->d_name) != 0 && fileRead->d_name[0] != '.'){
-
-						ret.append("<a href=\"");
-						ret.append(buildUrl(this->_request.findHeader("Host"), path, fileRead->d_name));
-						ret.append("\">");
-						ret.append(fileRead->d_name);
-						if (fileRead->d_type == DT_DIR)
-							ret.append("/");
-						ret.append("</a>");
-						for (size_t i = strlen(fileRead->d_name); i < ((fileRead->d_type == DT_DIR) ? 64 : 65); i++)
-							ret.append(" ");
-						
-						ret.append(getFileModification(buildPathTo(rootPath, path, fileRead->d_name)));
-						for (size_t i = getFileModification(buildPathTo(rootPath, path, fileRead->d_name)).size(); i < 65; i++)
-							ret.append(" ");
-
-						if (fileRead->d_type == DT_DIR)
-							ret.append("-");
-						else
-							ret.append(getFileSize(buildPathTo(rootPath, path, fileRead->d_name)));
-						ret.append("\r\n");
-					}
-				}
-				ret.append("</pre>\r\n");
+				ret.append(buildListingBlock(fileRead, rep, rootPath, path, this->_request.findHeader("Host")));
 				if (closedir(rep) == -1){
 					this->_status = INTERNAL_SERVER_ERROR;
 					return (this->_buildErrorPage(INTERNAL_SERVER_ERROR));
@@ -351,8 +313,7 @@ class httpResponse{
 			}
 			ret.append("<hr>\r\n");
 			//ret.append("<form enctype=\"multipart/form-data\" action=\"/python-cgi/upload.py\" method=\"post\"><input type=\"hidden\" name=\"MAX_FILE_SIZE\" value=\"30000\" />Envoyez ce fichier : <input name=\"userfile\" type=\"file\" /><input type=\"submit\" value=\"Envoyer le fichier\" /></form>");
-			ret.append("</body>\r\n");
-			ret.append("</html>\r\n");
+			ret.append("</body>\r\n</html>\r\n");
 			return (ret);
 		}
 
