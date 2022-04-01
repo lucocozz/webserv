@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/04/01 00:44:50 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/01 02:39:48 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -140,14 +140,14 @@ class httpResponse{
 		void _buildHeaders(){
 			//Mandatory HEADER (even if error)
 			this->_response.append("Server: " + this->_request.getServerName() + "\r\n");
-			this->_response.append("Date: " + getActualTime() + "\r\n");
+			this->_response.append("Date: " + buildDate() + "\r\n");
 			this->_response.append("Content-Type: " + this->_contentType + "\r\n");
 			this->_response.append("Content-Length: " + itos(this->_content.size()) + "\r\n");
 			this->_response.append("Connection: keep-alive\r\n"); //close or keep-alive make an enum
 			if (this->_status / 100 == 2 || this->_status / 100 == 3){
 				if (this->_request.getAutoindex() == false){
-					this->_response.append("Last-Modified: " + getFileModification(this->_rootToFile) + "\r\n");
-					this->_response.append("Etag: " + makeETag(this->_rootToFile) + "\r\n");
+					this->_response.append("Last-Modified: " + buildLastModified(this->_rootToFile) + "\r\n");
+					this->_response.append("Etag: " + buildETag(this->_rootToFile) + "\r\n");
 					//Transfert-Enconding (Need to handle chunked request)
 				}
 				this->_response.append("Accept-Ranges: bytes\r\n");
@@ -257,14 +257,14 @@ class httpResponse{
 		bool	_contentNeedRefresh(){
 			//Si le ETag de la ressource correspond au champs If-None-Match on renvoie 304 et pas de content (Prioritaire sur If-Modified-Since)
 			if (this->_request.findHeader("If-None-Match").empty() == false){
-				if (this->_request.findHeader("If-None-Match") == makeETag(this->_rootToFile)){
+				if (this->_request.findHeader("If-None-Match") == buildETag(this->_rootToFile)){
 					this->_status = NOT_MODIFIED;
 					return (false);
 				}
 			}
 			//Si la date de modification de la ressource correspond au champs If-Modified-Since on renvoie 304 et pas de content
 			if (this->_request.findHeader("If-Modified-Since").empty() == false){
-				if (this->_request.findHeader("If-Modified-Since") == getFileModification(this->_rootToFile)){
+				if (this->_request.findHeader("If-Modified-Since") == buildLastModified(this->_rootToFile)){
 					this->_status = NOT_MODIFIED;
 					return (false);
 				}

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   request.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
+/*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:46 by user42            #+#    #+#             */
-/*   Updated: 2022/03/30 19:41:31 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/04/01 03:03:28 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -87,7 +87,6 @@ class httpRequest{
 			this->_parse(rawRequest);
 
 			this->_check();
-			std::cout << "DEBUG POST " << getBody() << std::endl;
 		}
 
 		std::string		findHeader(std::string key){
@@ -121,7 +120,7 @@ class httpRequest{
 
 		bool										getAutoindex() const{return (this->_autoindex);}
 
-		std::pair<size_t, bool>						getMaxBodySize() const{return (this->_maxBodySize);}
+		size_t										getMaxBodySize() const{return (this->_maxBodySize);}
 
 		std::pair<std::vector<std::string>, bool> 	getErrorPage() const{return (this->_errorPage);}
 
@@ -145,8 +144,6 @@ class httpRequest{
 				this->_serverName = server_name[0];
 			}
 			catch (std::exception const &e){
-				//default server name
-				//need to check if this serverName already exist ?
 				this->_serverName = "server";
 			}
 			try{
@@ -158,10 +155,7 @@ class httpRequest{
 			}
 			try{
 				std::vector<std::string> index = server.context.directives.at("index");
-
-				//FIND THE INDEX
-
-				this->_index = index.at(0);
+				this->_index = checkIndex(_rootPath, index);
 			}
 			catch (std::exception const &e){
 				this->_index = "default_index.html";
@@ -177,11 +171,13 @@ class httpRequest{
 				this->_autoindex = false;
 			}
 			try{
-				this->_maxBodySize.first = atoi((server.context.directives.at("client_max_body_size")[0]).c_str());
-				this->_maxBodySize.second = true;
+				if (atoi((server.context.directives.at("client_max_body_size")[0]).c_str()) < 100)
+					this->_maxBodySize = atoi((server.context.directives.at("client_max_body_size")[0]).c_str()) * 1000000;
+				else
+					this->_maxBodySize = 1 * 1000000;
 			}
 			catch (std::exception const &e){
-				this->_maxBodySize.second = false;
+				this->_maxBodySize = 1 * 1000000;
 			}
 			try{
 				this->_errorPage.first = server.context.directives.at("error_page");
@@ -266,10 +262,10 @@ class httpRequest{
 			this->_checkRequestLine();
 
 			//Check if the body size exceed the max body size
-			//if (this->_maxBodySize.second == true && this->_maxBodySize.first < this->_bodySize){
-			//	this->_status = REQUEST_ENTITY_TOO_LARGE;
-			//	return;
-			//}
+			if (this->_maxBodySize < this->_bodySize){
+				this->_status = REQUEST_ENTITY_TOO_LARGE;
+				return;
+			}
 			//Check if the host is specified
 			if (this->findHeader("Host").empty() == true){
 				this->_status = BAD_REQUEST;
@@ -308,7 +304,7 @@ class httpRequest{
 		std::string										_index;
 		bool											_autoindex;
 		std::pair<std::vector<std::string>, bool>		_errorPage;
-		std::pair<size_t, bool>							_maxBodySize;							
+		size_t											_maxBodySize;							
 
 		//Request
 		size_t											_bodySize;
