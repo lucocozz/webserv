@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:59:01 by user42            #+#    #+#             */
-/*   Updated: 2022/04/01 03:01:49 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/01 03:21:03 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,6 +77,13 @@ bool						isPathDirectory(std::string const &path){
 	struct stat s;
 	stat(path.c_str(), &s);
 	if (s.st_mode & S_IFDIR)
+		return (true);
+	return (false);
+}
+
+bool						isPathValid(std::string const &path){
+	struct stat sb;
+	if (lstat(path.c_str(), &sb) == 0)
 		return (true);
 	return (false);
 }
@@ -198,8 +205,7 @@ std::string					checkIndex(std::string rootPath, std::vector<std::string> index)
 	std::string ret;
 
 	for (std::vector<std::string>::iterator it = index.begin(); it != index.end(); it++){
-		struct stat sb;
-		if (lstat(buildPathTo(rootPath, *it, "").c_str(), &sb) == 0)
+		if (isPathValid(buildPathTo(rootPath, *it, "")) == true)
 			return (*it);
 	}
 	return ("default_index.html");

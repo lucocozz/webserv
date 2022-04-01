@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:46 by user42            #+#    #+#             */
-/*   Updated: 2022/04/01 03:03:28 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/01 03:24:57 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -143,23 +143,20 @@ class httpRequest{
 				std::vector<std::string> server_name = server.context.directives.at("server_name");
 				this->_serverName = server_name[0];
 			}
-			catch (std::exception const &e){
-				this->_serverName = "server";
-			}
+			catch (std::exception const &e){this->_serverName = "server";}
+
 			try{
 				std::vector<std::string> root_path = server.context.directives.at("root");
 				this->_rootPath = root_path[0];
 			}
-			catch (std::exception const &e){
-				this->_rootPath = "/";
-			}
+			catch (std::exception const &e){this->_rootPath = "/";}
+
 			try{
 				std::vector<std::string> index = server.context.directives.at("index");
 				this->_index = checkIndex(_rootPath, index);
 			}
-			catch (std::exception const &e){
-				this->_index = "default_index.html";
-			}
+			catch (std::exception const &e){this->_index = "default_index.html";}
+
 			try{
 				std::string autoindex = server.context.directives.at("autoindex")[0];
 				if (autoindex == "on")
@@ -167,25 +164,21 @@ class httpRequest{
 				else
 					this->_autoindex = false;
 			}
-			catch (std::exception const &e){
-				this->_autoindex = false;
-			}
+			catch (std::exception const &e){this->_autoindex = false;}
+
 			try{
 				if (atoi((server.context.directives.at("client_max_body_size")[0]).c_str()) < 100)
 					this->_maxBodySize = atoi((server.context.directives.at("client_max_body_size")[0]).c_str()) * 1000000;
 				else
 					this->_maxBodySize = 1 * 1000000;
 			}
-			catch (std::exception const &e){
-				this->_maxBodySize = 1 * 1000000;
-			}
+			catch (std::exception const &e){this->_maxBodySize = 1 * 1000000;}
+
 			try{
 				this->_errorPage.first = server.context.directives.at("error_page");
 				this->_errorPage.second = true;
 			}
-			catch (std::exception const &e){
-				this->_errorPage.second = false;
-			}
+			catch (std::exception const &e){this->_errorPage.second = false;}
 		}
 
 		/*
@@ -264,6 +257,10 @@ class httpRequest{
 			//Check if the body size exceed the max body size
 			if (this->_maxBodySize < this->_bodySize){
 				this->_status = REQUEST_ENTITY_TOO_LARGE;
+				return;
+			}
+			if (isPathValid(buildPathTo(_rootPath, _path, "")) == false){
+				this->_status = NOT_FOUND;
 				return;
 			}
 			//Check if the host is specified
