@@ -25,7 +25,7 @@ void	handleInput(Server &server, EpollSocket &socketEvent)
 	httpResponse								response;
 
 	data = socketEvent.recvData();
-	std::cout << data.first << std::endl;
+	std::cout << "client datas: |" << data.first << "|" << std::endl;
 	request.treatRequest(data.first, server);
 	response.buildResponse(request, server, clientInfo);
 	response.sendResponse(socketEvent);

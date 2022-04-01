@@ -272,22 +272,6 @@ class httpResponse{
 			return (true);
 		}
 
-		static std::pair<bool,LocationContext>  getLocation(std::string path,const std::vector<LocationContext> &serverLocation){
-			LocationContext init;
-
-			std::pair<bool,LocationContext> locationPair = std::make_pair(true, init);
-			std::cout << "locationisze " << serverLocation.size() << std::endl;
-			for (size_t i = 0; i < serverLocation.size(); i++){
-				if ((path.append("/").find(serverLocation[i].args[0]) != std::string::npos) && 
-					(serverLocation[i].directives.count("cgi_binary") == 1)){
-					locationPair.second = serverLocation[i];
-					return(locationPair);
-				}
-			}
-			locationPair.first = false;
-			return (locationPair);
-		}
-
 		std::string		_buildAutoIndex(std::string rootPath, std::string path){
 			std::string ret;
 			ret.append("<html>\r\n<head>\r\n");
@@ -312,13 +296,29 @@ class httpResponse{
 				}
 			}
 			ret.append("<hr>\r\n");
-			//ret.append("<form enctype=\"multipart/form-data\" action=\"/python-cgi/upload.py\" method=\"post\"><input type=\"hidden\" name=\"MAX_FILE_SIZE\" value=\"30000\" />Envoyez ce fichier : <input name=\"userfile\" type=\"file\" /><input type=\"submit\" value=\"Envoyer le fichier\" /></form>");
+			ret.append("<form enctype=\"multipart/form-data\" action=\"/php-cgi/upload.php\" method=\"post\"><input type=\"hidden\" name=\"MAX_FILE_SIZE\" value=\"30000000\" />Envoyez ce fichier : <input name=\"userfile\" type=\"file\" /><input type=\"submit\" value=\"Envoyer le fichier\" /></form>");
 			ret.append("</body>\r\n</html>\r\n");
 			return (ret);
 		}
 
+		static std::pair<bool,LocationContext>  getLocation(std::string path,const std::vector<LocationContext> &serverLocation){
+			LocationContext init;
+			std::pair<bool,LocationContext> locationPair = std::make_pair(false, init);
+			
+			for (size_t i = 0; i < serverLocation.size(); i++){
+				if (serverLocation[i].directives.count("cgi_binary") == 1 &&
+					serverLocation[i].directives.count("cgi_extension") == 1 && 
+					path.find(serverLocation[i].args[0]) != std::string::npos &&
+					path.find(serverLocation[i].directives.find("cgi_extension")->second[0]) != std::string::npos){
+					locationPair.first = true;
+					locationPair.second = serverLocation[i];
+					return(locationPair);
+				}
+			}
+			return (locationPair);
+		}
+
 		void	_get(std::string &path, const Server &server, const std::pair<std::string, std::string> &clientInfo, const std::map<std::string, std::string> &headers){
-			std::cout << "servname " << server.context.directives.at("server_name")[0] << std::endl;
 			std::pair<bool,LocationContext> locationResult = 
 				getLocation(this->_request.getPath(), server.context.locations);
 			if (locationResult.first == true){

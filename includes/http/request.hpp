@@ -259,10 +259,10 @@ class httpRequest{
 				this->_status = REQUEST_ENTITY_TOO_LARGE;
 				return;
 			}
-			if (isPathValid(buildPathTo(_rootPath, _path, "")) == false){
-				this->_status = NOT_FOUND;
-				return;
-			}
+			// if (isPathValid(buildPathTo(_rootPath, _path, "")) == false){
+			// 	this->_status = NOT_FOUND;
+			// 	return;
+			// }
 			//Check if the host is specified
 			if (this->findHeader("Host").empty() == true){
 				this->_status = BAD_REQUEST;

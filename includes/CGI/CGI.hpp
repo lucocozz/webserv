@@ -73,8 +73,6 @@ public:
             delete [] cMetaVar[i];
         delete [] cMetaVar;
 
-        std::cout << "requestbody |" << _requestBody << "|" <<std::endl;
-
         if (_mapMetaVars.find("REQUEST_METHOD=")->second.compare("POST") == 0){
             write(fdToChild[1], _requestBody.c_str(),  _requestBody.size());
         }
@@ -82,7 +80,6 @@ public:
         close(fdToChild[0]);
         close(fdToChild[1]);
         cgiResponse.first = this->_getCgiOutput(fdToParent);
-        std::cout << "CGI REP " << cgiResponse.first << std::endl;
         if ((childExitStatus = this->_waitChild(pid)) > 0)
             throw execveError(childExitStatus);
         cgiResponse.second = this->_getCgiReturnStatus(cgiResponse.first);
@@ -120,12 +117,6 @@ public:
         }
     };
 
-    struct chdirError : public std::exception{
-        const char *what() const throw(){
-            return ("chdir error");
-        }
-    };
-
 private:
     void    _setMapEnvVar(std::map<std::string, std::string> headers, const serverLocation &serverLocation, 
 							const clientInfo &clientInfo, const std::string &method){
@@ -138,9 +129,9 @@ private:
         _setServerPort(serverLocation.first.directives.find("listen")->second[1]);
         _setRequestUri();
         _setRequestMethod(method);
+        _setScriptName();
         _setPathInfo();
         _setPathTranslated();
-        _setScriptName();
         _setQueryString();
         _setRemoteHost(clientInfo.second);
         _setRemoteAddr(clientInfo.first);
@@ -200,11 +191,28 @@ private:
 
         this->_mapMetaVars.insert(std::make_pair(varName, requestMethod));
     }
+    
+    void _setScriptName(){
+        std::string				varName("SCRIPT_NAME=");
+        std::string             name("");
+        const std::string       cgiExtension(this->_locationContext.directives.find("cgi_extension")->second[0]);
+        std::string::iterator   begin = this->_decodedURL.begin() + this->_decodedURL.find(cgiExtension);
+        std::string::iterator	end = this->_decodedURL.begin() + this->_decodedURL.find(cgiExtension);
+
+		while (*begin != '/')
+            begin--;
+        begin++;
+		while (*end != '/' && *end != '?' && *end != '\0')
+			end++;
+		name.append(begin ,end);
+        this->_mapMetaVars.insert(std::make_pair(varName, name));
+    }
 
     void _setPathInfo(){
         std::string varName("PATH_INFO=");
-        std::string pathInfo(this->_mapMetaVars.find("REQUEST_URI=")->second);
+        std::string pathInfo(this->_locationContext.args[0]);
 
+        pathInfo.append(this->_mapMetaVars.find("SCRIPT_NAME=")->second);
 		if (pathInfo.find('?') != std::string::npos){
 			std::string::iterator begin;
 			std::string::iterator end;
@@ -219,36 +227,12 @@ private:
     void _setPathTranslated(){
         std::string varName("PATH_TRANSLATED=");
         std::string pathTranslated("");
+        std::string pathInfo(this->_mapMetaVars.find("PATH_INFO=")->second);
 		std::string root(this->_serverContext.directives.at("root")[0]);
-        std::string uri(this->_mapMetaVars.find("REQUEST_URI=")->second);
-
-		if (*--root.end() == '/')
-			root.erase(--root.end());
-		pathTranslated = root.append(uri);
-		if (pathTranslated.find('?') != std::string::npos){
-			std::string::iterator begin;
-			std::string::iterator end;
-
-			begin = pathTranslated.begin() + pathTranslated.find('?');
-			end = pathTranslated.end();
-			pathTranslated.erase(begin, end);
-		}
+        
+        pathInfo.erase(pathInfo.begin());
+        pathTranslated = root.append(pathInfo);
         this->_mapMetaVars.insert(std::make_pair(varName, pathTranslated));
-    }
-
-    void _setScriptName(){
-        std::string				varName("SCRIPT_NAME=");
-        std::string             name("");
-        std::string             cgiFile(this->_locationContext.args[0]);
-        std::string::iterator   begin;
-        std::string::iterator	end;
-
-		begin = this->_decodedURL.begin() + (this->_decodedURL.find(cgiFile) + cgiFile.size());
-		end = begin;
-		while (*end != '/' && *end != '?' && *end != '\0')
-			end++;
-		name.append(begin ,end);
-        this->_mapMetaVars.insert(std::make_pair(varName, name));
     }
 
     void _setQueryString(){
@@ -405,7 +389,7 @@ private:
         close(fdToChild[0]);
 
         chdir(cgiLocationPath.c_str());
-        std::cerr << "currentdir " << get_current_dir_name() << " cgi binary: " << args[0]  << " cgi script name: " << args[1] <<  std::endl;
+        std::cerr << "currentdir " << get_current_dir_name() << " cgi binary: " << args[0]  << " cgi script name: |" << args[1] << "|" << std::endl;
         execve(args[0], args, cMetaVar);
         exit(errno);
     }
@@ -459,8 +443,10 @@ private:
 		std::string::iterator end;
         size_t                htmlOpen;
 
-        std::cout << "find " << cgiOutput.find("\r\n\r\n") << std::endl;
-        htmlOpen = (cgiOutput.find("\r\n\r\n"));
+        if (this->_locationContext.directives.at("cgi_binary")[0].find("php-cgi") != std::string::npos)
+            htmlOpen = cgiOutput.find("\r\n\r\n");
+        else 
+            htmlOpen = cgiOutput.find("<html>");
         begin = cgiOutput.begin();
         if (htmlOpen != std::string::npos)
             end = begin + htmlOpen;
@@ -474,3 +460,4 @@ private:
 
 
 #endif
+
