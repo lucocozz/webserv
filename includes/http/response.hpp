@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/04/01 02:39:48 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/05 23:48:34 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,13 +77,10 @@ class httpResponse{
 			this->_request = request;
 			this->_status = request.getStatus();
 
-			//need to locat where i am from the server root to adapt the path
-			this->_rootToFile = this->_request.getRootPath();
-			this->_rootToFile.erase(this->_rootToFile.end() - 1);
-			if (this->_request.getPath() == "/" && this->_request.getAutoindex() == true)
-				this->_rootToFile.append(this->_request.getIndex());
-			else
-				this->_rootToFile.append(this->_request.getPath());
+			//buildThePath
+			this->_rootToFile = buildPathTo(this->_request.getRootPath(), this->_request.getPath(), "");
+
+			//Treatment
 			if (this->_request.getMethod() == "POST")
 				this->_uploadContent(request.getPath(), server, clientInfo, request.getHeaders());
 			else if (this->_request.getMethod() == "DELETE")
@@ -143,12 +140,11 @@ class httpResponse{
 			this->_response.append("Date: " + buildDate() + "\r\n");
 			this->_response.append("Content-Type: " + this->_contentType + "\r\n");
 			this->_response.append("Content-Length: " + itos(this->_content.size()) + "\r\n");
-			this->_response.append("Connection: keep-alive\r\n"); //close or keep-alive make an enum
+			this->_response.append("Connection: keep-alive\r\n");
 			if (this->_status / 100 == 2 || this->_status / 100 == 3){
 				if (this->_request.getAutoindex() == false){
 					this->_response.append("Last-Modified: " + buildLastModified(this->_rootToFile) + "\r\n");
 					this->_response.append("Etag: " + buildETag(this->_rootToFile) + "\r\n");
-					//Transfert-Enconding (Need to handle chunked request)
 				}
 				this->_response.append("Accept-Ranges: bytes\r\n");
 			}
@@ -235,24 +231,7 @@ class httpResponse{
 			Retrieve a ressource :
 			- Retrieve the content
 			- Function to identify if the client need to refresh the content (ETag / Last-Modified)
-			- GET Method
 		*/
-
-		void	_retrieveContent(const Server &server, const std::pair<std::string, std::string> &clientInfo, const std::map<std::string, std::string> &headers){
-			if (this->_status / 100 == 4 || this->_status / 100 == 5){
-				this->_contentType = "text/html";
-				this->_content.append(this->_buildErrorPage(this->_status));
-				return;
-			}
-			else if (this->_status / 100 == 2 && this->_request.getMethod() != "GET")
-				return;
-
-			//GET method
-			if (this->_request.getMethod() == "GET"){
-				std::string path = this->_request.getRootPath();
-				this->_get(path, server, clientInfo, headers);
-			}
-		}
 
 		bool	_contentNeedRefresh(){
 			//Si le ETag de la ressource correspond au champs If-None-Match on renvoie 304 et pas de content (Prioritaire sur If-Modified-Since)
@@ -270,6 +249,69 @@ class httpResponse{
 				}
 			}
 			return (true);
+		}
+
+		void	_retrieveContent(const Server &server, const std::pair<std::string, std::string> &clientInfo, const std::map<std::string, std::string> &headers){
+			if (this->_request.getMethod() == "GET"){
+				std::pair<bool,LocationContext> locationResult = getLocation(this->_request.getPath(), server.context.locations);
+				//CGI
+				if (locationResult.first == true){
+					try{
+						std::pair<std::string, int> cgiResponse;
+						std::pair<ServerContext, LocationContext > serverLocation = 
+							std::make_pair(server.context, locationResult.second);
+						CGI cgi(this->_request.getPath(), headers, this->_request.getBody(), serverLocation, clientInfo, "GET");
+						cgiResponse = cgi.cgiHandler();
+						this->_content.append(cgiResponse.first);
+						this->_contentType = "text/html";
+						this->_status = cgiResponse.second;
+					}
+					catch(const std::exception &e){
+						std::string exception(e.what());
+						if (exception.find("No such file or directory") != std::string::npos){
+							this->_status = 404;
+							return;
+						}
+						this->_status = 500;
+						std::cerr << "Cgi failed: " << exception << std::endl;
+					}
+				}
+				//If request path is root
+				else if (this->_request.getPath() == "/"){
+					this->_contentType = "text/html";
+					//Listing the directories from the root
+					if (this->_request.getAutoindex() == true)
+						this->_content.append(this->_buildAutoIndex(this->_request.getRootPath(), this->_request.getPath()));
+					//Get the index page
+					else{
+						std::ifstream indata(this->_rootToFile.c_str());
+						std::stringstream buff;
+						buff << indata.rdbuf();
+						this->_content.append(buff.str());
+					}
+				}
+				else{
+					if (isPathValid(this->_rootToFile) == false){
+						this->_status = NOT_FOUND;
+						return;
+					}
+					if (this->_request.getAutoindex() == true && isPathDirectory(this->_rootToFile) == true)
+						this->_content.append(this->_buildAutoIndex(this->_request.getRootPath(), this->_request.getPath()));
+					else{
+						this->_contentType = getMimeTypes(this->_rootToFile.c_str());
+						std::ifstream indata(this->_rootToFile.c_str());
+						std::stringstream buff;
+						buff << indata.rdbuf();
+						this->_content.append(buff.str());
+					}
+				}
+			}
+			if (this->_status / 100 == 4 || this->_status / 100 == 5){
+				this->_contentType = "text/html";
+				this->_content.clear();
+				this->_content.append(this->_buildErrorPage(this->_status));
+				return;
+			}
 		}
 
 		static std::pair<bool,LocationContext>  getLocation(std::string path,const std::vector<LocationContext> &serverLocation){
@@ -312,65 +354,8 @@ class httpResponse{
 				}
 			}
 			ret.append("<hr>\r\n");
-			//ret.append("<form enctype=\"multipart/form-data\" action=\"/python-cgi/upload.py\" method=\"post\"><input type=\"hidden\" name=\"MAX_FILE_SIZE\" value=\"30000\" />Envoyez ce fichier : <input name=\"userfile\" type=\"file\" /><input type=\"submit\" value=\"Envoyer le fichier\" /></form>");
 			ret.append("</body>\r\n</html>\r\n");
 			return (ret);
-		}
-
-		void	_get(std::string &path, const Server &server, const std::pair<std::string, std::string> &clientInfo, const std::map<std::string, std::string> &headers){
-			std::cout << "servname " << server.context.directives.at("server_name")[0] << std::endl;
-			std::pair<bool,LocationContext> locationResult = 
-				getLocation(this->_request.getPath(), server.context.locations);
-			if (locationResult.first == true){
-				try{
-					std::pair<std::string, int> cgiResponse;
-					std::pair<ServerContext, LocationContext > serverLocation = 
-						std::make_pair(server.context, locationResult.second);
-
-					CGI cgi(this->_request.getPath(), headers, this->_request.getBody(), serverLocation, clientInfo, "GET");
-					cgiResponse = cgi.cgiHandler();
-					this->_content.append(cgiResponse.first);
-					this->_contentType = "text/html";
-					this->_status = cgiResponse.second;
-				}
-				catch(const std::exception &e){
-					std::string exception(e.what());
-					if (exception.find("No such file or directory") != std::string::npos){
-						this->_status = 404;
-						return;
-					}
-					this->_status = 500;
-					std::cerr << "Cgi failed: " << exception << std::endl;
-				}
-			}
-			//If request path is root
-			else if (this->_request.getPath() == "/"){
-				this->_contentType = "text/html";
-				path.append(this->_request.getIndex());
-				//Listing the directories from the root
-				if (this->_request.getAutoindex() == true)
-					this->_content.append(this->_buildAutoIndex(this->_request.getRootPath(), this->_request.getPath()));
-				//Get the index page
-				else{
-					std::ifstream indata(path.c_str());
-					std::stringstream buff;
-					buff << indata.rdbuf();
-					this->_content.append(buff.str());
-				}
-			}
-			else{
-				path.erase(path.end() - 1);
-				path.append(this->_request.getPath());
-				if (this->_request.getAutoindex() == true && isPathDirectory(path) == true)
-					this->_content.append(this->_buildAutoIndex(this->_request.getRootPath(), this->_request.getPath()));
-				else{
-					this->_contentType = getMimeTypes(path.c_str());
-					std::ifstream indata(path.c_str());
-					std::stringstream buff;
-					buff << indata.rdbuf();
-					this->_content.append(buff.str());
-				}
-			}
 		}
 
 		/*

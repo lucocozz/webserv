@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:59:01 by user42            #+#    #+#             */
-/*   Updated: 2022/04/01 03:21:03 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/05 23:26:41 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -91,11 +91,17 @@ bool						isPathValid(std::string const &path){
 std::string 				buildPathTo(std::string rootPath, std::string path, std::string fileName){
 	std::string ret;
 
+	//rootPath
 	ret.append(rootPath);
-	if (path != "/")
-		ret.append(path);
-	else if (*(ret.end() - 1) == '/' && *(path.begin()) == '/')
+	//path
+	if (*(ret.end() - 1) == '/' && *(path.begin()) == '/'){
 		path.erase(path.begin());
+		ret.append(path);
+	}
+	else if (path != "/")
+		ret.append(path);
+
+	//fileName
 	if (fileName.empty() == false){
 		if (*(ret.end() - 1) != '/')
 			ret.append("/");

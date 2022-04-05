@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:46 by user42            #+#    #+#             */
-/*   Updated: 2022/04/01 03:24:57 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/05 01:35:52 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -257,10 +257,6 @@ class httpRequest{
 			//Check if the body size exceed the max body size
 			if (this->_maxBodySize < this->_bodySize){
 				this->_status = REQUEST_ENTITY_TOO_LARGE;
-				return;
-			}
-			if (isPathValid(buildPathTo(_rootPath, _path, "")) == false){
-				this->_status = NOT_FOUND;
 				return;
 			}
 			//Check if the host is specified
