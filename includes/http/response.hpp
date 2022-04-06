@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/04/05 23:48:34 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/07 00:48:40 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -84,7 +84,7 @@ class httpResponse{
 			if (this->_request.getMethod() == "POST")
 				this->_uploadContent(request.getPath(), server, clientInfo, request.getHeaders());
 			else if (this->_request.getMethod() == "DELETE")
-				this->_delete();
+				this->_deleteContent();
 			this->_retrieveContent(server, clientInfo, request.getHeaders());
 
 			this->_buildStatusLine();
@@ -146,7 +146,6 @@ class httpResponse{
 					this->_response.append("Last-Modified: " + buildLastModified(this->_rootToFile) + "\r\n");
 					this->_response.append("Etag: " + buildETag(this->_rootToFile) + "\r\n");
 				}
-				this->_response.append("Accept-Ranges: bytes\r\n");
 			}
 		}
 
@@ -277,20 +276,21 @@ class httpResponse{
 					}
 				}
 				//If request path is root
-				else if (this->_request.getPath() == "/"){
+				else if (this->_request.getPath() == "/" && _contentNeedRefresh() == true){
 					this->_contentType = "text/html";
 					//Listing the directories from the root
 					if (this->_request.getAutoindex() == true)
 						this->_content.append(this->_buildAutoIndex(this->_request.getRootPath(), this->_request.getPath()));
 					//Get the index page
 					else{
-						std::ifstream indata(this->_rootToFile.c_str());
+						std::string indexPath = _rootToFile + this->_request.getIndex();
+						std::ifstream indata(indexPath.c_str());
 						std::stringstream buff;
 						buff << indata.rdbuf();
 						this->_content.append(buff.str());
 					}
 				}
-				else{
+				else if (_contentNeedRefresh() == true){
 					if (isPathValid(this->_rootToFile) == false){
 						this->_status = NOT_FOUND;
 						return;
@@ -318,7 +318,6 @@ class httpResponse{
 			LocationContext init;
 
 			std::pair<bool,LocationContext> locationPair = std::make_pair(true, init);
-			std::cout << "locationisze " << serverLocation.size() << std::endl;
 			for (size_t i = 0; i < serverLocation.size(); i++){
 				if ((path.append("/").find(serverLocation[i].args[0]) != std::string::npos) && 
 					(serverLocation[i].directives.count("cgi_binary") == 1)){
@@ -389,7 +388,28 @@ class httpResponse{
 			Delete a ressource :
 		*/
 
-		void	_delete(){
+		void	_deleteContent(){
+			if (this->_request.getPath() == "/"){
+				this->_status = FORBIDDEN;
+				this->_content.clear();
+				this->_content = _buildErrorPage(this->_status);
+			}
+			else{
+				if (isPathValid(_rootToFile) && isPathDirectory(_rootToFile) == false)
+					remove(_rootToFile.c_str());
+				else if (isPathValid(_rootToFile) && isPathDirectory(_rootToFile) == true){
+					if (removeDir(_rootToFile.c_str()) == -1){
+						this->_status = INTERNAL_SERVER_ERROR;
+						this->_content.clear();
+						this->_content = _buildErrorPage(this->_status);
+					}
+				}
+				else{
+					this->_status = NOT_FOUND;
+					this->_content.clear();
+					this->_content = _buildErrorPage(this->_status);
+				}
+			}
 			return;
 		}
 

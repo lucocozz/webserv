@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:59:01 by user42            #+#    #+#             */
-/*   Updated: 2022/04/05 23:26:41 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/07 00:11:51 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -111,6 +111,34 @@ std::string 				buildPathTo(std::string rootPath, std::string path, std::string 
 	return (ret);
 }
 
+int					removeDir(char const *path){
+	struct dirent *entry = NULL;
+	DIR *dir = NULL;
+	dir = opendir(path);
+	if (dir == NULL)
+		return (-1);
+	while ((entry = readdir(dir))){
+		DIR *sub_dir = NULL;
+		FILE *file = NULL;
+		char abs_path[257] = {0};
+		if (*(entry->d_name) != '.'){
+			sprintf(abs_path, "%s/%s", path, entry->d_name);
+			if ((sub_dir = opendir(abs_path))){
+				closedir(sub_dir);
+				removeDir(abs_path);
+			}
+			else{
+				if ((file = fopen(abs_path, "r"))){
+					fclose(file);
+					remove(abs_path);
+				}
+			}
+		}
+	}
+	remove(path);
+	return (1);
+}
+
 /*
 	Dates :
 */
@@ -195,12 +223,12 @@ std::string					buildETag(std::string &path){
 	mTimeStream << std::hex << mTime;
 	ret.append(mTimeStream.str());
 	
-	ret.append("-");
+	//ret.append("-");
 	
-	int sSize = sb.st_size;
-	std::stringstream sSizeStream;
-	sSizeStream << std::hex << sSize;
-	ret.append(sSizeStream.str());
+	//int sSize = sb.st_size;
+	//std::stringstream sSizeStream;
+	//sSizeStream << std::hex << sSize;
+	//ret.append(sSizeStream.str());
 	
 	ret.append("\"");
 
