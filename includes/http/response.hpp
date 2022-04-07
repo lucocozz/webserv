@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/04/07 00:48:40 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/07 02:57:28 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -163,66 +163,18 @@ class httpResponse{
 		std::string	_buildErrorPage(int status){
 			std::string ret;
 
-			if (this->_request.getErrorPage().second == true && this->_statusIsCustom(status) != -1){
-				std::string errorPagesPath = this->_request.getRootPath() + this->_request.getErrorPage().first.at( this->_request.getErrorPage().first.size() - 1);
-
-				DIR *rep = NULL;
-				struct dirent *fileRead = NULL;
-				rep = opendir(errorPagesPath.c_str());
-				if (rep == NULL){
-					this->_status = INTERNAL_SERVER_ERROR;
-					return (this->_buildErrorPage(INTERNAL_SERVER_ERROR));
-				}
-				else{
-					char *toCompare = new char[(itos(status) + ".html").size()];
-					strcpy(toCompare, (itos(status) + ".html").c_str());
-
-					while ((fileRead = readdir(rep)) != NULL){
-						if (match(toCompare, fileRead->d_name) == true){
-							std::ifstream indata((this->_request.getRootPath().c_str() + this->_request.getErrorPage().first.at(1) + fileRead->d_name).c_str());
-							std::stringstream buff;
-							buff << indata.rdbuf();
-							ret.append(buff.str());
-
-							delete[] toCompare;
-							if (closedir(rep) == -1){
-								this->_status = INTERNAL_SERVER_ERROR;
-								return (this->_buildErrorPage(INTERNAL_SERVER_ERROR));
-							}
-							return (ret);
-						}
-					}
-					delete[] toCompare;
-					if (closedir(rep) == -1){
-						this->_status = INTERNAL_SERVER_ERROR;
-						return (this->_buildErrorPage(INTERNAL_SERVER_ERROR));
-					}
-					ret.append(buildErrorPage(status));
-				}
+			this->_status = status;
+			if (this->_request.getErrorPage().second == true && match(itos(status).c_str(), this->_request.getErrorPage().first.at(0).c_str(), 'x') == 1){
+				std::ifstream indata(buildPathTo(this->_request.getRootPath(), this->_request.getErrorPage().first.at(1), "").c_str());
+				std::stringstream buff;
+				buff << indata.rdbuf();
+				ret.append(buff.str());
+				return (ret);
 			}
 			else
 				ret.append(buildErrorPage(status));
 
 			return (ret);
-		}
-
-		int			_statusIsCustom(int status){
-			std::vector<std::string> vecError = this->_request.getErrorPage().first;
-			size_t i;
-			for (i = 0; i < vecError.size(); i++){
-				char *charConfig = new char[(vecError.at(i) + ".html").size()];
-				char *charStatus = new char[(itos(status) + ".html").size()];
-				strncpy(charStatus, (itos(status) + ".html").c_str(), (itos(status) + ".html").size());
-				strncpy(charConfig, (vecError.at(i) + ".html").c_str(), (vecError.at(i) + ".html").size());
-				if (match(charConfig, charStatus) == true){
-					delete [] charConfig;
-					delete [] charStatus;
-					return (i);
-				}
-				delete [] charConfig;
-				delete [] charStatus;
-			}
-			return (-1);
 		}
 
 		/*
@@ -292,7 +244,9 @@ class httpResponse{
 				}
 				else if (_contentNeedRefresh() == true){
 					if (isPathValid(this->_rootToFile) == false){
-						this->_status = NOT_FOUND;
+						//this->_status = NOT_FOUND;
+						this->_content.clear();
+						this->_content.append(this->_buildErrorPage(NOT_FOUND));
 						return;
 					}
 					if (this->_request.getAutoindex() == true && isPathDirectory(this->_rootToFile) == true)
@@ -341,16 +295,12 @@ class httpResponse{
 			DIR *rep = NULL;
 			struct dirent *fileRead = NULL;
 			rep = opendir(buildPathTo(rootPath, path, "").c_str());
-			if (rep == NULL){
-				this->_status = INTERNAL_SERVER_ERROR;
+			if (rep == NULL)
 				return (this->_buildErrorPage(INTERNAL_SERVER_ERROR));
-			}
 			else{
 				ret.append(buildListingBlock(fileRead, rep, rootPath, path, this->_request.findHeader("Host")));
-				if (closedir(rep) == -1){
-					this->_status = INTERNAL_SERVER_ERROR;
+				if (closedir(rep) == -1)
 					return (this->_buildErrorPage(INTERNAL_SERVER_ERROR));
-				}
 			}
 			ret.append("<hr>\r\n");
 			ret.append("</body>\r\n</html>\r\n");
@@ -390,24 +340,21 @@ class httpResponse{
 
 		void	_deleteContent(){
 			if (this->_request.getPath() == "/"){
-				this->_status = FORBIDDEN;
 				this->_content.clear();
-				this->_content = _buildErrorPage(this->_status);
+				this->_content = _buildErrorPage(FORBIDDEN);
 			}
 			else{
 				if (isPathValid(_rootToFile) && isPathDirectory(_rootToFile) == false)
 					remove(_rootToFile.c_str());
 				else if (isPathValid(_rootToFile) && isPathDirectory(_rootToFile) == true){
 					if (removeDir(_rootToFile.c_str()) == -1){
-						this->_status = INTERNAL_SERVER_ERROR;
 						this->_content.clear();
-						this->_content = _buildErrorPage(this->_status);
+						this->_content = _buildErrorPage(INTERNAL_SERVER_ERROR);
 					}
 				}
 				else{
-					this->_status = NOT_FOUND;
 					this->_content.clear();
-					this->_content = _buildErrorPage(this->_status);
+					this->_content = _buildErrorPage(NOT_FOUND);
 				}
 			}
 			return;
