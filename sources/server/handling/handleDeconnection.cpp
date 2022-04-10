@@ -6,18 +6,19 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/22 21:59:57 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/03/31 00:43:29 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/04/09 21:15:16 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Epoll.hpp"
 #include "Server.hpp"
 #include "EpollSocket.hpp"
+#include "Client.hpp"
 
-void	handleDeconnection(Server &server, EpollSocket &socketEvent, Epoll &epoll)
+void	handleDeconnection(std::map<int, Client> &clientList, EpollSocket &socketEvent, Epoll &epoll)
 {
 	epoll.control(EPOLL_CTL_DEL, socketEvent);
 	socketEvent.shutdownSocket();
 	socketEvent.closeSocket();
-	std::remove(server.clients.begin(), server.clients.end(), socketEvent);
+	clientList.erase(socketEvent.listener());
 }

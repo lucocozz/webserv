@@ -6,7 +6,7 @@
 #    By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2022/01/21 19:56:36 by lucocozz          #+#    #+#              #
-#    Updated: 2022/03/31 00:19:07 by lucocozz         ###   ########.fr        #
+#    Updated: 2022/04/09 18:04:36 by lucocozz         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -15,7 +15,7 @@ NAME := webserv
 CONFIG_FILE_NAME := "webserv.conf"
 WEBSERV_PATH := "$(HOME)/.config/webserv/"
 DEFAULT_PORT := "8080"
-DEFAULT_ROOT := "/var/www/"
+DEFAULT_ROOT := "/tmp/www/"
 
 DEF := CONFIG_FILE_NAME WEBSERV_PATH DEFAULT_PORT DEFAULT_ROOT
 
@@ -27,7 +27,9 @@ SRC := 	main.cpp					\
 		handleConnection.cpp		\
 		handleDeconnection.cpp		\
 		handleSignal.cpp			\
-		createServers.cpp
+		createServers.cpp			\
+		closeServers.cpp			\
+		eventLoop.cpp
 
 MAKE = make
 MAKEFLAGS += --no-print-directory
@@ -46,6 +48,7 @@ vpath %.cpp ./ $(shell find $(SOURCE_DIR) -type d)
 
 all: $(NAME)
 	mkdir -p $(WEBSERV_PATH)
+	mkdir -p $(DEFAULT_ROOT)
 	cp -r sources/config/* $(WEBSERV_PATH)
 
 clean:

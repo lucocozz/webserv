@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/03 01:11:36 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/03/31 00:24:22 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/04/06 23:18:24 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@
 #endif
 
 #ifndef DEFAULT_ROOT
-# define DEFAULT_ROOT "/var/www/"
+# define DEFAULT_ROOT "/tmp/www/"
 #endif
 
 struct LocationContext

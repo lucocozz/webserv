@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:19:24 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/03/31 00:42:53 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/04/09 23:08:08 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,11 +17,15 @@
 #include "Epoll.hpp"
 #include "EpollSocket.hpp"
 #include "Server.hpp"
+#include "Client.hpp"
 
 extern bool	g_running;
 
-std::vector<Server>			createServers(Config &config);
-void						handleConnection(Server &server, EpollSocket &socketEvent, Epoll &epoll);
-void						handleDeconnection(Server &server, EpollSocket &socketEvent, Epoll &epoll);
-void						handleInput(Server &server, EpollSocket &socketEvent);
-void						serverCore(std::vector<Server> &localServers);
+std::vector<Server>	createServers(Config &config);
+void				closeServers(std::vector<Server> &serverList);
+void				handleConnection(std::vector<Server> &serverList,
+						std::map<int, Client> &clientList, EpollSocket &socketEvent, Epoll &epoll);
+void				handleDeconnection(std::map<int, Client> &clientList, EpollSocket &socketEvent, Epoll &epoll);
+void				handleInput(Client &client);
+void				serverCore(std::vector<Server> &serverList);
+void				eventLoop(std::vector<Server> &serverList, Epoll &epoll, int events);
