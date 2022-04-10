@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/04/07 03:16:29 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/10 21:41:30 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -87,6 +87,7 @@ class httpResponse{
 				this->_deleteContent();
 			this->_retrieveContent(server, clientInfo, request.getHeaders());
 
+			//Build response
 			this->_buildStatusLine();
 			this->_buildHeaders();
 			this->_buildBody();
@@ -205,7 +206,6 @@ class httpResponse{
 		void	_retrieveContent(const Server &server, const std::pair<std::string, std::string> &clientInfo, const std::map<std::string, std::string> &headers){
 			if (this->_request.getMethod() == "GET"){
 				std::pair<bool,LocationContext> locationResult = getLocation(this->_request.getPath(), server.context.locations);
-				//CGI
 				if (locationResult.first == true){
 					try{
 						std::pair<std::string, int> cgiResponse;

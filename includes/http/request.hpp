@@ -6,13 +6,12 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:46 by user42            #+#    #+#             */
-/*   Updated: 2022/04/07 03:16:29 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/10 21:27:57 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef REQUEST_HPP
 #define REQUEST_HPP
-
 
 /*
 	Includes :
@@ -85,7 +84,6 @@ class httpRequest{
 		void	treatRequest(std::string const &rawRequest, Server const &server){
 			this->_retrieveConfigInfo(server);
 			this->_parse(rawRequest);
-
 			this->_check();
 		}
 
@@ -126,6 +124,8 @@ class httpRequest{
 
 		size_t										getBodySize() const{return (this->_bodySize);}
 
+		std::vector<LocationContext>				getLocations() const{return (this->_locations);}
+
 
 	/*
 		Underluying functions :
@@ -139,24 +139,25 @@ class httpRequest{
 		*/
 
 		void	_retrieveConfigInfo(Server const &server){
+			//server name
 			try{
 				std::vector<std::string> server_name = server.context.directives.at("server_name");
 				this->_serverName = server_name[0];
 			}
 			catch (std::exception const &e){this->_serverName = "server";}
-
+			//root
 			try{
 				std::vector<std::string> root_path = server.context.directives.at("root");
 				this->_rootPath = root_path[0];
 			}
 			catch (std::exception const &e){this->_rootPath = "/";}
-
+			//server index
 			try{
 				std::vector<std::string> index = server.context.directives.at("index");
 				this->_index = checkIndex(_rootPath, index);
 			}
 			catch (std::exception const &e){this->_index = "default_index.html";}
-
+			//auto index
 			try{
 				std::string autoindex = server.context.directives.at("autoindex")[0];
 				if (autoindex == "on")
@@ -165,7 +166,7 @@ class httpRequest{
 					this->_autoindex = false;
 			}
 			catch (std::exception const &e){this->_autoindex = false;}
-
+			//client max body size
 			try{
 				if (atoi((server.context.directives.at("client_max_body_size")[0]).c_str()) < 100)
 					this->_maxBodySize = atoi((server.context.directives.at("client_max_body_size")[0]).c_str()) * 1000;
@@ -173,12 +174,63 @@ class httpRequest{
 					this->_maxBodySize = 1 * 1000;
 			}
 			catch (std::exception const &e){this->_maxBodySize = 1 * 1000;}
-
+			//error pages
 			try{
 				this->_errorPage.first = server.context.directives.at("error_page");
 				this->_errorPage.second = true;
 			}
 			catch (std::exception const &e){this->_errorPage.second = false;}
+
+			//location index & limit_except
+			//try{
+			{
+				std::vector<LocationContext> locations = server.context.locations;
+				for (std::vector<LocationContext>::iterator it = locations.begin(); it != locations.end(); it++){
+					int needDel = 0;
+					//Index
+					try {std::vector<std::string> vec = (*it).directives.at("index");}
+					catch (std::exception const &e){needDel++;}
+					//Limit Except
+					try {std::vector<std::string> vec = (*it).directives.at("limit_except");}
+					catch (std::exception const &e){needDel++;}
+					//Delete useless locations
+					if (needDel == 2){
+						locations.erase(it);
+						if (locations.empty() == true)
+							break;
+						it = locations.begin();
+					}
+				}
+				this->_locations = locations;
+
+				for (std::vector<LocationContext>::iterator it = locations.begin(); it != locations.end(); it++){
+					//Retrieve the location
+					LocationContext tmp = *it;
+					//Retrieve location path
+					std::cout << "location name = " << tmp.args.at(0) << std::endl;
+					try{
+						std::vector<std::string> vec = tmp.directives.at("index");
+						std::cout << "index:" << std::endl;
+						for (std::vector<std::string>::iterator vit = vec.begin(); vit != vec.end(); vit++)
+							std::cout << *vit << std::endl;
+					}
+					catch (std::exception const &e){
+						std::cout << "index off" << std::endl;
+					}
+					try{
+						std::vector<std::string> vec = tmp.directives.at("limit_except");
+						std::cout << "limit_except :" << std::endl;
+						for (std::vector<std::string>::iterator vit = vec.begin(); vit != vec.end(); vit++)
+							std::cout << *vit << std::endl;
+					}
+					catch (std::exception const &e){
+						std::cout << "limit off" << std::endl;
+					}
+				}
+			}
+			//catch (std::exception const &e){
+			//	std::cout << "DEBUG BUG LOCATION" << std::endl;
+			//}
 		}
 
 		/*
@@ -298,7 +350,8 @@ class httpRequest{
 		std::string										_index;
 		bool											_autoindex;
 		std::pair<std::vector<std::string>, bool>		_errorPage;
-		size_t											_maxBodySize;							
+		size_t											_maxBodySize;
+		std::vector<LocationContext>					_locations;
 
 		//Request
 		size_t											_bodySize;

@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:59:01 by user42            #+#    #+#             */
-/*   Updated: 2022/04/07 02:33:34 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/10 21:42:42 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -305,5 +305,47 @@ std::string					buildListingBlock(struct dirent *fileRead, DIR *rep, std::string
 	ret.append("</pre>\r\n");
 	return (ret);
 }
+
+//Locations Directives
+static std::pair<bool,LocationContext>  pathIsLocation(std::string path,const std::vector<LocationContext> &serverLocation, std::string directiveName){
+	LocationContext init;
+	std::pair<bool,LocationContext> locationPair = std::make_pair(true, init);
+	for (size_t i = 0; i < serverLocation.size(); i++){
+		if ((path.append("/").find(serverLocation[i].args[0]) != std::string::npos) && 
+			((serverLocation[i].directives.count(directiveName) == 1) || (serverLocation[i].directives.count(directiveName) == 1))){
+			locationPair.second = serverLocation[i];
+			return(locationPair);
+		}
+	}
+	locationPair.first = false;
+	return (locationPair);
+}
+
+//bool						isMethodAllowed(std::vector<LocationContext> locations, std::string path, std::string method){
+//	(void)locations;(void)path;(void)method;
+
+//	std::pair<bool,LocationContext> isLocation = pathIsLocation(path, locations, method);
+//	//if (isLocation.first == false)
+//		//return (true);
+
+//	//std::vector<std::string> method = retrieveMethods(locationName, locations);
+//	//for (size_t i = 0; i < method.size(); i++){
+//		//if (method == method.at(i))
+//			//return (false);
+//	//}
+//	return (true);
+//}
+
+//std::string					retrieveLocationIndex(std::vector<LocationContext> locations, std::string rootPath, std::string path){
+//	(void)locations;(void)rootPath;(void)path;
+//	std::string ret;
+
+//	std::pair<bool,LocationContext> isLocation = pathIsLocation(path, locations, method);
+//	//if (isLocation.first == false)
+//		//return (ret);
+
+//	//std::vector<std::string> index = retrieveIndex(locationName, locations);
+//	return ((ret = checkIndex(rootPath, index)));
+//}
 
 #endif
