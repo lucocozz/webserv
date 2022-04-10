@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:59:01 by user42            #+#    #+#             */
-/*   Updated: 2022/04/01 03:21:03 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/07 02:33:34 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,16 +57,16 @@ std::string					itos(int nb){
 	return (ret);
 }
 
-int							match(char *s1, char *s2){
-	if (*s1 != '\0' && *s2 == '*')
-		return (match(s1 + 1, s2) || match(s1, s2 + 1));
-	if (*s1 == '\0' && *s2 == '*')
-		return (match(s1, s2 + 1));
+bool							match(char const *s1, char const *s2, char wildcard){
+	if (*s1 != '\0' && *s2 == wildcard)
+		return (match(s1 + 1, s2, 'x') || match(s1, s2 + 1, 'x'));
+	if (*s1 == '\0' && *s2 == wildcard)
+		return (match(s1, s2 + 1, 'x'));
 	if (*s1 == *s2 && *s1 != '\0' && *s2 != '\0')
-		return (match(s1 + 1, s2 + 1));
+		return (match(s1 + 1, s2 + 1, 'x'));
 	if (*s1 == *s2 && *s1 == '\0' && *s2 == '\0')
-		return (1);
-	return (0);
+		return (true);
+	return (false);
 }
 
 /*
@@ -91,11 +91,17 @@ bool						isPathValid(std::string const &path){
 std::string 				buildPathTo(std::string rootPath, std::string path, std::string fileName){
 	std::string ret;
 
+	//rootPath
 	ret.append(rootPath);
-	if (path != "/")
-		ret.append(path);
-	else if (*(ret.end() - 1) == '/' && *(path.begin()) == '/')
+	//path
+	if (*(ret.end() - 1) == '/' && *(path.begin()) == '/'){
 		path.erase(path.begin());
+		ret.append(path);
+	}
+	else if (path != "/")
+		ret.append(path);
+
+	//fileName
 	if (fileName.empty() == false){
 		if (*(ret.end() - 1) != '/')
 			ret.append("/");
@@ -103,6 +109,34 @@ std::string 				buildPathTo(std::string rootPath, std::string path, std::string 
 	}
 
 	return (ret);
+}
+
+int					removeDir(char const *path){
+	struct dirent *entry = NULL;
+	DIR *dir = NULL;
+	dir = opendir(path);
+	if (dir == NULL)
+		return (-1);
+	while ((entry = readdir(dir))){
+		DIR *sub_dir = NULL;
+		FILE *file = NULL;
+		char abs_path[257] = {0};
+		if (*(entry->d_name) != '.'){
+			sprintf(abs_path, "%s/%s", path, entry->d_name);
+			if ((sub_dir = opendir(abs_path))){
+				closedir(sub_dir);
+				removeDir(abs_path);
+			}
+			else{
+				if ((file = fopen(abs_path, "r"))){
+					fclose(file);
+					remove(abs_path);
+				}
+			}
+		}
+	}
+	remove(path);
+	return (1);
 }
 
 /*
@@ -189,12 +223,12 @@ std::string					buildETag(std::string &path){
 	mTimeStream << std::hex << mTime;
 	ret.append(mTimeStream.str());
 	
-	ret.append("-");
+	//ret.append("-");
 	
-	int sSize = sb.st_size;
-	std::stringstream sSizeStream;
-	sSizeStream << std::hex << sSize;
-	ret.append(sSizeStream.str());
+	//int sSize = sb.st_size;
+	//std::stringstream sSizeStream;
+	//sSizeStream << std::hex << sSize;
+	//ret.append(sSizeStream.str());
 	
 	ret.append("\"");
 

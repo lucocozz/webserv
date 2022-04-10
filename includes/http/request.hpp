@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:46 by user42            #+#    #+#             */
-/*   Updated: 2022/04/01 03:24:57 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/07 03:16:29 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -168,11 +168,11 @@ class httpRequest{
 
 			try{
 				if (atoi((server.context.directives.at("client_max_body_size")[0]).c_str()) < 100)
-					this->_maxBodySize = atoi((server.context.directives.at("client_max_body_size")[0]).c_str()) * 1000000;
+					this->_maxBodySize = atoi((server.context.directives.at("client_max_body_size")[0]).c_str()) * 1000;
 				else
-					this->_maxBodySize = 1 * 1000000;
+					this->_maxBodySize = 1 * 1000;
 			}
-			catch (std::exception const &e){this->_maxBodySize = 1 * 1000000;}
+			catch (std::exception const &e){this->_maxBodySize = 1 * 1000;}
 
 			try{
 				this->_errorPage.first = server.context.directives.at("error_page");
@@ -208,6 +208,7 @@ class httpRequest{
 			else if (sep.size() > 2){
 				for (size_t i = 1; i < sep.size(); i++)
 					this->_body.append(sep.at(i));
+				this->_bodySize = _body.size();
 			}
 			this->_request = split(sep.at(0), "\r\n");
 		}
@@ -259,10 +260,6 @@ class httpRequest{
 				this->_status = REQUEST_ENTITY_TOO_LARGE;
 				return;
 			}
-			// if (isPathValid(buildPathTo(_rootPath, _path, "")) == false){
-			// 	this->_status = NOT_FOUND;
-			// 	return;
-			// }
 			//Check if the host is specified
 			if (this->findHeader("Host").empty() == true){
 				this->_status = BAD_REQUEST;

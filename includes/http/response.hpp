@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/04/01 02:39:48 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/07 03:16:29 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,17 +77,14 @@ class httpResponse{
 			this->_request = request;
 			this->_status = request.getStatus();
 
-			//need to locat where i am from the server root to adapt the path
-			this->_rootToFile = this->_request.getRootPath();
-			this->_rootToFile.erase(this->_rootToFile.end() - 1);
-			if (this->_request.getPath() == "/" && this->_request.getAutoindex() == true)
-				this->_rootToFile.append(this->_request.getIndex());
-			else
-				this->_rootToFile.append(this->_request.getPath());
+			//buildThePath
+			this->_rootToFile = buildPathTo(this->_request.getRootPath(), this->_request.getPath(), "");
+
+			//Treatment
 			if (this->_request.getMethod() == "POST")
 				this->_uploadContent(request.getPath(), server, clientInfo, request.getHeaders());
 			else if (this->_request.getMethod() == "DELETE")
-				this->_delete();
+				this->_deleteContent();
 			this->_retrieveContent(server, clientInfo, request.getHeaders());
 
 			this->_buildStatusLine();
@@ -143,14 +140,12 @@ class httpResponse{
 			this->_response.append("Date: " + buildDate() + "\r\n");
 			this->_response.append("Content-Type: " + this->_contentType + "\r\n");
 			this->_response.append("Content-Length: " + itos(this->_content.size()) + "\r\n");
-			this->_response.append("Connection: keep-alive\r\n"); //close or keep-alive make an enum
+			this->_response.append("Connection: keep-alive\r\n");
 			if (this->_status / 100 == 2 || this->_status / 100 == 3){
 				if (this->_request.getAutoindex() == false){
 					this->_response.append("Last-Modified: " + buildLastModified(this->_rootToFile) + "\r\n");
 					this->_response.append("Etag: " + buildETag(this->_rootToFile) + "\r\n");
-					//Transfert-Enconding (Need to handle chunked request)
 				}
-				this->_response.append("Accept-Ranges: bytes\r\n");
 			}
 		}
 
@@ -168,42 +163,13 @@ class httpResponse{
 		std::string	_buildErrorPage(int status){
 			std::string ret;
 
-			if (this->_request.getErrorPage().second == true && this->_statusIsCustom(status) != -1){
-				std::string errorPagesPath = this->_request.getRootPath() + this->_request.getErrorPage().first.at( this->_request.getErrorPage().first.size() - 1);
-
-				DIR *rep = NULL;
-				struct dirent *fileRead = NULL;
-				rep = opendir(errorPagesPath.c_str());
-				if (rep == NULL){
-					this->_status = INTERNAL_SERVER_ERROR;
-					return (this->_buildErrorPage(INTERNAL_SERVER_ERROR));
-				}
-				else{
-					char *toCompare = new char[(itos(status) + ".html").size()];
-					strcpy(toCompare, (itos(status) + ".html").c_str());
-
-					while ((fileRead = readdir(rep)) != NULL){
-						if (match(toCompare, fileRead->d_name) == true){
-							std::ifstream indata((this->_request.getRootPath().c_str() + this->_request.getErrorPage().first.at(1) + fileRead->d_name).c_str());
-							std::stringstream buff;
-							buff << indata.rdbuf();
-							ret.append(buff.str());
-
-							delete[] toCompare;
-							if (closedir(rep) == -1){
-								this->_status = INTERNAL_SERVER_ERROR;
-								return (this->_buildErrorPage(INTERNAL_SERVER_ERROR));
-							}
-							return (ret);
-						}
-					}
-					delete[] toCompare;
-					if (closedir(rep) == -1){
-						this->_status = INTERNAL_SERVER_ERROR;
-						return (this->_buildErrorPage(INTERNAL_SERVER_ERROR));
-					}
-					ret.append(buildErrorPage(status));
-				}
+			this->_status = status;
+			if (this->_request.getErrorPage().second == true && match(itos(status).c_str(), this->_request.getErrorPage().first.at(0).c_str(), 'x') == 1){
+				std::ifstream indata(buildPathTo(this->_request.getRootPath(), this->_request.getErrorPage().first.at(1), "").c_str());
+				std::stringstream buff;
+				buff << indata.rdbuf();
+				ret.append(buff.str());
+				return (ret);
 			}
 			else
 				ret.append(buildErrorPage(status));
@@ -211,48 +177,12 @@ class httpResponse{
 			return (ret);
 		}
 
-		int			_statusIsCustom(int status){
-			std::vector<std::string> vecError = this->_request.getErrorPage().first;
-			size_t i;
-			for (i = 0; i < vecError.size(); i++){
-				char *charConfig = new char[(vecError.at(i) + ".html").size()];
-				char *charStatus = new char[(itos(status) + ".html").size()];
-				strncpy(charStatus, (itos(status) + ".html").c_str(), (itos(status) + ".html").size());
-				strncpy(charConfig, (vecError.at(i) + ".html").c_str(), (vecError.at(i) + ".html").size());
-				if (match(charConfig, charStatus) == true){
-					delete [] charConfig;
-					delete [] charStatus;
-					return (i);
-				}
-				delete [] charConfig;
-				delete [] charStatus;
-			}
-			return (-1);
-		}
-
 		/*
 			(COM) : Need to merge and clean retrieveContent / GET method
 			Retrieve a ressource :
 			- Retrieve the content
 			- Function to identify if the client need to refresh the content (ETag / Last-Modified)
-			- GET Method
 		*/
-
-		void	_retrieveContent(const Server &server, const std::pair<std::string, std::string> &clientInfo, const std::map<std::string, std::string> &headers){
-			if (this->_status / 100 == 4 || this->_status / 100 == 5){
-				this->_contentType = "text/html";
-				this->_content.append(this->_buildErrorPage(this->_status));
-				return;
-			}
-			else if (this->_status / 100 == 2 && this->_request.getMethod() != "GET")
-				return;
-
-			//GET method
-			if (this->_request.getMethod() == "GET"){
-				std::string path = this->_request.getRootPath();
-				this->_get(path, server, clientInfo, headers);
-			}
-		}
 
 		bool	_contentNeedRefresh(){
 			//Si le ETag de la ressource correspond au champs If-None-Match on renvoie 304 et pas de content (Prioritaire sur If-Modified-Since)
@@ -272,6 +202,87 @@ class httpResponse{
 			return (true);
 		}
 
+		void	_retrieveContent(const Server &server, const std::pair<std::string, std::string> &clientInfo, const std::map<std::string, std::string> &headers){
+			if (this->_request.getMethod() == "GET"){
+				std::pair<bool,LocationContext> locationResult = getLocation(this->_request.getPath(), server.context.locations);
+				//CGI
+				if (locationResult.first == true){
+					try{
+						std::pair<std::string, int> cgiResponse;
+						std::pair<ServerContext, LocationContext > serverLocation = 
+							std::make_pair(server.context, locationResult.second);
+						CGI cgi(this->_request.getPath(), headers, this->_request.getBody(), serverLocation, clientInfo, "GET");
+						cgiResponse = cgi.cgiHandler();
+						this->_content.append(cgiResponse.first);
+						this->_contentType = "text/html";
+						this->_status = cgiResponse.second;
+					}
+					catch(const std::exception &e){
+						std::string exception(e.what());
+						if (exception.find("No such file or directory") != std::string::npos){
+							this->_status = 404;
+							return;
+						}
+						this->_status = 500;
+						std::cerr << "Cgi failed: " << exception << std::endl;
+					}
+				}
+				//If request path is root
+				else if (this->_request.getPath() == "/" && _contentNeedRefresh() == true){
+					this->_contentType = "text/html";
+					//Listing the directories from the root
+					if (this->_request.getAutoindex() == true)
+						this->_content.append(this->_buildAutoIndex(this->_request.getRootPath(), this->_request.getPath()));
+					//Get the index page
+					else{
+						std::string indexPath = _rootToFile + this->_request.getIndex();
+						std::ifstream indata(indexPath.c_str());
+						std::stringstream buff;
+						buff << indata.rdbuf();
+						this->_content.append(buff.str());
+					}
+				}
+				else if (_contentNeedRefresh() == true){
+					if (isPathValid(this->_rootToFile) == false){
+						//this->_status = NOT_FOUND;
+						this->_content.clear();
+						this->_content.append(this->_buildErrorPage(NOT_FOUND));
+						return;
+					}
+					if (this->_request.getAutoindex() == true && isPathDirectory(this->_rootToFile) == true)
+						this->_content.append(this->_buildAutoIndex(this->_request.getRootPath(), this->_request.getPath()));
+					else{
+						this->_contentType = getMimeTypes(this->_rootToFile.c_str());
+						std::ifstream indata(this->_rootToFile.c_str());
+						std::stringstream buff;
+						buff << indata.rdbuf();
+						this->_content.append(buff.str());
+					}
+				}
+			}
+			if (this->_status / 100 == 4 || this->_status / 100 == 5){
+				this->_contentType = "text/html";
+				this->_content.clear();
+				this->_content.append(this->_buildErrorPage(this->_status));
+				return;
+			}
+		}
+
+		static std::pair<bool,LocationContext>  getLocation(std::string path,const std::vector<LocationContext> &serverLocation){
+			LocationContext init;
+
+			std::pair<bool,LocationContext> locationPair = std::make_pair(true, init);
+			for (size_t i = 0; i < serverLocation.size(); i++){
+				if ((path.append("/").find(serverLocation[i].args[0]) != std::string::npos) && 
+					(serverLocation[i].directives.count("cgi_binary") == 1)){
+					locationPair.second = serverLocation[i];
+					return(locationPair);
+				}
+			}
+			locationPair.first = false;
+			return (locationPair);
+		}
+
 		std::string		_buildAutoIndex(std::string rootPath, std::string path){
 			std::string ret;
 			ret.append("<html>\r\n<head>\r\n");
@@ -284,93 +295,16 @@ class httpResponse{
 			DIR *rep = NULL;
 			struct dirent *fileRead = NULL;
 			rep = opendir(buildPathTo(rootPath, path, "").c_str());
-			if (rep == NULL){
-				this->_status = INTERNAL_SERVER_ERROR;
+			if (rep == NULL)
 				return (this->_buildErrorPage(INTERNAL_SERVER_ERROR));
-			}
 			else{
 				ret.append(buildListingBlock(fileRead, rep, rootPath, path, this->_request.findHeader("Host")));
-				if (closedir(rep) == -1){
-					this->_status = INTERNAL_SERVER_ERROR;
+				if (closedir(rep) == -1)
 					return (this->_buildErrorPage(INTERNAL_SERVER_ERROR));
-				}
 			}
 			ret.append("<hr>\r\n");
-			ret.append("<form enctype=\"multipart/form-data\" action=\"/php-cgi/upload.php\" method=\"post\"><input type=\"hidden\" name=\"MAX_FILE_SIZE\" value=\"30000000\" />Envoyez ce fichier : <input name=\"userfile\" type=\"file\" /><input type=\"submit\" value=\"Envoyer le fichier\" /></form>");
 			ret.append("</body>\r\n</html>\r\n");
 			return (ret);
-		}
-
-		static std::pair<bool,LocationContext>  getLocation(std::string path,const std::vector<LocationContext> &serverLocation){
-			LocationContext init;
-			std::pair<bool,LocationContext> locationPair = std::make_pair(false, init);
-			
-			for (size_t i = 0; i < serverLocation.size(); i++){
-				if (serverLocation[i].directives.count("cgi_binary") == 1 &&
-					serverLocation[i].directives.count("cgi_extension") == 1 && 
-					path.find(serverLocation[i].args[0]) != std::string::npos &&
-					path.find(serverLocation[i].directives.find("cgi_extension")->second[0]) != std::string::npos){
-					locationPair.first = true;
-					locationPair.second = serverLocation[i];
-					return(locationPair);
-				}
-			}
-			return (locationPair);
-		}
-
-		void	_get(std::string &path, const Server &server, const std::pair<std::string, std::string> &clientInfo, const std::map<std::string, std::string> &headers){
-			std::pair<bool,LocationContext> locationResult = 
-				getLocation(this->_request.getPath(), server.context.locations);
-			if (locationResult.first == true){
-				try{
-					std::pair<std::string, int> cgiResponse;
-					std::pair<ServerContext, LocationContext > serverLocation = 
-						std::make_pair(server.context, locationResult.second);
-
-					CGI cgi(this->_request.getPath(), headers, this->_request.getBody(), serverLocation, clientInfo, "GET");
-					cgiResponse = cgi.cgiHandler();
-					this->_content.append(cgiResponse.first);
-					this->_contentType = "text/html";
-					this->_status = cgiResponse.second;
-				}
-				catch(const std::exception &e){
-					std::string exception(e.what());
-					if (exception.find("No such file or directory") != std::string::npos){
-						this->_status = 404;
-						return;
-					}
-					this->_status = 500;
-					std::cerr << "Cgi failed: " << exception << std::endl;
-				}
-			}
-			//If request path is root
-			else if (this->_request.getPath() == "/"){
-				this->_contentType = "text/html";
-				path.append(this->_request.getIndex());
-				//Listing the directories from the root
-				if (this->_request.getAutoindex() == true)
-					this->_content.append(this->_buildAutoIndex(this->_request.getRootPath(), this->_request.getPath()));
-				//Get the index page
-				else{
-					std::ifstream indata(path.c_str());
-					std::stringstream buff;
-					buff << indata.rdbuf();
-					this->_content.append(buff.str());
-				}
-			}
-			else{
-				path.erase(path.end() - 1);
-				path.append(this->_request.getPath());
-				if (this->_request.getAutoindex() == true && isPathDirectory(path) == true)
-					this->_content.append(this->_buildAutoIndex(this->_request.getRootPath(), this->_request.getPath()));
-				else{
-					this->_contentType = getMimeTypes(path.c_str());
-					std::ifstream indata(path.c_str());
-					std::stringstream buff;
-					buff << indata.rdbuf();
-					this->_content.append(buff.str());
-				}
-			}
 		}
 
 		/*
@@ -404,7 +338,25 @@ class httpResponse{
 			Delete a ressource :
 		*/
 
-		void	_delete(){
+		void	_deleteContent(){
+			if (this->_request.getPath() == "/"){
+				this->_content.clear();
+				this->_content = _buildErrorPage(FORBIDDEN);
+			}
+			else{
+				if (isPathValid(_rootToFile) && isPathDirectory(_rootToFile) == false)
+					remove(_rootToFile.c_str());
+				else if (isPathValid(_rootToFile) && isPathDirectory(_rootToFile) == true){
+					if (removeDir(_rootToFile.c_str()) == -1){
+						this->_content.clear();
+						this->_content = _buildErrorPage(INTERNAL_SERVER_ERROR);
+					}
+				}
+				else{
+					this->_content.clear();
+					this->_content = _buildErrorPage(NOT_FOUND);
+				}
+			}
 			return;
 		}
 
