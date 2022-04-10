@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/09 16:50:53 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/04/09 23:07:57 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/04/10 17:24:55 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,6 +43,6 @@ void	eventLoop(std::vector<Server> &serverList, Epoll &epoll, int events)
 		else if (socketEvent.events() & EPOLLIN)
 			handleInput(clientList[socketEvent.listener()]);
 		// else if (socketEvent.events() & EPOLLOUT)
-			// handleOutput(*server, socketEvent);
+			// handleOutput(clientList[socketEvent.listener()]);
 	}
 }
