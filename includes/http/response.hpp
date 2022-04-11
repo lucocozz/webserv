@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/04/10 21:41:30 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/11 15:11:07 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -86,7 +86,6 @@ class httpResponse{
 			else if (this->_request.getMethod() == "DELETE")
 				this->_deleteContent();
 			this->_retrieveContent(server, clientInfo, request.getHeaders());
-
 			//Build response
 			this->_buildStatusLine();
 			this->_buildHeaders();
@@ -142,12 +141,12 @@ class httpResponse{
 			this->_response.append("Content-Type: " + this->_contentType + "\r\n");
 			this->_response.append("Content-Length: " + itos(this->_content.size()) + "\r\n");
 			this->_response.append("Connection: keep-alive\r\n");
-			if (this->_status / 100 == 2 || this->_status / 100 == 3){
-				if (this->_request.getAutoindex() == false){
-					this->_response.append("Last-Modified: " + buildLastModified(this->_rootToFile) + "\r\n");
-					this->_response.append("Etag: " + buildETag(this->_rootToFile) + "\r\n");
-				}
-			}
+			//if (this->_status / 100 == 2 || this->_status / 100 == 3){
+			//	if (this->_request.getAutoindex() == false){
+			//		this->_response.append("Last-Modified: " + buildLastModified(this->_rootToFile) + "\r\n");
+			//		this->_response.append("Etag: " + buildETag(this->_rootToFile) + "\r\n");
+			//	}
+			//}
 		}
 
 		void _buildBody(){
@@ -228,7 +227,8 @@ class httpResponse{
 					}
 				}
 				//If request path is root
-				else if (this->_request.getPath() == "/" && _contentNeedRefresh() == true){
+				//else if (this->_request.getPath() == "/" && _contentNeedRefresh() == true){
+				else if (this->_request.getPath() == "/"){
 					this->_contentType = "text/html";
 					//Listing the directories from the root
 					if (this->_request.getAutoindex() == true)
@@ -242,7 +242,8 @@ class httpResponse{
 						this->_content.append(buff.str());
 					}
 				}
-				else if (_contentNeedRefresh() == true){
+				//else if (_contentNeedRefresh() == true){
+				else{
 					if (isPathValid(this->_rootToFile) == false){
 						//this->_status = NOT_FOUND;
 						this->_content.clear();

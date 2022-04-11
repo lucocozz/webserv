@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:46 by user42            #+#    #+#             */
-/*   Updated: 2022/04/10 21:27:57 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/11 19:03:01 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -81,17 +81,35 @@ class httpRequest{
 			- Return the specified header if found
 		*/
 
-		void	treatRequest(std::string const &rawRequest, Server const &server){
+		void								treatRequest(std::string const &rawRequest, Server const &server){
 			this->_retrieveConfigInfo(server);
 			this->_parse(rawRequest);
 			this->_check();
 		}
 
-		std::string		findHeader(std::string key){
+		std::string							findHeader(std::string key){
 			std::map<std::string, std::string>::iterator it = this->_headers.find(key);
 			if (it == this->_headers.end())
 				return (std::string());
 			return ((*it).second);
+		}
+
+		std::pair<bool, std::string>		findBoundarie(){
+			std::map<std::string, std::string>::iterator it = this->_headers.find("Content-Type");
+			std::string boundarie;
+			bool ret = false;
+			if (it == this->_headers.end())
+				return (std::make_pair(ret, boundarie));
+			else{
+				if ((*it).second.find("multipart/form-data", 0, 18) != std::string::npos){
+					std::vector<std::string> vec = split((*it).second, "; boundary=");
+					if (vec.size() == 2){
+						boundarie = vec.at(1);
+						ret = true;
+					}
+				}
+			}
+			return (std::make_pair(ret, boundarie));
 		}
 
 		/*
@@ -182,7 +200,6 @@ class httpRequest{
 			catch (std::exception const &e){this->_errorPage.second = false;}
 
 			//location index & limit_except
-			//try{
 			{
 				std::vector<LocationContext> locations = server.context.locations;
 				for (std::vector<LocationContext>::iterator it = locations.begin(); it != locations.end(); it++){
@@ -202,35 +219,7 @@ class httpRequest{
 					}
 				}
 				this->_locations = locations;
-
-				for (std::vector<LocationContext>::iterator it = locations.begin(); it != locations.end(); it++){
-					//Retrieve the location
-					LocationContext tmp = *it;
-					//Retrieve location path
-					std::cout << "location name = " << tmp.args.at(0) << std::endl;
-					try{
-						std::vector<std::string> vec = tmp.directives.at("index");
-						std::cout << "index:" << std::endl;
-						for (std::vector<std::string>::iterator vit = vec.begin(); vit != vec.end(); vit++)
-							std::cout << *vit << std::endl;
-					}
-					catch (std::exception const &e){
-						std::cout << "index off" << std::endl;
-					}
-					try{
-						std::vector<std::string> vec = tmp.directives.at("limit_except");
-						std::cout << "limit_except :" << std::endl;
-						for (std::vector<std::string>::iterator vit = vec.begin(); vit != vec.end(); vit++)
-							std::cout << *vit << std::endl;
-					}
-					catch (std::exception const &e){
-						std::cout << "limit off" << std::endl;
-					}
-				}
 			}
-			//catch (std::exception const &e){
-			//	std::cout << "DEBUG BUG LOCATION" << std::endl;
-			//}
 		}
 
 		/*
@@ -241,60 +230,51 @@ class httpRequest{
 		*/
 
 		void	_parse(std::string const &rawRequest){
-			this->_parseBody(rawRequest);
-			if (this->_request.size() != 0){
-				this->_parseRequestLine();
-				this->_parseHeaders();
-			}
-			else
-				this->_status = BAD_REQUEST;
-		}
+			std::string rawHeaders;
+			rawHeaders.append(rawRequest.substr(0, rawRequest.find("\r\n\r\n")));
+			std::vector<std::string> vecHeaders = split(rawHeaders, "\r\n");
 
-		void	_parseBody(std::string const &rawRequest){
-			std::vector<std::string> sep = split(rawRequest, "\r\n\r\n");
-
-			if (sep.size() == 2){
-				this->_body = sep.at(1);
-				this->_bodySize = _body.size();
-			}
-			else if (sep.size() > 2){
-				for (size_t i = 1; i < sep.size(); i++)
-					this->_body.append(sep.at(i));
-				this->_bodySize = _body.size();
-			}
-			this->_request = split(sep.at(0), "\r\n");
-		}
-
-		void	_parseRequestLine(){
-			std::vector<std::string> requestLine = split(this->_request.at(0), " ");
-			if (requestLine.size() == 3){
-				this->_method = requestLine.at(0);
-				this->_path = requestLine.at(1);
-				this->_protocol = requestLine.at(2);
-				this->_request.erase(_request.begin());
-			}
-			else
-				this->_status = BAD_REQUEST;
-		}
-
-		void	_parseHeaders(){
-			if (this->_status != OK)
-				return;
-			for (size_t i = 0; i < _request.size(); i++){
-				if (this->_request.at(i).find(": ") == std::string::npos){
-					this->_status = BAD_REQUEST;
-					return;
-				}
-				std::vector<std::string> res = split(_request.at(i), ": ");
-				if (res.size() == 2){
-					std::pair<std::string, std::string> pair = std::make_pair(res.at(0), res.at(1));
-					this->_headers.insert(pair);
+			if (vecHeaders.size() > 0){
+				//RequestLine
+				std::vector<std::string> requestLine = split(vecHeaders.at(0), " ");
+				if (requestLine.size() == 3){
+					this->_method = requestLine.at(0);
+					this->_path = requestLine.at(1);
+					this->_protocol = requestLine.at(2);
+					vecHeaders.erase(vecHeaders.begin());
 				}
 				else{
 					this->_status = BAD_REQUEST;
 					return;
 				}
-				res.clear();
+				//Headers map
+				std::map<std::string, std::string>				mapHeaders;
+				for (size_t i = 0; i < vecHeaders.size(); i++){
+					if (vecHeaders.at(i).find(": ") == std::string::npos){
+						this->_status = BAD_REQUEST;
+						return;
+					}
+					std::vector<std::string> res = split(vecHeaders.at(i), ": ");
+					if (res.size() == 2){
+						std::pair<std::string, std::string> pair = std::make_pair(res.at(0), res.at(1));
+						mapHeaders.insert(pair);
+					}
+					else{
+						this->_status = BAD_REQUEST;
+						return;
+					}
+					res.clear();
+				}
+				this->_headers = mapHeaders; 
+				//Body
+				std::string rawBody;
+				rawBody.append(rawRequest.substr(rawRequest.find("\r\n\r\n") + 4));
+				this->_body = rawBody;
+				this->_bodySize = this->_body.size();
+			}
+			else{
+				this->_status = BAD_REQUEST;
+				return;
 			}
 		}
 
