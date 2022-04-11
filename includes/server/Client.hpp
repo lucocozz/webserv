@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/09 14:37:30 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/04/11 22:01:41 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/04/11 22:04:54 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@ private:
 	std::vector<Server*>	_serverLinks;
 
 public:
-	EpollSocket				socket;
+	EpollSocket	socket;
 
 	Client(void) {}
 
@@ -46,10 +46,7 @@ public:
 		return (*this);
 	}
 
-	EpollSocket				getSocket() const{
-		return (this->_socket);
-	}
-	std::vector<Server*>	getServerLinks() const{
+	std::vector<Server*>	getServerLinks() const {
 		return (this->_serverLinks);
 	}
 };

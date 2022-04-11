@@ -3,14 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   handleInput.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
+/*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/22 21:55:31 by lucocozz          #+#    #+#             */
-<<<<<<< HEAD
-/*   Updated: 2022/04/11 19:37:40 by user42           ###   ########.fr       */
-=======
-/*   Updated: 2022/04/11 17:59:01 by lucocozz         ###   ########.fr       */
->>>>>>> server
+/*   Updated: 2022/04/11 22:06:54 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,13 +21,13 @@
 void	handleInput(Client &client)
 {
 	std::pair<std::string, int>					data;
-	const std::pair<std::string, std::string> 	clientInfo(client.getSocket().getNameInfo(NI_NUMERICHOST), client.getSocket().getNameInfo());
+	const std::pair<std::string, std::string> 	clientInfo(client.socket.getNameInfo(NI_NUMERICHOST), client.socket.getNameInfo());
 	httpRequest 								request;
 	httpResponse								response;
 
-	data = client.getSocket().recvData();
+	data = client.socket.recvData();
 	std::cout << "client datas: |" << data.first << "|" << std::endl;
 	request.treatRequest(data.first, *(client.getServerLinks().at(0)));
 	response.buildResponse(request, *(client.getServerLinks().at(0)), clientInfo);
-	response.sendResponse(client.getSocket());
+	response.sendResponse(client.socket);
 }
