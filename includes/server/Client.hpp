@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
+/*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/09 14:37:30 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/04/11 19:28:10 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/11 22:01:41 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,16 +19,17 @@
 class Client
 {
 private:
-	EpollSocket				_socket;
 	std::vector<Server*>	_serverLinks;
 
 public:
+	EpollSocket				socket;
+
 	Client(void) {}
 
 	Client(EpollSocket &socket, std::vector<Server*> serverLinks):
-		_socket(socket), _serverLinks(serverLinks) {}
+		_serverLinks(serverLinks), socket(socket) {}
 
-	~Client(void) {}
+	~Client() {}
 
 	Client(const Client &rhs)
 	{
@@ -39,7 +40,7 @@ public:
 	{
 		if (this != &rhs)
 		{
-			this->_socket = rhs._socket;
+			this->socket = rhs.socket;
 			this->_serverLinks = rhs._serverLinks;
 		}
 		return (*this);
