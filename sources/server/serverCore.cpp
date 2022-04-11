@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:14:35 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/03/31 00:44:04 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/04/09 21:13:48 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,68 +16,33 @@
 #include "Config.hpp"
 #include "serverCore.hpp"
 #include "system.hpp"
+#include "Client.hpp"
 
 bool	g_running = true;
 
-static void	initServer(std::vector<Server> &localServers, Epoll &epoll)
+static void	initServer(std::vector<Server> &serverList, Epoll &epoll)
 {
+	EpollSocket			socket;
+	std::vector<int>	controledSocket;
+
 	signal(SIGINT, handleSigint);
-	for (size_t i = 0; i < localServers.size(); ++i)
+	for (size_t i = 0; i < serverList.size(); ++i)
 	{
-		localServers[i].socket.events(EPOLLIN | EPOLLET | EPOLLRDHUP);
-		epoll.control(EPOLL_CTL_ADD, localServers[i].socket);
-	}
-}
-
-static Server	*findServerSocket(std::vector<Server> &localServers, EpollSocket &socketEvent)
-{
-	for (size_t i = 0; i < localServers.size(); ++i)
-	{
-		if (localServers[i].socket.listener() == socketEvent.listener())
-			return (&localServers[i]);
-	}
-	return (NULL);
-}
-
-
-static	Server	*findServerFromClient(std::vector<Server> &localServers, EpollSocket &socketEvent)
-{	
-	for (size_t i = 0; i < localServers.size(); ++i)
-	{
-		for (size_t j = 0; j < localServers[i].clients.size(); ++j)
+		socket = serverList[i].socket;
+		if (std::find(controledSocket.begin(), controledSocket.end(), socket.listener()) == controledSocket.end())
 		{
-			if (localServers[i].clients[j].listener() == socketEvent.listener())
-				return (&localServers[i]);
+			socket.events(EPOLLIN | EPOLLET | EPOLLRDHUP | EPOLLOUT);
+			epoll.control(EPOLL_CTL_ADD, socket);
+			controledSocket.push_back(socket.listener());
 		}
 	}
-	return (NULL);
 }
 
-void	serverCore(std::vector<Server> &localServers)
+void	serverCore(std::vector<Server> &serverList)
 {
-	int			nfds;
 	Epoll		epoll;
-	Server		*server;
-	EpollSocket	socketEvent;
 
-	initServer(localServers, epoll);
+	initServer(serverList, epoll);
 	while (g_running == true)
-	{
-		nfds = epoll.wait();
-		for (int n = 0; n < nfds; ++n)
-		{
-			socketEvent = epoll.socketAt(n);
-			server = findServerSocket(localServers, socketEvent);
-			if (server != NULL)
-				handleConnection(*server, socketEvent, epoll);
-			else
-			{
-				server = findServerFromClient(localServers, socketEvent);
-				if (socketEvent.events() & (EPOLLERR | EPOLLRDHUP | EPOLLHUP))
-					handleDeconnection(*server, socketEvent, epoll);
-				else if (socketEvent.events() & EPOLLIN)
-					handleInput(*server, socketEvent);
-			}
-		}
-	}
+		eventLoop(serverList, epoll, epoll.wait());
 }

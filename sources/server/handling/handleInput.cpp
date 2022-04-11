@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/22 21:55:31 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/03/31 00:42:36 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/04/09 21:18:13 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,8 +16,9 @@
 #include "request.hpp"
 #include "Server.hpp"
 #include "response.hpp"
+#include "Client.hpp"
 
-void	handleInput(Server &server, EpollSocket &socketEvent)
+void	handleInput(Client &client)
 {
 	std::pair<std::string, int>					data;
 	const std::pair<std::string, std::string> 	clientInfo(socketEvent.getNameInfo(NI_NUMERICHOST), socketEvent.getNameInfo());

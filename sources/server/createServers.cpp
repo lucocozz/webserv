@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/23 19:58:50 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/03/30 17:51:19 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/04/09 21:07:36 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,8 +65,8 @@ static EpollSocket	findSocket(std::vector<Server> &servers, ServerContext &conte
 
 static void	addServer(std::vector<Server> &servers, ServerContext &context)
 {
-	int							check;
-	EpollSocket					socket;
+	int			check;
+	EpollSocket	socket;
 
 	check = checkServers(servers, context);
 	if (check == -1)
@@ -81,18 +81,18 @@ static void	addServer(std::vector<Server> &servers, ServerContext &context)
 
 std::vector<Server>	createServers(Config &config)
 {
-	std::vector<Server>			LocalServers;
+	std::vector<Server>	serverList;
 
 	for (size_t i = 0; i < config.servers.size(); ++i)
 	{
 		try {
-			addServer(LocalServers, config.servers[i]);
+			addServer(serverList, config.servers[i]);
 		} catch (const std::exception &e) {
-			for (size_t j = 0; j < LocalServers.size(); ++j)
-				LocalServers[j].socket.closeSocket();
+			for (size_t j = 0; j < serverList.size(); ++j)
+				serverList[j].socket.closeSocket();
 			throw (std::runtime_error(e.what()));
 		}
 		std::cout << std::endl;
 	}
-	return (LocalServers);
+	return (serverList);
 }

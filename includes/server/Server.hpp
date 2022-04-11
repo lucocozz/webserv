@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/30 15:43:25 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/03/31 00:36:40 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/04/08 18:19:40 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,6 @@ class Server
 public:
 	EpollSocket					socket;
 	ServerContext				context;
-	std::vector<EpollSocket>	clients;
 
 	Server(void) {}
 
@@ -39,7 +38,6 @@ public:
 		{
 			this->socket = rhs.socket;
 			this->context = rhs.context;
-			this->clients = rhs.clients;
 		}
 		return (*this);
 	}
@@ -47,7 +45,7 @@ public:
 
 inline bool	operator==(const Server &lhs, const Server &rhs)
 {
-	return (lhs.socket == rhs.socket && lhs.context == rhs.context && lhs.clients == rhs.clients);
+	return (lhs.socket == rhs.socket && lhs.context == rhs.context);
 }
 
 inline bool	operator!=(const Server &lhs, const Server &rhs)
