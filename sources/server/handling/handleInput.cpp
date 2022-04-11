@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/22 21:55:31 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/04/09 21:18:13 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/04/11 17:59:01 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,14 +20,15 @@
 
 void	handleInput(Client &client)
 {
-	std::pair<std::string, int>					data;
-	const std::pair<std::string, std::string> 	clientInfo(socketEvent.getNameInfo(NI_NUMERICHOST), socketEvent.getNameInfo());
-	httpRequest 								request;
-	httpResponse								response;
+	// std::pair<std::string, int>					data;
+	// const std::pair<std::string, std::string> 	clientInfo(socketEvent.getNameInfo(NI_NUMERICHOST), socketEvent.getNameInfo());
+	// httpRequest 								request;
+	// httpResponse								response;
 
-	data = socketEvent.recvData();
-	std::cout << "client datas: |" << data.first << "|" << std::endl;
-	request.treatRequest(data.first, server);
-	response.buildResponse(request, server, clientInfo);
-	response.sendResponse(socketEvent);
+	std::cout << client.socket.recvData().first << std::endl;
+	// data = socketEvent.recvData();
+	// std::cout << "client datas: |" << data.first << "|" << std::endl;
+	// request.treatRequest(data.first, server);
+	// response.buildResponse(request, server, clientInfo);
+	// response.sendResponse(socketEvent);
 }

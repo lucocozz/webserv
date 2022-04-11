@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:14:35 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/04/09 21:13:48 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/04/11 21:58:32 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,7 @@ static void	initServer(std::vector<Server> &serverList, Epoll &epoll)
 		socket = serverList[i].socket;
 		if (std::find(controledSocket.begin(), controledSocket.end(), socket.listener()) == controledSocket.end())
 		{
-			socket.events(EPOLLIN | EPOLLET | EPOLLRDHUP | EPOLLOUT);
+			socket.events(EPOLLIN | EPOLLET | EPOLLOUT | EPOLLRDHUP);
 			epoll.control(EPOLL_CTL_ADD, socket);
 			controledSocket.push_back(socket.listener());
 		}
@@ -40,9 +40,10 @@ static void	initServer(std::vector<Server> &serverList, Epoll &epoll)
 
 void	serverCore(std::vector<Server> &serverList)
 {
-	Epoll		epoll;
+	Epoll					epoll;
+	std::map<int, Client>	clientList;
 
 	initServer(serverList, epoll);
 	while (g_running == true)
-		eventLoop(serverList, epoll, epoll.wait());
+		eventLoop(serverList, clientList, epoll, epoll.wait());
 }

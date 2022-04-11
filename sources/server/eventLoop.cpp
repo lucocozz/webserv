@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/09 16:50:53 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/04/10 17:24:55 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/04/11 21:49:22 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,10 +28,10 @@ static bool	isAServer(std::vector<Server> &serverList, EpollSocket &socketEvent)
 	return (false);
 }
 
-void	eventLoop(std::vector<Server> &serverList, Epoll &epoll, int events)
+void	eventLoop(std::vector<Server> &serverList,
+	std::map<int, Client> &clientList, Epoll &epoll, int events)
 {
-	EpollSocket				socketEvent;
-	std::map<int, Client>	clientList;
+	EpollSocket	socketEvent;
 
 	for (int n = 0; n < events; ++n)
 	{
@@ -42,7 +42,8 @@ void	eventLoop(std::vector<Server> &serverList, Epoll &epoll, int events)
 			handleDeconnection(clientList, socketEvent, epoll);
 		else if (socketEvent.events() & EPOLLIN)
 			handleInput(clientList[socketEvent.listener()]);
-		// else if (socketEvent.events() & EPOLLOUT)
+		else if (socketEvent.events() & EPOLLOUT)
+			std::cout << "EPOLLOUT" << std::endl;
 			// handleOutput(clientList[socketEvent.listener()]);
 	}
 }

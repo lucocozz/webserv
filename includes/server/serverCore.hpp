@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:19:24 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/04/09 23:08:08 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/04/11 21:50:06 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,4 +28,5 @@ void				handleConnection(std::vector<Server> &serverList,
 void				handleDeconnection(std::map<int, Client> &clientList, EpollSocket &socketEvent, Epoll &epoll);
 void				handleInput(Client &client);
 void				serverCore(std::vector<Server> &serverList);
-void				eventLoop(std::vector<Server> &serverList, Epoll &epoll, int events);
+void				eventLoop(std::vector<Server> &serverList, std::map<int, Client> &clientList,
+						Epoll &epoll, int events);
