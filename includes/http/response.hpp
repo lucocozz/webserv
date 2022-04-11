@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/04/11 15:11:07 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/11 19:31:14 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -95,7 +95,7 @@ class httpResponse{
 			std::cout << this->_response << std::endl;
 		}
 
-		void	sendResponse(EpollSocket &socketEvent){
+		void	sendResponse(EpollSocket socketEvent){
 			socketEvent.sendData(this->_response);
 		}
 

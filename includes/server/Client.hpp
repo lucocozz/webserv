@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
+/*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/09 14:37:30 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/04/10 17:09:21 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/04/11 19:28:10 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,5 +43,12 @@ public:
 			this->_serverLinks = rhs._serverLinks;
 		}
 		return (*this);
+	}
+
+	EpollSocket				getSocket() const{
+		return (this->_socket);
+	}
+	std::vector<Server*>	getServerLinks() const{
+		return (this->_serverLinks);
 	}
 };
