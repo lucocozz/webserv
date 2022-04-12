@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   handleInput.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
+/*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/22 21:55:31 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/04/11 19:37:40 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/11 22:06:54 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,13 +21,27 @@
 void	handleInput(Client &client)
 {
 	std::pair<std::string, int>					data;
-	const std::pair<std::string, std::string> 	clientInfo(client.getSocket().getNameInfo(NI_NUMERICHOST), client.getSocket().getNameInfo());
+	std::string 								hostName("");
+	Server										*serverLink;
+	const std::pair<std::string, std::string> 	clientInfo(client.socket.getNameInfo(NI_NUMERICHOST), client.socket.getNameInfo());
 	httpRequest 								request;
 	httpResponse								response;
 
-	data = client.getSocket().recvData();
+	data = client.socket.recvData();
 	std::cout << "client datas: |" << data.first << "|" << std::endl;
-	request.treatRequest(data.first, *(client.getServerLinks().at(0)));
-	response.buildResponse(request, *(client.getServerLinks().at(0)), clientInfo);
-	response.sendResponse(client.getSocket());
+	if (data.first.find("Host") != std::string::npos){
+		std::string::iterator 	itb;
+		std::string::iterator	ite;
+
+		itb = data.first.begin() + data.first.find("Host:") + 6;
+		ite = itb;
+		while (*ite != '\n')
+			ite++;
+		ite--;
+		hostName.append(itb, ite);
+	}
+	serverLink = client.getServerLinks(hostName);
+	request.treatRequest(data.first, *serverLink);
+	response.buildResponse(request, *serverLink, clientInfo);
+	response.sendResponse(client.socket);
 }

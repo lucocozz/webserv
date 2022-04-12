@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/04/11 19:31:14 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/12 17:17:00 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -164,16 +164,27 @@ class httpResponse{
 			std::string ret;
 
 			this->_status = status;
-			if (this->_request.getErrorPage().second == true && match(itos(status).c_str(), this->_request.getErrorPage().first.at(0).c_str(), 'x') == 1){
-				std::ifstream indata(buildPathTo(this->_request.getRootPath(), this->_request.getErrorPage().first.at(1), "").c_str());
-				std::stringstream buff;
-				buff << indata.rdbuf();
-				ret.append(buff.str());
-				return (ret);
-			}
-			else
-				ret.append(buildErrorPage(status));
+			if (this->_request.getErrorPage().second == true){
+				std::cout << std::endl << "DEBUG :" << std::endl;
 
+				//std::map<std::string, std::string>::iterator it;
+				for (std::map<std::string, std::string>::iterator it = this->_request.getErrorPage().first.begin(); it != this->_request.getErrorPage().first.end(); it++){
+					std::cout << (*it).first << " : " << (*it).second << std::endl;
+					//if (match(itos(status).c_str(), (*it).first.c_str(), 'x') == 1)
+					//	break;
+				}
+				//if (it == this->_request.getErrorPage().first.end()){
+				//	ret.append(buildErrorPage(status));
+				//	return (ret);
+				//}
+
+				//std::ifstream indata(buildPathTo(this->_request.getRootPath(), (*it).second, "").c_str());
+				//std::stringstream buff;
+				//buff << indata.rdbuf();
+				//ret.append(buff.str());
+				//return (ret);
+			}
+			ret.append(buildErrorPage(status));
 			return (ret);
 		}
 

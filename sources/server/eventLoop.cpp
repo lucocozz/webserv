@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   eventLoop.cpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
+/*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/09 16:50:53 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/04/11 19:37:13 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/11 22:01:17 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,10 +28,10 @@ static bool	isAServer(std::vector<Server> &serverList, EpollSocket &socketEvent)
 	return (false);
 }
 
-void	eventLoop(std::vector<Server> &serverList, Epoll &epoll, int events)
+void	eventLoop(std::vector<Server> &serverList,
+	std::map<int, Client> &clientList, Epoll &epoll, int events)
 {
-	EpollSocket				socketEvent;
-	std::map<int, Client>	clientList;
+	EpollSocket	socketEvent;
 
 	for (int n = 0; n < events; ++n)
 	{
@@ -40,9 +40,12 @@ void	eventLoop(std::vector<Server> &serverList, Epoll &epoll, int events)
 			handleConnection(serverList, clientList, socketEvent, epoll);
 		else if (socketEvent.events() & (EPOLLERR | EPOLLRDHUP | EPOLLHUP))
 			handleDeconnection(clientList, socketEvent, epoll);
-		else if (socketEvent.events() & EPOLLIN)
+		else if (socketEvent.events() & EPOLLIN){
+			std::cout << "epollout val " << (socketEvent.events() & EPOLLOUT)<< std::endl;
 			handleInput(clientList[socketEvent.listener()]);
-		// else if (socketEvent.events() & EPOLLOUT)
+		}
+		else if (socketEvent.events() & EPOLLOUT)
+			std::cout << "EPOLLOUT" << std::endl;
 			// handleOutput(clientList[socketEvent.listener()]);
 	}
 }
