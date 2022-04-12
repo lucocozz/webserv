@@ -21,13 +21,27 @@
 void	handleInput(Client &client)
 {
 	std::pair<std::string, int>					data;
+	std::string 								hostName("");
+	Server										*serverLink;
 	const std::pair<std::string, std::string> 	clientInfo(client.socket.getNameInfo(NI_NUMERICHOST), client.socket.getNameInfo());
 	httpRequest 								request;
 	httpResponse								response;
 
 	data = client.socket.recvData();
 	std::cout << "client datas: |" << data.first << "|" << std::endl;
-	request.treatRequest(data.first, *(client.getServerLinks().at(0)));
-	response.buildResponse(request, *(client.getServerLinks().at(0)), clientInfo);
+	if (data.first.find("Host") != std::string::npos){
+		std::string::iterator 	itb;
+		std::string::iterator	ite;
+
+		itb = data.first.begin() + data.first.find("Host:") + 6;
+		ite = itb;
+		while (*ite != '\n')
+			ite++;
+		ite--;
+		hostName.append(itb, ite);
+	}
+	serverLink = client.getServerLinks(hostName);
+	request.treatRequest(data.first, *serverLink);
+	response.buildResponse(request, *serverLink, clientInfo);
 	response.sendResponse(client.socket);
 }

@@ -46,7 +46,15 @@ public:
 		return (*this);
 	}
 
-	std::vector<Server*>	getServerLinks() const {
-		return (this->_serverLinks);
+	Server	*getServerLinks(std::string hostName) const {
+		if (this->_serverLinks.size() == 1)
+			return (this->_serverLinks.at(0));
+		size_t i = 0;
+		while (i < this->_serverLinks.size()){
+			if (this->_serverLinks.at(i)->context.directives.find("server_name")->second[0] == hostName)
+				return (this->_serverLinks.at(i));
+			i++;
+		}
+		return (this->_serverLinks.at(0));
 	}
 };

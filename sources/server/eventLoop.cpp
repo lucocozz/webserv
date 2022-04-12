@@ -40,8 +40,10 @@ void	eventLoop(std::vector<Server> &serverList,
 			handleConnection(serverList, clientList, socketEvent, epoll);
 		else if (socketEvent.events() & (EPOLLERR | EPOLLRDHUP | EPOLLHUP))
 			handleDeconnection(clientList, socketEvent, epoll);
-		else if (socketEvent.events() & EPOLLIN)
+		else if (socketEvent.events() & EPOLLIN){
+			std::cout << "epollout val " << (socketEvent.events() & EPOLLOUT)<< std::endl;
 			handleInput(clientList[socketEvent.listener()]);
+		}
 		else if (socketEvent.events() & EPOLLOUT)
 			std::cout << "EPOLLOUT" << std::endl;
 			// handleOutput(clientList[socketEvent.listener()]);
