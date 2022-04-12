@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:46 by user42            #+#    #+#             */
-/*   Updated: 2022/04/12 18:04:27 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/12 18:36:07 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -116,33 +116,33 @@ class httpRequest{
 			Getters :
 		*/
 
-		std::string 								getMethod() const{return (this->_method);}
+		const std::string 								&getMethod() const{return (this->_method);}
 
-		std::string 								getPath() const{return (this->_path);}
+		const std::string 								&getPath() const{return (this->_path);}
 
-		std::string 								getProtocol() const{return (this->_protocol);}
+		const std::string 								&getProtocol() const{return (this->_protocol);}
 
-		std::map<std::string, std::string>			getHeaders() const{return (this->_headers);}
+		const std::map<std::string, std::string>			&getHeaders() const{return (this->_headers);}
 
-		std::string									getBody() const{return (this->_body);}
+		const std::string									&getBody() const{return (this->_body);}
 
-		int											getStatus() const{return (this->_status);}
+		const int											&getStatus() const{return (this->_status);}
 
-		std::string									getServerName()	const{return (this->_serverName);}
+		const std::string									&getServerName()	const{return (this->_serverName);}
 
-		std::string									getRootPath() const{return (this->_rootPath);}
+		const std::string									&getRootPath() const{return (this->_rootPath);}
 
-		std::string									getIndex() const{return (this->_index);}
+		const std::string									&getIndex() const{return (this->_index);}
 
-		bool										getAutoindex() const{return (this->_autoindex);}
+		const bool										&getAutoindex() const{return (this->_autoindex);}
 
-		size_t										getMaxBodySize() const{return (this->_maxBodySize);}
+		const size_t										&getMaxBodySize() const{return (this->_maxBodySize);}
 
-		std::pair<std::map<std::string, std::string>, bool> 	getErrorPage() const{return (this->_errorPage);}
+		const std::pair<std::map<std::string, std::string>, bool> 	&getErrorPage() const{return (this->_errorPage);}
 
-		size_t										getBodySize() const{return (this->_bodySize);}
+		const size_t										&getBodySize() const{return (this->_bodySize);}
 
-		std::vector<LocationContext>				getLocations() const{return (this->_locations);}
+		const std::vector<LocationContext>				&getLocations() const{return (this->_locations);}
 
 
 	/*

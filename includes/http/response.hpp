@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/04/12 17:17:00 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/12 18:38:25 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -165,10 +165,7 @@ class httpResponse{
 
 			this->_status = status;
 			if (this->_request.getErrorPage().second == true){
-				std::cout << std::endl << "DEBUG :" << std::endl;
-
-				//std::map<std::string, std::string>::iterator it;
-				for (std::map<std::string, std::string>::iterator it = this->_request.getErrorPage().first.begin(); it != this->_request.getErrorPage().first.end(); it++){
+				for (std::map<std::string, std::string>::const_iterator it = this->_request.getErrorPage().first.begin(); it != this->_request.getErrorPage().first.end(); it++){
 					std::cout << (*it).first << " : " << (*it).second << std::endl;
 					//if (match(itos(status).c_str(), (*it).first.c_str(), 'x') == 1)
 					//	break;
