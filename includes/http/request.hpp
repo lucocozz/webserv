@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:46 by user42            #+#    #+#             */
-/*   Updated: 2022/04/12 17:23:19 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/12 18:04:27 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -193,7 +193,7 @@ class httpRequest{
 			}
 			catch (std::exception const &e){this->_maxBodySize = 1 * 1000;}
 			//error pages
-			std::vector<std::string> rawErrorPages;
+			/*std::vector<std::string> rawErrorPages;
 			try{
 				rawErrorPages = server.context.directives.at("error_page");
 				this->_errorPage.second = true;
@@ -225,36 +225,36 @@ class httpRequest{
 			this->_errorPage.first.insert(map.begin(), map.end());
 			for (std::map<std::string, std::string>::iterator it = this->_errorPage.first.begin(); it != this->_errorPage.first.end(); it++){
 				std::cout << (*it).first << " : " << (*it).second << std::endl;
+			}*/
+			try{
+				//this->_errorPage.first = server.context.directives.at("error_page");
+				std::vector<std::string> rawErrorPages = server.context.directives.at("error_page");
+				//Retrieve
+				std::string status;
+				std::string path;
+				std::map<std::string, std::string> map;
+				for (size_t i = 0; i < rawErrorPages.size(); i++){
+					if (i % 2 == 0)
+						status = rawErrorPages.at(i);
+					else{
+						if (status.find_first_not_of("0123456789x") == std::string::npos){
+							path = rawErrorPages.at(i);
+							map.insert(std::make_pair(status, path));
+						}
+						status.clear();
+						path.clear();
+					}
+				}
+				//this->_errorPage.first = map;
+				this->_errorPage.first.insert(map.begin(), map.end());
+				for (std::map<std::string, std::string>::iterator it = this->_errorPage.first.begin(); it != this->_errorPage.first.end(); it++){
+					std::cout << (*it).first << " : " << (*it).second << std::endl;
+				}
+				this->_errorPage.second = true;
 			}
-			//try{
-			//	//this->_errorPage.first = server.context.directives.at("error_page");
-			//	std::vector<std::string> rawErrorPages = server.context.directives.at("error_page");
-			//	//Retrieve
-			//	std::string status;
-			//	std::string path;
-			//	std::map<std::string, std::string> map;
-			//	for (size_t i = 0; i < rawErrorPages.size(); i++){
-			//		if (i % 2 == 0)
-			//			status = rawErrorPages.at(i);
-			//		else{
-			//			if (status.find_first_not_of("0123456789x") == std::string::npos){
-			//				path = rawErrorPages.at(i);
-			//				map.insert(std::make_pair(status, path));
-			//			}
-			//			status.clear();
-			//			path.clear();
-			//		}
-			//	}
-			//	//this->_errorPage.first = map;
-			//	this->_errorPage.first.insert(map.begin(), map.end());
-			//	for (std::map<std::string, std::string>::iterator it = this->_errorPage.first.begin(); it != this->_errorPage.first.end(); it++){
-			//		std::cout << (*it).first << " : " << (*it).second << std::endl;
-			//	}
-			//	this->_errorPage.second = true;
-			//}
-			//catch (std::exception const &e){
-			//	this->_errorPage.second = false;
-			//}
+			catch (std::exception const &e){
+				this->_errorPage.second = false;
+			}
 
 			//location index & limit_except
 			{
