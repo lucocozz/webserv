@@ -35,9 +35,8 @@ void	handleInput(Client &client)
 
 		itb = data.first.begin() + data.first.find("Host:") + 6;
 		ite = itb;
-		while (*ite != '\n')
+		while (*ite != '\n' && *ite != ':')
 			ite++;
-		ite--;
 		hostName.append(itb, ite);
 	}
 	serverLink = client.getServerLinks(hostName);

@@ -303,8 +303,12 @@ class httpResponse{
 				if (closedir(rep) == -1)
 					return (this->_buildErrorPage(INTERNAL_SERVER_ERROR));
 			}
-			ret.append("<hr>\r\n");
-			ret.append("</body>\r\n</html>\r\n");
+			// ret.append("<hr>\r\n");
+			// ret.append("<form enctype=\"multipart/form-data\" action=\"/php-cgi/upload.php\" method=\"post\">");
+  			// ret.append("Envoyer ce fichier : <input name=\"userfile\" type=\"file\" />");
+ 			// ret.append("<input type=\"submit\" value=\"Envoyer le fichier\" />");
+			// ret.append("</form>");
+			// ret.append("</body>\r\n</html>\r\n");
 			return (ret);
 		}
 
