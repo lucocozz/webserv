@@ -225,13 +225,19 @@ private:
     }
 
     void _setPathTranslated(){
-        std::string varName("PATH_TRANSLATED=");
-        std::string pathTranslated("");
-        std::string pathInfo(this->_mapMetaVars.find("PATH_INFO=")->second);
-		std::string root(this->_serverContext.directives.at("root")[0]);
+        std::string             varName("PATH_TRANSLATED=");
+        std::string             pathTranslated("");
+        std::string             pathInfo(this->_mapMetaVars.find("PATH_INFO=")->second);
+		std::string             root(this->_serverContext.directives.at("root")[0]);
+        std::string::iterator   it;
         
-        pathInfo.erase(pathInfo.begin());
-        pathTranslated = root.append(pathInfo);
+        pathTranslated.append(root + pathInfo);
+        it = pathTranslated.begin();
+        while (it != pathTranslated.end()){
+            if (*it == '/' && *(it + 1) == '/')
+                pathTranslated.erase(it);
+            it++;
+        }
         this->_mapMetaVars.insert(std::make_pair(varName, pathTranslated));
     }
 
@@ -389,7 +395,7 @@ private:
         close(fdToChild[0]);
 
         chdir(cgiLocationPath.c_str());
-        std::cerr << "currentdir " << get_current_dir_name() << " cgi binary: " << args[0]  << " cgi script name: |" << args[1] << "|" << std::endl;
+        std::cerr << "currentdir |" << get_current_dir_name() << "| cgi binary: |" << args[0]  << "| cgi script name: |" << args[1] << "|" << std::endl;
         execve(args[0], args, cMetaVar);
         exit(errno);
     }

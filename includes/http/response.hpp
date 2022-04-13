@@ -283,7 +283,9 @@ class httpResponse{
 			std::pair<bool,LocationContext> locationPair = std::make_pair(true, init);
 			for (size_t i = 0; i < serverLocation.size(); i++){
 				if ((path.append("/").find(serverLocation[i].args[0]) != std::string::npos) && 
-					(serverLocation[i].directives.count("cgi_binary") == 1)){
+					(serverLocation[i].directives.count("cgi_binary") == 1) &&
+					(serverLocation[i].directives.count("cgi_extension") == 1) &&
+					(path.find(serverLocation[i].directives.find("cgi_extension")->second[0])) != std::string::npos){
 					locationPair.second = serverLocation[i];
 					return(locationPair);
 				}
@@ -311,12 +313,12 @@ class httpResponse{
 				if (closedir(rep) == -1)
 					return (this->_buildErrorPage(INTERNAL_SERVER_ERROR));
 			}
-			// ret.append("<hr>\r\n");
-			// ret.append("<form enctype=\"multipart/form-data\" action=\"/php-cgi/upload.php\" method=\"post\">");
-  			// ret.append("Envoyer ce fichier : <input name=\"userfile\" type=\"file\" />");
- 			// ret.append("<input type=\"submit\" value=\"Envoyer le fichier\" />");
-			// ret.append("</form>");
-			// ret.append("</body>\r\n</html>\r\n");
+			ret.append("<hr>\r\n");
+			ret.append("<form enctype=\"multipart/form-data\" action=\"/php-cgi/upload.php\" method=\"post\">");
+  			ret.append("Envoyer ce fichier : <input name=\"userfile\" type=\"file\" />");
+ 			ret.append("<input type=\"submit\" value=\"Envoyer le fichier\" />");
+			ret.append("</form>");
+			ret.append("</body>\r\n</html>\r\n");
 			return (ret);
 		}
 
