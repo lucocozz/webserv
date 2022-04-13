@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/04/13 02:30:29 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/13 16:16:00 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -81,9 +81,9 @@ class httpResponse{
 			this->_rootToFile = buildPathTo(this->_request.getRootPath(), this->_request.getPath(), "");
 
 			//Treatment
-			if (this->_request.getMethod() == "POST")
+			if (this->_request.getMethod() == "POST" && isMethodAllowed(this->_request.getLocations(), this->_request.getPath(), this->_request.getMethod()) == true)
 				this->_uploadContent(request.getPath(), server, clientInfo, request.getHeaders());
-			else if (this->_request.getMethod() == "DELETE")
+			else if (this->_request.getMethod() == "DELETE" && isMethodAllowed(this->_request.getLocations(), this->_request.getPath(), this->_request.getMethod()) == true)
 				this->_deleteContent();
 			this->_retrieveContent(server, clientInfo, request.getHeaders());
 			//Build response
@@ -167,7 +167,6 @@ class httpResponse{
 			if (this->_request.getErrorPage().second == true){
 				std::map<std::string, std::string>::const_iterator it = this->_request.getErrorPage().first.begin();
 				for (; it != this->_request.getErrorPage().first.end(); it++){
-					std::cout << (*it).first << " : " << (*it).second << std::endl;
 					if (match(itos(status).c_str(), (*it).first.c_str(), 'x') == 1)
 						break;
 				}
@@ -212,7 +211,7 @@ class httpResponse{
 		}
 
 		void	_retrieveContent(const Server &server, const std::pair<std::string, std::string> &clientInfo, const std::map<std::string, std::string> &headers){
-			if (this->_request.getMethod() == "GET"){
+			if (this->_request.getMethod() == "GET" && isMethodAllowed(this->_request.getLocations(), this->_request.getPath(), this->_request.getMethod()) == true){
 				std::pair<bool,LocationContext> locationResult = getLocation(this->_request.getPath(), server.context.locations);
 				if (locationResult.first == true){
 					try{
@@ -253,21 +252,22 @@ class httpResponse{
 				}
 				//else if (_contentNeedRefresh() == true){
 				else{
-					//DEBUG
-					std::cout << "DEBUG isMethodAllowed = " << isMethodAllowed(this->_request.getLocations(), this->_request.getPath(), this->_request.getMethod()) << std::endl;
-					std::string indexLocation = retrieveLocationIndex(this->_request.getLocations(), this->_request.getRootPath(), this->_request.getPath());
-					if (indexLocation.empty() == true)
-						std::cout "Location index = " << indexLocation << std::endl;
-					else
-						std::cout "Location index off" << std::endl;
-					//DEBUG
-					
 					if (isPathValid(this->_rootToFile) == false){
 						this->_content.clear();
 						this->_content.append(this->_buildErrorPage(NOT_FOUND));
 						return;
 					}
-					if (this->_request.getAutoindex() == true && isPathDirectory(this->_rootToFile) == true)
+					std::pair<std::string, std::string> indexLocation = retrieveLocationIndex(this->_request.getLocations(), this->_request.getRootPath(), this->_request.getPath());
+					if (indexLocation.first.empty() == false && isSameDirectory(indexLocation.second, this->_request.getPath()) == true){
+						std::string pathToIndex = buildPathTo(this->_request.getRootPath(), indexLocation.first, "");
+						this->_contentType = getMimeTypes(pathToIndex.c_str());
+						
+						std::ifstream indata(pathToIndex.c_str());
+						std::stringstream buff;
+						buff << indata.rdbuf();
+						this->_content.append(buff.str());
+					}
+					else if (this->_request.getAutoindex() == true && isPathDirectory(this->_rootToFile) == true)
 						this->_content.append(this->_buildAutoIndex(this->_request.getRootPath(), this->_request.getPath()));
 					else{
 						this->_contentType = getMimeTypes(this->_rootToFile.c_str());
@@ -278,6 +278,8 @@ class httpResponse{
 					}
 				}
 			}
+			else
+				this->_status = METHOD_NOT_ALLOWED;
 			if (this->_status / 100 == 4 || this->_status / 100 == 5){
 				this->_contentType = "text/html";
 				this->_content.clear();
@@ -365,7 +367,7 @@ class httpResponse{
 				this->_content.clear();
 				this->_content = _buildErrorPage(FORBIDDEN);
 			}
-			else{
+			else if (isMethodAllowed(this->_request.getLocations(), this->_request.getPath(), this->_request.getMethod()) == true){
 				if (isPathValid(_rootToFile) && isPathDirectory(_rootToFile) == false)
 					remove(_rootToFile.c_str());
 				else if (isPathValid(_rootToFile) && isPathDirectory(_rootToFile) == true){
@@ -378,6 +380,10 @@ class httpResponse{
 					this->_content.clear();
 					this->_content = _buildErrorPage(NOT_FOUND);
 				}
+			}
+			else{
+				this->_content.clear();
+				this->_content = _buildErrorPage(METHOD_NOT_ALLOWED);
 			}
 			return;
 		}

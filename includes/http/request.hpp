@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:46 by user42            #+#    #+#             */
-/*   Updated: 2022/04/13 01:44:47 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/13 16:12:34 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -257,6 +257,10 @@ class httpRequest{
 				if (requestLine.size() == 3){
 					this->_method = requestLine.at(0);
 					this->_path = requestLine.at(1);
+					for (std::string::iterator it = this->_path.end() - 1; it != this->_path.begin() && *it == '/'; it--){
+						this->_path.erase(it);
+						it = this->_path.end() - 1;
+					}
 					this->_protocol = requestLine.at(2);
 					vecHeaders.erase(vecHeaders.begin());
 				}
