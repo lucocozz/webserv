@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:46 by user42            #+#    #+#             */
-/*   Updated: 2022/04/12 18:36:07 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/13 01:44:47 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,6 +65,7 @@ class httpRequest{
 			this->_errorPage = rhs.getErrorPage();
 			this->_maxBodySize = rhs.getMaxBodySize();
 			this->_bodySize = rhs.getBodySize();
+			this->_locations = rhs.getLocations();
 
 			this->_method = rhs.getMethod();
 			this->_path = rhs.getPath();
@@ -116,33 +117,33 @@ class httpRequest{
 			Getters :
 		*/
 
-		const std::string 								&getMethod() const{return (this->_method);}
+		const std::string 											&getMethod() const{return (this->_method);}
 
-		const std::string 								&getPath() const{return (this->_path);}
+		const std::string 											&getPath() const{return (this->_path);}
 
-		const std::string 								&getProtocol() const{return (this->_protocol);}
+		const std::string 											&getProtocol() const{return (this->_protocol);}
 
-		const std::map<std::string, std::string>			&getHeaders() const{return (this->_headers);}
+		const std::map<std::string, std::string>					&getHeaders() const{return (this->_headers);}
 
-		const std::string									&getBody() const{return (this->_body);}
+		const std::string											&getBody() const{return (this->_body);}
 
-		const int											&getStatus() const{return (this->_status);}
+		const int													&getStatus() const{return (this->_status);}
 
-		const std::string									&getServerName()	const{return (this->_serverName);}
+		const std::string											&getServerName()	const{return (this->_serverName);}
 
-		const std::string									&getRootPath() const{return (this->_rootPath);}
+		const std::string											&getRootPath() const{return (this->_rootPath);}
 
-		const std::string									&getIndex() const{return (this->_index);}
+		const std::string											&getIndex() const{return (this->_index);}
 
-		const bool										&getAutoindex() const{return (this->_autoindex);}
+		const bool													&getAutoindex() const{return (this->_autoindex);}
 
-		const size_t										&getMaxBodySize() const{return (this->_maxBodySize);}
+		const size_t												&getMaxBodySize() const{return (this->_maxBodySize);}
 
 		const std::pair<std::map<std::string, std::string>, bool> 	&getErrorPage() const{return (this->_errorPage);}
 
-		const size_t										&getBodySize() const{return (this->_bodySize);}
+		const size_t												&getBodySize() const{return (this->_bodySize);}
 
-		const std::vector<LocationContext>				&getLocations() const{return (this->_locations);}
+		const std::vector<LocationContext>							&getLocations() const{return (this->_locations);}
 
 
 	/*
@@ -193,41 +194,7 @@ class httpRequest{
 			}
 			catch (std::exception const &e){this->_maxBodySize = 1 * 1000;}
 			//error pages
-			/*std::vector<std::string> rawErrorPages;
 			try{
-				rawErrorPages = server.context.directives.at("error_page");
-				this->_errorPage.second = true;
-			}
-			catch (std::exception const &e){
-				this->_errorPage.second = false;
-			}
-			std::map<std::string, std::string> map;
-			std::string status;
-			std::string path;
-			std::pair<std::string, std::string> pair;
-			if (this->_errorPage.second == true){
-				for (size_t i = 0; i < rawErrorPages.size(); i++){
-					if (i % 2 == 0)
-						status = rawErrorPages.at(i);
-					else{
-						if (status.find_first_not_of("0123456789x") == std::string::npos){
-							path = rawErrorPages.at(i);
-							pair.first = status;
-							pair.second = path;
-							//map.insert(std::make_pair(status, path));
-							map.insert(pair);
-						}
-						status.clear();
-						path.clear();
-					}
-				}
-			}
-			this->_errorPage.first.insert(map.begin(), map.end());
-			for (std::map<std::string, std::string>::iterator it = this->_errorPage.first.begin(); it != this->_errorPage.first.end(); it++){
-				std::cout << (*it).first << " : " << (*it).second << std::endl;
-			}*/
-			try{
-				//this->_errorPage.first = server.context.directives.at("error_page");
 				std::vector<std::string> rawErrorPages = server.context.directives.at("error_page");
 				//Retrieve
 				std::string status;
@@ -245,38 +212,31 @@ class httpRequest{
 						path.clear();
 					}
 				}
-				//this->_errorPage.first = map;
 				this->_errorPage.first.insert(map.begin(), map.end());
-				for (std::map<std::string, std::string>::iterator it = this->_errorPage.first.begin(); it != this->_errorPage.first.end(); it++){
-					std::cout << (*it).first << " : " << (*it).second << std::endl;
-				}
 				this->_errorPage.second = true;
 			}
 			catch (std::exception const &e){
 				this->_errorPage.second = false;
 			}
-
 			//location index & limit_except
-			{
-				std::vector<LocationContext> locations = server.context.locations;
-				for (std::vector<LocationContext>::iterator it = locations.begin(); it != locations.end(); it++){
-					int needDel = 0;
-					//Index
-					try {std::vector<std::string> vec = (*it).directives.at("index");}
-					catch (std::exception const &e){needDel++;}
-					//Limit Except
-					try {std::vector<std::string> vec = (*it).directives.at("limit_except");}
-					catch (std::exception const &e){needDel++;}
-					//Delete useless locations
-					if (needDel == 2){
-						locations.erase(it);
-						if (locations.empty() == true)
-							break;
-						it = locations.begin();
-					}
+			std::vector<LocationContext> locations = server.context.locations;
+			for (std::vector<LocationContext>::iterator it = locations.begin(); it != locations.end(); it++){
+				int needDel = 0;
+				//Index
+				try {std::vector<std::string> vec = (*it).directives.at("index");}
+				catch (std::exception const &e){needDel++;}
+				//Limit Except
+				try {std::vector<std::string> vec = (*it).directives.at("limit_except");}
+				catch (std::exception const &e){needDel++;}
+				//Delete useless locations
+				if (needDel == 2){
+					locations.erase(it);
+					if (locations.empty() == true)
+						break;
+					it = locations.begin();
 				}
-				this->_locations = locations;
 			}
+			this->_locations = locations;
 		}
 
 		/*
