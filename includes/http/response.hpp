@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/04/13 16:16:00 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/13 19:23:49 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -278,7 +278,7 @@ class httpResponse{
 					}
 				}
 			}
-			else
+			else if (this->_request.getMethod() == "GET")
 				this->_status = METHOD_NOT_ALLOWED;
 			if (this->_status / 100 == 4 || this->_status / 100 == 5){
 				this->_contentType = "text/html";
@@ -357,6 +357,13 @@ class httpResponse{
 					std::cerr << "Cgi failed: " << e.what() << std::endl;
 				}
 			}
+			else{
+				std::string pathToIndex = buildPathTo(this->_request.getRootPath(), this->_request.getPath(), "request.txt");
+				this->_contentType = getMimeTypes(pathToIndex.c_str());
+				std::ofstream outdata(pathToIndex.c_str());
+				outdata << this->_request.getBody() << std::endl;
+				outdata.close();
+			}
 			return;
 		}
 
@@ -375,7 +382,7 @@ class httpResponse{
 				else if (isPathValid(_rootToFile) && isPathDirectory(_rootToFile) == true){
 					if (removeDir(_rootToFile.c_str()) == -1){
 						this->_content.clear();
-						this->_content = _buildErrorPage(INTERNAL_SERVER_ERROR);
+						this->_content = _buildErrorPage(FORBIDDEN);
 					}
 				}
 				else{
