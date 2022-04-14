@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:59:01 by user42            #+#    #+#             */
-/*   Updated: 2022/04/13 16:15:23 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/14 19:02:36 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -317,6 +317,23 @@ static std::pair<bool,LocationContext>  pathIsLocation(std::string path,const st
 	for (size_t i = 0; i < serverLocation.size(); i++){
 		if ((path.append("/").find(serverLocation[i].args[0]) != std::string::npos) && 
 			((serverLocation[i].directives.count(directiveName) == 1) || (serverLocation[i].directives.count(directiveName) == 1))){
+			locationPair.second = serverLocation[i];
+			return(locationPair);
+		}
+	}
+	locationPair.first = false;
+	return (locationPair);
+}
+
+static std::pair<bool,LocationContext>  getLocation(std::string path,const std::vector<LocationContext> &serverLocation){
+	LocationContext init;
+	std::pair<bool,LocationContext> locationPair = std::make_pair(true, init);
+	
+	for (size_t i = 0; i < serverLocation.size(); i++){
+		if ((path.append("/").find(serverLocation[i].args[0]) != std::string::npos) && 
+			(serverLocation[i].directives.count("cgi_binary") == 1) &&
+			(serverLocation[i].directives.count("cgi_extension") == 1) &&
+			(path.find(serverLocation[i].directives.find("cgi_extension")->second[0])) != std::string::npos){
 			locationPair.second = serverLocation[i];
 			return(locationPair);
 		}

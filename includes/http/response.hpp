@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/04/14 18:14:54 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/14 19:30:34 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -80,21 +80,19 @@ class httpResponse{
 		void	buildResponse(httpRequest const &request, Server const &server, const std::pair<std::string, std::string> &clientInfo){
 			this->_request = request;
 			this->_status = request.getStatus();
-
-			//buildThePath
 			this->_rootToFile = buildPathTo(this->_request.getRootPath(), this->_request.getPath(), "");
 
-			//Treatment
 			if (this->_request.getMethod() == "POST" && isMethodAllowed(this->_request.getLocations(), this->_request.getPath(), this->_request.getMethod()) == true)
 				this->_uploadContent(request.getPath(), server, clientInfo, request.getHeaders());
 			else if (this->_request.getMethod() == "DELETE" && isMethodAllowed(this->_request.getLocations(), this->_request.getPath(), this->_request.getMethod()) == true)
 				this->_deleteContent();
 			this->_retrieveContent(server, clientInfo, request.getHeaders());
-			//Build response
+
 			this->_buildStatusLine();
 			this->_buildHeaders();
 			this->_buildBody();
 
+			//DEBUG OUTPUT
 			std::cout << std::endl << "SERVER RESPONSE :" << std::endl;
 			std::cout << this->_response << std::endl;
 		}
@@ -157,12 +155,27 @@ class httpResponse{
 			this->_response.append("Content-Type: " + this->_contentType + "\r\n");
 			this->_response.append("Content-Length: " + itos(this->_content.size()) + "\r\n");
 			this->_response.append("Connection: keep-alive\r\n");
-			//if (this->_status / 100 == 2 || this->_status / 100 == 3){
-			//	if (this->_request.getAutoindex() == false){
-			//		this->_response.append("Last-Modified: " + buildLastModified(this->_rootToFile) + "\r\n");
-			//		this->_response.append("Etag: " + buildETag(this->_rootToFile) + "\r\n");
-			//	}
-			//}
+			if (this->_status / 100 == 2 || this->_status / 100 == 3){
+				if (this->_request.getAutoindex() == false){
+					if (this->_request.getPath() == "/" && this->_request.getIndex().empty() == false){
+						std::string pathToIndex = buildPathTo(this->_request.getRootPath(), this->_request.getIndex(), "");
+						//this->_response.append("Last-Modified: " + buildLastModified(pathToIndex) + "\r\n");
+						this->_response.append("Etag: " + buildETag(pathToIndex) + "\r\n");
+					}
+					else if (isPathDirectory(this->_rootToFile.c_str()) == false){
+						//this->_response.append("Last-Modified: " + buildLastModified(this->_rootToFile) + "\r\n");
+						this->_response.append("Etag: " + buildETag(this->_rootToFile) + "\r\n");
+					}
+					else{
+						std::pair<std::string, std::string> indexLocation = retrieveLocationIndex(this->_request.getLocations(), this->_request.getRootPath(), this->_request.getPath());
+						if (indexLocation.first.empty() == false && isSameDirectory(indexLocation.second, this->_request.getPath()) == true){
+							std::string pathToIndex = buildPathTo(this->_request.getRootPath(), indexLocation.first, "");
+							//this->_response.append("Last-Modified: " + buildLastModified(pathToIndex) + "\r\n");
+							this->_response.append("Etag: " + buildETag(pathToIndex) + "\r\n");
+						}
+					}
+				}
+			}
 		}
 
 		void _buildBody(){
@@ -171,70 +184,11 @@ class httpResponse{
 		}
 
 		/*
-			Error pages :
-			- Build and return an error page (default or custom)
-			- Function to identify if the status code need a custom error page
-		*/
-
-		std::string					_buildDefaultErrorPage(){
-			std::string ret;
-			std::string title = itos(this->_status) + " " + this->getStatusMessage();
-			ret.append("<html>\n<head><title>" + title + "</title></head>\n");
-			ret.append("<body>\n<center><h1>" + title + "</h1></center>\n");
-			ret.append("<hr><center>42webserv/0.0.1</center>\n");
-			ret.append("</body>\n</html>");
-
-			return (ret);
-		}
-
-		void	_buildErrorPage(int status){
-			std::string ret;
-
-			this->_content.clear();
-			this->_status = status;
-			if (this->_request.getErrorPage().second == true){
-				std::map<std::string, std::string>::const_iterator it = this->_request.getErrorPage().first.begin();
-				for (; it != this->_request.getErrorPage().first.end(); it++){
-					if (match(itos(status).c_str(), (*it).first.c_str(), 'x') == 1)
-						break;
-				}
-				if (it == this->_request.getErrorPage().first.end()){
-					this->_content.append(this->_buildDefaultErrorPage());
-					return;
-				}
-				std::ifstream indata(buildPathTo(this->_request.getRootPath(), (*it).second, "").c_str());
-				std::stringstream buff;
-				buff << indata.rdbuf();
-				this->_content.append(buff.str());
-				return;
-			}
-			this->_content.append(this->_buildDefaultErrorPage());
-		}
-
-		/*
-			(COM) : Need to merge and clean retrieveContent / GET method
 			Retrieve a ressource :
 			- Retrieve the content
-			- Function to identify if the client need to refresh the content (ETag / Last-Modified)
+			- Identify if the client need to refresh the content (ETag / Last-Modified)
+			- Build the autoindex page
 		*/
-
-		bool	_contentNeedRefresh(){
-			//Si le ETag de la ressource correspond au champs If-None-Match on renvoie 304 et pas de content (Prioritaire sur If-Modified-Since)
-			if (this->_request.findHeader("If-None-Match").empty() == false){
-				if (this->_request.findHeader("If-None-Match") == buildETag(this->_rootToFile)){
-					this->_status = NOT_MODIFIED;
-					return (false);
-				}
-			}
-			//Si la date de modification de la ressource correspond au champs If-Modified-Since on renvoie 304 et pas de content
-			if (this->_request.findHeader("If-Modified-Since").empty() == false){
-				if (this->_request.findHeader("If-Modified-Since") == buildLastModified(this->_rootToFile)){
-					this->_status = NOT_MODIFIED;
-					return (false);
-				}
-			}
-			return (true);
-		}
 
 		void	_retrieveContent(const Server &server, const std::pair<std::string, std::string> &clientInfo, const std::map<std::string, std::string> &headers){
 			if (this->_request.getMethod() == "GET" && isMethodAllowed(this->_request.getLocations(), this->_request.getPath(), this->_request.getMethod()) == true){
@@ -312,21 +266,22 @@ class httpResponse{
 			}
 		}
 
-		static std::pair<bool,LocationContext>  getLocation(std::string path,const std::vector<LocationContext> &serverLocation){
-			LocationContext init;
-
-			std::pair<bool,LocationContext> locationPair = std::make_pair(true, init);
-			for (size_t i = 0; i < serverLocation.size(); i++){
-				if ((path.append("/").find(serverLocation[i].args[0]) != std::string::npos) && 
-					(serverLocation[i].directives.count("cgi_binary") == 1) &&
-					(serverLocation[i].directives.count("cgi_extension") == 1) &&
-					(path.find(serverLocation[i].directives.find("cgi_extension")->second[0])) != std::string::npos){
-					locationPair.second = serverLocation[i];
-					return(locationPair);
+		bool	_contentNeedRefresh(){
+			//Si le ETag de la ressource correspond au champs If-None-Match on renvoie 304 et pas de content (Prioritaire sur If-Modified-Since)
+			if (this->_request.findHeader("If-None-Match").empty() == false){
+				if (this->_request.findHeader("If-None-Match") == buildETag(this->_rootToFile)){
+					this->_status = NOT_MODIFIED;
+					return (false);
 				}
 			}
-			locationPair.first = false;
-			return (locationPair);
+			//Si la date de modification de la ressource correspond au champs If-Modified-Since on renvoie 304 et pas de content
+			if (this->_request.findHeader("If-Modified-Since").empty() == false){
+				if (this->_request.findHeader("If-Modified-Since") == buildLastModified(this->_rootToFile)){
+					this->_status = NOT_MODIFIED;
+					return (false);
+				}
+			}
+			return (true);
 		}
 
 		void			_buildAutoIndex(std::string rootPath, std::string path){
@@ -411,6 +366,47 @@ class httpResponse{
 			else
 				this->_buildErrorPage(METHOD_NOT_ALLOWED);
 			return;
+		}
+
+		/*
+			Error pages :
+			- Build and return an error page (default or custom)
+			- Function to identify if the status code need a custom error page
+		*/
+
+		std::string					_buildDefaultErrorPage(){
+			std::string ret;
+			std::string title = itos(this->_status) + " " + this->getStatusMessage();
+			ret.append("<html>\n<head><title>" + title + "</title></head>\n");
+			ret.append("<body>\n<center><h1>" + title + "</h1></center>\n");
+			ret.append("<hr><center>42webserv/0.0.1</center>\n");
+			ret.append("</body>\n</html>");
+
+			return (ret);
+		}
+
+		void	_buildErrorPage(int status){
+			std::string ret;
+
+			this->_content.clear();
+			this->_status = status;
+			if (this->_request.getErrorPage().second == true){
+				std::map<std::string, std::string>::const_iterator it = this->_request.getErrorPage().first.begin();
+				for (; it != this->_request.getErrorPage().first.end(); it++){
+					if (match(itos(status).c_str(), (*it).first.c_str(), 'x') == 1)
+						break;
+				}
+				if (it == this->_request.getErrorPage().first.end()){
+					this->_content.append(this->_buildDefaultErrorPage());
+					return;
+				}
+				std::ifstream indata(buildPathTo(this->_request.getRootPath(), (*it).second, "").c_str());
+				std::stringstream buff;
+				buff << indata.rdbuf();
+				this->_content.append(buff.str());
+				return;
+			}
+			this->_content.append(this->_buildDefaultErrorPage());
 		}
 
 		/*
