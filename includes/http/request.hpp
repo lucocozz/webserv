@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:46 by user42            #+#    #+#             */
-/*   Updated: 2022/04/15 00:26:02 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/15 00:57:04 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,13 +17,6 @@
 	Includes :
 */
 
-#include <algorithm>
-#include <vector>
-#include <map>
-#include <utility>
-#include <sys/stat.h>
-
-#include "Server.hpp"
 #include "Config.hpp"
 #include "configData.hpp"
 #include "statusCode.hpp"
