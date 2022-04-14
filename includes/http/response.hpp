@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/04/14 19:30:34 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/14 19:55:37 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -149,7 +149,6 @@ class httpResponse{
 		}
 
 		void _buildHeaders(){
-			//Mandatory HEADER (even if error)
 			this->_response.append("Server: " + this->_request.getServerName() + "\r\n");
 			this->_response.append("Date: " + buildDate() + "\r\n");
 			this->_response.append("Content-Type: " + this->_contentType + "\r\n");
@@ -159,19 +158,19 @@ class httpResponse{
 				if (this->_request.getAutoindex() == false){
 					if (this->_request.getPath() == "/" && this->_request.getIndex().empty() == false){
 						std::string pathToIndex = buildPathTo(this->_request.getRootPath(), this->_request.getIndex(), "");
-						//this->_response.append("Last-Modified: " + buildLastModified(pathToIndex) + "\r\n");
-						this->_response.append("Etag: " + buildETag(pathToIndex) + "\r\n");
+						this->_response.append("Last-Modified: " + formatLastModified(pathToIndex) + "\r\n");
+						this->_response.append("Etag: " + formatETag(pathToIndex) + "\r\n");
 					}
 					else if (isPathDirectory(this->_rootToFile.c_str()) == false){
-						//this->_response.append("Last-Modified: " + buildLastModified(this->_rootToFile) + "\r\n");
-						this->_response.append("Etag: " + buildETag(this->_rootToFile) + "\r\n");
+						this->_response.append("Last-Modified: " + formatLastModified(this->_rootToFile) + "\r\n");
+						this->_response.append("Etag: " + formatETag(this->_rootToFile) + "\r\n");
 					}
 					else{
 						std::pair<std::string, std::string> indexLocation = retrieveLocationIndex(this->_request.getLocations(), this->_request.getRootPath(), this->_request.getPath());
 						if (indexLocation.first.empty() == false && isSameDirectory(indexLocation.second, this->_request.getPath()) == true){
-							std::string pathToIndex = buildPathTo(this->_request.getRootPath(), indexLocation.first, "");
-							//this->_response.append("Last-Modified: " + buildLastModified(pathToIndex) + "\r\n");
-							this->_response.append("Etag: " + buildETag(pathToIndex) + "\r\n");
+							std::string pathToLocationIndex = buildPathTo(this->_request.getRootPath(), indexLocation.first, "");
+							this->_response.append("Last-Modified: " + formatLastModified(pathToLocationIndex) + "\r\n");
+							this->_response.append("Etag: " + formatETag(pathToLocationIndex) + "\r\n");
 						}
 					}
 				}
@@ -215,8 +214,7 @@ class httpResponse{
 					}
 				}
 				//If request path is root
-				//else if (this->_request.getPath() == "/" && _contentNeedRefresh() == true){
-				else if (this->_request.getPath() == "/"){
+				else if (this->_request.getPath() == "/" && _contentNeedRefresh() == true){
 					this->_contentType = "text/html";
 					//Listing the directories from the root
 					if (this->_request.getAutoindex() == true)
@@ -230,8 +228,7 @@ class httpResponse{
 						this->_content.append(buff.str());
 					}
 				}
-				//else if (_contentNeedRefresh() == true){
-				else{
+				else if (_contentNeedRefresh() == true){
 					if (isPathValid(this->_rootToFile) == false){
 						this->_buildErrorPage(NOT_FOUND);
 						return;
@@ -269,14 +266,14 @@ class httpResponse{
 		bool	_contentNeedRefresh(){
 			//Si le ETag de la ressource correspond au champs If-None-Match on renvoie 304 et pas de content (Prioritaire sur If-Modified-Since)
 			if (this->_request.findHeader("If-None-Match").empty() == false){
-				if (this->_request.findHeader("If-None-Match") == buildETag(this->_rootToFile)){
+				if (this->_request.findHeader("If-None-Match") == formatETag(this->_rootToFile)){
 					this->_status = NOT_MODIFIED;
 					return (false);
 				}
 			}
 			//Si la date de modification de la ressource correspond au champs If-Modified-Since on renvoie 304 et pas de content
 			if (this->_request.findHeader("If-Modified-Since").empty() == false){
-				if (this->_request.findHeader("If-Modified-Since") == buildLastModified(this->_rootToFile)){
+				if (this->_request.findHeader("If-Modified-Since") == formatLastModified(this->_rootToFile)){
 					this->_status = NOT_MODIFIED;
 					return (false);
 				}

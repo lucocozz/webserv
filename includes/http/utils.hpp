@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:59:01 by user42            #+#    #+#             */
-/*   Updated: 2022/04/14 19:02:36 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/14 19:42:32 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -193,7 +193,7 @@ std::string					buildDate(){
 	return (ret);
 }
 
-std::string					buildLastModified(std::string path){\
+std::string					formatLastModified(std::string path){\
 	struct stat sb;
 	lstat(path.c_str(), &sb);
 	std::string timeInfo = ctime(&sb.st_mtime);
@@ -221,7 +221,7 @@ std::string					buildFileSize(std::string path){\
 	return (ret);
 }
 
-std::string					buildETag(std::string &path){
+std::string					formatETag(std::string &path){
 	struct stat sb;
 	lstat(path.c_str(), &sb);
 	std::string ret;
@@ -281,8 +281,8 @@ std::string					buildListFilesUrls(struct dirent *fileRead, DIR *rep, std::strin
 			ret.append("</a>");
 			for (size_t i = strlen(fileRead->d_name); i < ((fileRead->d_type == DT_DIR) ? 54 : 55); i++)
 				ret.append(" ");
-			ret.append(buildLastModified(buildPathTo(rootPath, path, fileRead->d_name)));
-			for (size_t i = buildLastModified(buildPathTo(rootPath, path, fileRead->d_name)).size(); i < 65; i++)
+			ret.append(formatLastModified(buildPathTo(rootPath, path, fileRead->d_name)));
+			for (size_t i = formatLastModified(buildPathTo(rootPath, path, fileRead->d_name)).size(); i < 65; i++)
 				ret.append(" ");
 			if (fileRead->d_type == DT_DIR)
 				ret.append("-");
