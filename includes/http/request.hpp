@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:46 by user42            #+#    #+#             */
-/*   Updated: 2022/04/14 18:54:23 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/14 23:07:18 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,7 @@
 #include "Config.hpp"
 #include "configData.hpp"
 #include "statusCode.hpp"
-#include "utils.hpp"
+#include "utils/fileRelated.hpp"
 
 /*
 	httpRequest class :
