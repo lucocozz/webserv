@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:57 by user42            #+#    #+#             */
-/*   Updated: 2022/03/21 00:39:09 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/14 17:46:55 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,23 +73,6 @@ std::map<int, std::string>	initStatusMessages(){
 	ret.insert(std::make_pair(NOT_IMPLEMENTED, "Not Implemented"));
 	ret.insert(std::make_pair(SERVICE_UNAVAILABLE, "Service Unavailable"));
 	ret.insert(std::make_pair(HTTP_VERSION_NOT_SUPPORTED, "http Version Not Supported"));
-
-	return (ret);
-}
-
-std::map<int, std::string>	statusMessages = initStatusMessages();
-
-std::string	getStatusMessage(int status){
-	return ((*statusMessages.find(status)).second);
-}
-
-std::string					buildErrorPage(int status){
-	std::string ret;
-	std::string title = itos(status) + " " + getStatusMessage(status);
-	ret.append("<html>\n<head><title>" + title + "</title></head>\n");
-	ret.append("<body>\n<center><h1>" + title + "</h1></center>\n");
-	ret.append("<hr><center>42webserv/0.0.1</center>\n");
-	ret.append("</body>\n</html>");
 
 	return (ret);
 }

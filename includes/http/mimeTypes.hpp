@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:40 by user42            #+#    #+#             */
-/*   Updated: 2022/03/18 02:15:47 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/14 17:55:54 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -93,19 +93,6 @@ std::map<std::string, std::string>	initExtensionTypes(){
 	ret.insert(std::make_pair("7z", "application/x-7z-compressed"));
 
 	return (ret);
-}
-
-std::map<std::string, std::string>	extensionTypes = initExtensionTypes();
-
-std::string							getMimeTypes(char const *path){
-	std::string tmp(path);
-
-	if (tmp.rfind(".") == std::string::npos)
-		return ("text/html");
-	std::map<std::string, std::string>::iterator it = extensionTypes.find(tmp.substr(tmp.rfind(".") + 1));
-	if (it == extensionTypes.end())
-		return ("text/html");
-	return ((*it).second);
 }
 
 #endif

@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:46 by user42            #+#    #+#             */
-/*   Updated: 2022/04/13 16:12:34 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/14 18:54:23 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,8 +23,9 @@
 #include <utility>
 #include <sys/stat.h>
 
-#include "../server/Server.hpp"
-#include "../config/Config.hpp"
+#include "Server.hpp"
+#include "Config.hpp"
+#include "configData.hpp"
 #include "statusCode.hpp"
 #include "utils.hpp"
 
@@ -158,92 +159,20 @@ class httpRequest{
 		*/
 
 		void	_retrieveConfigInfo(Server const &server){
-			//server name
-			try{
-				std::vector<std::string> server_name = server.context.directives.at("server_name");
-				this->_serverName = server_name[0];
-			}
-			catch (std::exception const &e){this->_serverName = "server";}
-			//root
-			try{
-				std::vector<std::string> root_path = server.context.directives.at("root");
-				this->_rootPath = root_path[0];
-			}
-			catch (std::exception const &e){this->_rootPath = "/";}
-			//server index
-			try{
-				std::vector<std::string> index = server.context.directives.at("index");
-				this->_index = checkIndex(_rootPath, index);
-			}
-			catch (std::exception const &e){this->_index = "default_index.html";}
-			//auto index
-			try{
-				std::string autoindex = server.context.directives.at("autoindex")[0];
-				if (autoindex == "on")
-					this->_autoindex = true;
-				else
-					this->_autoindex = false;
-			}
-			catch (std::exception const &e){this->_autoindex = false;}
-			//client max body size
-			try{
-				if (atoi((server.context.directives.at("client_max_body_size")[0]).c_str()) < 100)
-					this->_maxBodySize = atoi((server.context.directives.at("client_max_body_size")[0]).c_str()) * 1000;
-				else
-					this->_maxBodySize = 1 * 1000;
-			}
-			catch (std::exception const &e){this->_maxBodySize = 1 * 1000;}
-			//error pages
-			try{
-				std::vector<std::string> rawErrorPages = server.context.directives.at("error_page");
-				//Retrieve
-				std::string status;
-				std::string path;
-				std::map<std::string, std::string> map;
-				for (size_t i = 0; i < rawErrorPages.size(); i++){
-					if (i % 2 == 0)
-						status = rawErrorPages.at(i);
-					else{
-						if (status.find_first_not_of("0123456789x") == std::string::npos){
-							path = rawErrorPages.at(i);
-							map.insert(std::make_pair(status, path));
-						}
-						status.clear();
-						path.clear();
-					}
-				}
-				this->_errorPage.first.insert(map.begin(), map.end());
-				this->_errorPage.second = true;
-			}
-			catch (std::exception const &e){
-				this->_errorPage.second = false;
-			}
-			//location index & limit_except
-			std::vector<LocationContext> locations = server.context.locations;
-			for (std::vector<LocationContext>::iterator it = locations.begin(); it != locations.end(); it++){
-				int needDel = 0;
-				//Index
-				try {std::vector<std::string> vec = (*it).directives.at("index");}
-				catch (std::exception const &e){needDel++;}
-				//Limit Except
-				try {std::vector<std::string> vec = (*it).directives.at("limit_except");}
-				catch (std::exception const &e){needDel++;}
-				//Delete useless locations
-				if (needDel == 2){
-					locations.erase(it);
-					if (locations.empty() == true)
-						break;
-					it = locations.begin();
-				}
-			}
-			this->_locations = locations;
+			this->_serverName = getConfigServerName(server);
+			this->_rootPath = getConfigRootPath(server);
+			this->_index = getConfigIndex(server, _rootPath);
+			this->_autoindex = getConfigAutoIndex(server);
+			this->_maxBodySize = getConfigMaxBodySize(server);
+			this->_errorPage = getConfigErrorPage(server);
+			this->_locations = getConfigLocations(server);
 		}
 
 		/*
 			Parsing :
-			-	Retrieve the body first
-			-	Retrieve the request line (Method + Path + Protocol)
-			-	Retrieve the headers in a map
+			-	Parse the request
+			-	Parse the request line part
+			-	Parse the headers
 		*/
 
 		void	_parse(std::string const &rawRequest){
@@ -252,51 +181,54 @@ class httpRequest{
 			std::vector<std::string> vecHeaders = split(rawHeaders, "\r\n");
 
 			if (vecHeaders.size() > 0){
-				//RequestLine
-				std::vector<std::string> requestLine = split(vecHeaders.at(0), " ");
-				if (requestLine.size() == 3){
-					this->_method = requestLine.at(0);
-					this->_path = requestLine.at(1);
-					for (std::string::iterator it = this->_path.end() - 1; it != this->_path.begin() && *it == '/'; it--){
-						this->_path.erase(it);
-						it = this->_path.end() - 1;
-					}
-					this->_protocol = requestLine.at(2);
-					vecHeaders.erase(vecHeaders.begin());
-				}
-				else{
-					this->_status = BAD_REQUEST;
-					return;
-				}
-				//Headers map
-				std::map<std::string, std::string>				mapHeaders;
-				for (size_t i = 0; i < vecHeaders.size(); i++){
-					if (vecHeaders.at(i).find(": ") == std::string::npos){
-						this->_status = BAD_REQUEST;
-						return;
-					}
-					std::vector<std::string> res = split(vecHeaders.at(i), ": ");
-					if (res.size() == 2){
-						std::pair<std::string, std::string> pair = std::make_pair(res.at(0), res.at(1));
-						mapHeaders.insert(pair);
-					}
-					else{
-						this->_status = BAD_REQUEST;
-						return;
-					}
-					res.clear();
-				}
-				this->_headers = mapHeaders; 
-				//Body
-				std::string rawBody;
-				rawBody.append(rawRequest.substr(rawRequest.find("\r\n\r\n") + 4));
-				this->_body = rawBody;
+				this->_parseRequestLine(vecHeaders);
+				this->_parseHeaders(vecHeaders);
+				this->_body.append(rawRequest.substr(rawRequest.find("\r\n\r\n") + 4));
 				this->_bodySize = this->_body.size();
 			}
 			else{
 				this->_status = BAD_REQUEST;
 				return;
 			}
+		}
+
+		void	_parseRequestLine(std::vector<std::string> &vecHeaders){
+			std::vector<std::string> requestLine = split(vecHeaders.at(0), " ");
+			if (requestLine.size() == 3){
+				this->_method = requestLine.at(0);
+				this->_path = requestLine.at(1);
+				for (std::string::iterator it = this->_path.end() - 1; it != this->_path.begin() && *it == '/'; it--){
+					this->_path.erase(it);
+					it = this->_path.end() - 1;
+				}
+				this->_protocol = requestLine.at(2);
+				vecHeaders.erase(vecHeaders.begin());
+			}
+			else{
+				this->_status = BAD_REQUEST;
+				return;
+			}
+		}
+
+		void	_parseHeaders(std::vector<std::string> &vecHeaders){
+			std::map<std::string, std::string>				mapHeaders;
+			for (size_t i = 0; i < vecHeaders.size(); i++){
+				if (vecHeaders.at(i).find(": ") == std::string::npos){
+					this->_status = BAD_REQUEST;
+					return;
+				}
+				std::vector<std::string> res = split(vecHeaders.at(i), ": ");
+				if (res.size() == 2){
+					std::pair<std::string, std::string> pair = std::make_pair(res.at(0), res.at(1));
+					mapHeaders.insert(pair);
+				}
+				else{
+					this->_status = BAD_REQUEST;
+					return;
+				}
+				res.clear();
+			}
+			this->_headers = mapHeaders; 
 		}
 
 		/*
@@ -350,7 +282,6 @@ class httpRequest{
 		std::string											_rootPath;
 		std::string											_index;
 		bool												_autoindex;
-		//std::pair<std::vector<std::string>, bool>			_errorPage;
 		std::pair<std::map<std::string, std::string>, bool> _errorPage;
 		size_t												_maxBodySize;
 		std::vector<LocationContext>						_locations;
