@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/04/14 23:02:18 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/15 00:35:56 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,11 +19,16 @@
 
 #include "Config.hpp"
 #include "Epoll.hpp"
-#include "request.hpp"
-#include "mimeTypes.hpp"
 #include "Server.hpp"
 #include "CGI.hpp"
-#include "utils/URLRelated.hpp"
+
+#include "request.hpp"
+#include "mimeTypes.hpp"
+#include "stringRelated.hpp"
+#include "pathRelated.hpp"
+#include "fileRelated.hpp"
+#include "locationRelated.hpp"
+#include "URLRelated.hpp"
 
 #include <fstream>
 #include <cstdio>

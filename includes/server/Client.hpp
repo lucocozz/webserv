@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/09 14:37:30 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/04/14 22:33:08 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/15 00:44:00 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,11 +21,11 @@ class Client
 {
 private:
 	std::vector<Server*>	_serverLinks;
-	//httpRequest 			_request;
-	//httpResponse			_response;
 
 public:
 	EpollSocket	socket;
+	//httpRequest 			request;
+	//httpResponse			response;
 
 	Client(void) {}
 
@@ -60,12 +60,4 @@ public:
 		}
 		return (this->_serverLinks.at(0));
 	}
-
-	//httpRequest &getRequest() const{
-	//	return (this->_request);
-	//}
-
-	//httpResponse &getRequest() const{
-	//	return (this->_response);
-	//}
 };

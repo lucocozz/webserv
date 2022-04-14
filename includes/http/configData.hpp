@@ -2,7 +2,7 @@
 #define CONFIGDATA_HPP
 
 #include "Server.hpp"
-#include "utils/locationRelated.hpp"
+#include "locationRelated.hpp"
 
 std::string												getConfigServerName(Server const &server);
 std::string												getConfigRootPath(Server const &server);
