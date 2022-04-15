@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:46 by user42            #+#    #+#             */
-/*   Updated: 2022/04/15 00:57:04 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/15 19:54:50 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,6 +58,8 @@ class httpRequest{
 			this->_autoindex = rhs.getAutoindex();
 			this->_errorPage = rhs.getErrorPage();
 			this->_maxBodySize = rhs.getMaxBodySize();
+			this->_bodyMultipart = rhs.getBodyMultipart();
+			this->_boundarie = rhs.getBoundarie();
 			this->_bodySize = rhs.getBodySize();
 			this->_locations = rhs.getLocations();
 
@@ -89,23 +91,23 @@ class httpRequest{
 			return ((*it).second);
 		}
 
-		std::pair<bool, std::string>		findBoundarie(){
-			std::map<std::string, std::string>::iterator it = this->_headers.find("Content-Type");
-			std::string boundarie;
-			bool ret = false;
-			if (it == this->_headers.end())
-				return (std::make_pair(ret, boundarie));
-			else{
-				if ((*it).second.find("multipart/form-data", 0, 18) != std::string::npos){
-					std::vector<std::string> vec = split((*it).second, "; boundary=");
-					if (vec.size() == 2){
-						boundarie = vec.at(1);
-						ret = true;
-					}
-				}
-			}
-			return (std::make_pair(ret, boundarie));
-		}
+		//std::pair<bool, std::string>		findBoundarie(){
+		//	std::map<std::string, std::string>::iterator it = this->_headers.find("Content-Type");
+		//	std::string boundarie;
+		//	bool ret = false;
+		//	if (it == this->_headers.end())
+		//		return (std::make_pair(ret, boundarie));
+		//	else{
+		//		if ((*it).second.find("multipart/form-data", 0, 18) != std::string::npos){
+		//			std::vector<std::string> vec = split((*it).second, "; boundary=");
+		//			if (vec.size() == 2){
+		//				boundarie = vec.at(1);
+		//				ret = true;
+		//			}
+		//		}
+		//	}
+		//	return (std::make_pair(ret, "--" + boundarie));
+		//}
 
 		/*
 			Getters :
@@ -134,6 +136,11 @@ class httpRequest{
 		const size_t												&getMaxBodySize() const{return (this->_maxBodySize);}
 
 		const std::pair<std::map<std::string, std::string>, bool> 	&getErrorPage() const{return (this->_errorPage);}
+
+		const std::pair<bool, std::string>							&getBoundarie() const{return (this->_boundarie);}
+
+		//const std::map<std::vector<std::string>, std::string> 		&getBodyMultipart() const{return (this->_bodyMultipart);}
+		const std::map<std::map<std::string, std::string>, std::string> 		&getBodyMultipart() const{return (this->_bodyMultipart);}
 
 		const size_t												&getBodySize() const{return (this->_bodySize);}
 
@@ -176,8 +183,7 @@ class httpRequest{
 			if (vecHeaders.size() > 0){
 				this->_parseRequestLine(vecHeaders);
 				this->_parseHeaders(vecHeaders);
-				this->_body.append(rawRequest.substr(rawRequest.find("\r\n\r\n") + 4));
-				this->_bodySize = this->_body.size();
+				this->_parseBody(rawRequest);
 			}
 			else{
 				this->_status = BAD_REQUEST;
@@ -206,12 +212,13 @@ class httpRequest{
 		void	_parseHeaders(std::vector<std::string> &vecHeaders){
 			std::map<std::string, std::string>				mapHeaders;
 			for (size_t i = 0; i < vecHeaders.size(); i++){
-				if (vecHeaders.at(i).find(": ") == std::string::npos){
-					this->_status = BAD_REQUEST;
-					return;
-				}
 				std::vector<std::string> res = split(vecHeaders.at(i), ": ");
 				if (res.size() == 2){
+					if (res.at(1).find("; boundary=") != std::string::npos){
+						this->_boundarie.first = true;
+						this->_boundarie.second = "--" + res.at(1).substr(res.at(1).find("; boundary=") + 11, res.at(1).size() - 2);
+						res.at(1) = res.at(1).substr(0, res.at(1).find("; boundary="));
+					}
 					std::pair<std::string, std::string> pair = std::make_pair(res.at(0), res.at(1));
 					mapHeaders.insert(pair);
 				}
@@ -222,6 +229,61 @@ class httpRequest{
 				res.clear();
 			}
 			this->_headers = mapHeaders; 
+		}
+
+		void		_parseBody(std::string rawRequest){
+			if (this->_boundarie.first == true){
+				std::string rawBody = rawRequest.substr(rawRequest.find("\r\n\r\n") + 4);
+				std::vector<std::string> separedMultipart = split(rawBody, this->_boundarie.second + "\r\n");
+				//CLEAR EMPTY STRINGS
+				for (std::vector<std::string>::iterator it = separedMultipart.begin(); it != separedMultipart.end(); it++){
+					if ((*it).empty() == true){
+						separedMultipart.erase(it);
+						it = separedMultipart.begin();
+					}
+				}
+				//SPLITS HEADERS
+				for (size_t i = 0; i < separedMultipart.size(); i++){
+					//std::pair<std::vector<std::string>, std::string>	pair;
+					std::pair<std::map<std::string,std::string>, std::string>	pair;
+					std::vector<std::string> tmpVec = split(separedMultipart.at(i).substr(0, separedMultipart.at(i).find("\r\n\r\n")), "\r\n");
+					for (std::vector<std::string>::iterator itt = tmpVec.begin(); itt != tmpVec.end(); itt++){
+						if ((*itt).find("; ") != std::string::npos){
+							std::vector<std::string> splitedHeader = split(*itt, "; ");
+							for (size_t x = 0; x < splitedHeader.size(); x++){
+								if (splitedHeader.at(x).find(": ") != std::string::npos){
+									std::vector<std::string> keyValue = split(splitedHeader.at(x), ": ");
+									pair.first.insert(std::make_pair(keyValue.at(0), keyValue.at(1)));
+								}
+								else if (splitedHeader.at(x).find("=\"") != std::string::npos){
+									std::vector<std::string> keyValue = split(splitedHeader.at(x), "=\"");
+									pair.first.insert(std::make_pair(keyValue.at(0), keyValue.at(1).substr(0, keyValue.at(1).find("\""))));
+								}
+								//std::vector<std::string> keyValue = split(splitedHeader.at(x), ": ");
+								//pair.first.insert(std::make_pair(keyValue.at(0), keyValue.at(1)));
+							}
+						}
+						else{
+							if ((*itt).find(": ") != std::string::npos){
+								std::vector<std::string> keyValue = split((*itt), ": ");
+								pair.first.insert(std::make_pair(keyValue.at(0), keyValue.at(1)));
+							}
+							else if ((*itt).find("=\"") != std::string::npos){
+								std::vector<std::string> keyValue = split((*itt), "=\"");
+								pair.first.insert(std::make_pair(keyValue.at(0), keyValue.at(1).substr(0, keyValue.at(1).find("\""))));
+							}
+						}
+					}
+					pair.second = separedMultipart.at(i).substr(separedMultipart.at(i).find("\r\n\r\n") + 4);
+					this->_bodyMultipart.insert(pair);
+				}
+				this->_body.append(rawBody);
+				this->_bodySize = this->_body.size();
+			}
+			else{
+				this->_body.append(rawRequest.substr(rawRequest.find("\r\n\r\n") + 4));
+				this->_bodySize = this->_body.size();
+			}
 		}
 
 		/*
@@ -280,12 +342,17 @@ class httpRequest{
 		std::vector<LocationContext>						_locations;
 
 		//Request
+		std::pair<bool, std::string>						_boundarie;
+		//std::map<std::vector<std::string>, std::string> 	_bodyMultipart;
+		std::map<std::map<std::string, std::string>, std::string> 	_bodyMultipart;
+		std::string											_body;
 		size_t												_bodySize;
+
 		std::string 										_method;
 		std::string 										_path;
 		std::string 										_protocol;
 		std::map<std::string, std::string>					_headers;
-		std::string											_body;
+
 		int													_status;
 };//end of class httpRequest
 

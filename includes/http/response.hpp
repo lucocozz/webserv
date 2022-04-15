@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/04/15 00:54:16 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/15 20:06:34 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -293,6 +293,21 @@ class httpResponse{
   			this->_content.append("Envoyer ce fichier : <input name=\"userfile\" type=\"file\" />");
  			this->_content.append("<input type=\"submit\" value=\"Envoyer le fichier\" />");
 			this->_content.append("</form>");
+			//POST form 2 input
+			this->_content.append("<hr>\r\n");
+			this->_content.append("Multipart Form POST 2 input : \r\n");
+			this->_content.append("<form enctype=\"multipart/form-data\" action=\"/\" method=\"post\">");
+  			this->_content.append("<input type=\"text\" name=\"description\" value=\"du texte\" />");
+			this->_content.append("<input type=\"file\" name=\"monFichier\" />");
+ 			this->_content.append("<button type =\"submit\">Envoyer</button>");
+			this->_content.append("</form>");
+			//POST form 1 input
+			this->_content.append("<hr>\r\n");
+			this->_content.append("Multipart Form POST 1 input : \r\n");
+			this->_content.append("<form enctype=\"multipart/form-data\" action=\"/\" method=\"post\">");
+			this->_content.append("<input type=\"file\" name=\"monFichier\" />");
+ 			this->_content.append("<button type =\"submit\">Envoyer</button>");
+			this->_content.append("</form>");
 			this->_content.append("</body>\r\n</html>\r\n");
 		}
 
@@ -320,10 +335,32 @@ class httpResponse{
 					std::cerr << "Cgi failed: " << e.what() << std::endl;
 				}
 			}
+			//MULTIPART
+			else if (this->_request.getBoundarie().first == true){
+				std::cout << "DEBUG MULTIPART" << std::endl;
+				int test = 0;
+				for (std::map<std::map<std::string, std::string>, std::string>::const_iterator it = this->_request.getBodyMultipart().begin(); it != this->_request.getBodyMultipart().end(); it++){
+					//DEBUG
+					test++;
+					for (std::map<std::string, std::string>::const_iterator itt = (*it).first.begin(); itt != (*it).first.end(); itt++)
+						std::cout << "DEBUG " << test << "= " << (*itt).first << " | '" << (*itt).second << "'" << std::endl;
+
+					if ((*it).first.find("filename") != (*it).first.end()){
+						std::cout << "DEBUG filename = " << (*(*it).first.find("filename")).second << std::endl;
+						std::string pathToFile = buildPathTo(this->_request.getRootPath(), this->_request.getPath(), (*(*it).first.find("filename")).second);
+						this->_contentType = this->getMimeTypes(pathToFile.c_str());
+						std::ofstream outdata(pathToFile.c_str());
+						outdata << (*it).second << std::endl;
+						outdata.close();
+					}
+					else
+						std::cout << "DEBUG no filename" << std::endl;
+				}
+			}
 			else{
-				std::string pathToIndex = buildPathTo(this->_request.getRootPath(), this->_request.getPath(), "request.txt");
-				this->_contentType = this->getMimeTypes(pathToIndex.c_str());
-				std::ofstream outdata(pathToIndex.c_str());
+				std::string pathToFile = buildPathTo(this->_request.getRootPath(), this->_request.getPath(), "request.txt");
+				this->_contentType = this->getMimeTypes(pathToFile.c_str());
+				std::ofstream outdata(pathToFile.c_str());
 				outdata << this->_request.getBody() << std::endl;
 				outdata.close();
 			}
