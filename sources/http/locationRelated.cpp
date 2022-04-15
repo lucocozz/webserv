@@ -28,14 +28,12 @@ std::pair<bool,LocationContext>  pathIsLocation(std::string path,const std::vect
 }
 
 std::pair<bool,LocationContext>  getLocation(std::string path,const std::vector<LocationContext> &serverLocation){
-	LocationContext init;
+	LocationContext 				init;
 	std::pair<bool,LocationContext> locationPair = std::make_pair(true, init);
 	
 	for (size_t i = 0; i < serverLocation.size(); i++){
-		if ((path.append("/").find(serverLocation[i].args[0]) != std::string::npos) && 
-			(serverLocation[i].directives.count("cgi_binary") == 1) &&
-			(serverLocation[i].directives.count("cgi_extension") == 1) &&
-			(path.find(serverLocation[i].directives.find("cgi_extension")->second[0])) != std::string::npos){
+		if ((path.append("/").find(serverLocation[i].args[0]) != std::string::npos && path.find(serverLocation[i].directives.find("cgi_extension")->second[0]) != std::string::npos) ||
+			(match(serverLocation[i].args[0].c_str(), path.c_str(), '*') == true) ){
 			locationPair.second = serverLocation[i];
 			return(locationPair);
 		}
