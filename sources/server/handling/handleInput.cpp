@@ -6,14 +6,14 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/22 21:55:31 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/04/12 18:06:37 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/15 00:44:31 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "EpollSocket.hpp"
 #include "Config.hpp"
 #include "CGI.hpp"
-#include "request.hpp"
+#include "response.hpp"
 #include "Server.hpp"
 #include "response.hpp"
 #include "Client.hpp"
@@ -40,6 +40,9 @@ void	handleInput(Client &client)
 		hostName.append(itb, ite);
 	}
 	serverLink = client.getServerLinks(hostName);
+	//client.request.treatRequest(data.first, *serverLink);
+	//client.response.buildResponse(client.request, *serverLink, clientInfo);
+	//client.response.sendResponse(client.socket);
 	request.treatRequest(data.first, *serverLink);
 	response.buildResponse(request, *serverLink, clientInfo);
 	response.sendResponse(client.socket);

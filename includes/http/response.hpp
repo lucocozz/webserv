@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/04/12 18:38:25 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/15 00:54:16 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,17 +17,15 @@
 	Includes :
 */
 
-#include "../config/Config.hpp"
-#include "../socket/Epoll.hpp"
+#include "Epoll.hpp"
+#include "CGI.hpp"
+
 #include "request.hpp"
 #include "mimeTypes.hpp"
-#include "../server/Server.hpp"
+#include "statusCode.hpp"
+#include "URLRelated.hpp"
 
 #include <fstream>
-#include <cstdio>
-#include <dirent.h>
-#include <sys/types.h>
-#include "../CGI/CGI.hpp"
 
 /*
 	httpResponse class :
@@ -60,6 +58,8 @@ class httpResponse{
 		httpResponse	operator=(httpResponse const &src){
 			this->_request = src.getRequest();
 			this->_status = src.getStatus();
+			this->_statusMessages = initStatusMessages();
+			this->_extensionTypes = initExtensionTypes();
 			this->_content = src.getContent();
 			this->_contentType = src.getContentType();
 			this->_rootToFile = src.getRootToFile();
@@ -74,23 +74,23 @@ class httpResponse{
 		*/
 
 		void	buildResponse(httpRequest const &request, Server const &server, const std::pair<std::string, std::string> &clientInfo){
+			this->_statusMessages = initStatusMessages();
+			this->_extensionTypes = initExtensionTypes();
 			this->_request = request;
 			this->_status = request.getStatus();
-
-			//buildThePath
 			this->_rootToFile = buildPathTo(this->_request.getRootPath(), this->_request.getPath(), "");
 
-			//Treatment
-			if (this->_request.getMethod() == "POST")
+			if (this->_request.getMethod() == "POST" && isMethodAllowed(this->_request.getLocations(), this->_request.getPath(), this->_request.getMethod()) == true)
 				this->_uploadContent(request.getPath(), server, clientInfo, request.getHeaders());
-			else if (this->_request.getMethod() == "DELETE")
+			else if (this->_request.getMethod() == "DELETE" && isMethodAllowed(this->_request.getLocations(), this->_request.getPath(), this->_request.getMethod()) == true)
 				this->_deleteContent();
-			this->_retrieveContent(server, clientInfo, request.getHeaders());
-			//Build response
+			this->_retrieveContent(server, clientInfo);
+
 			this->_buildStatusLine();
 			this->_buildHeaders();
 			this->_buildBody();
 
+			//DEBUG OUTPUT
 			std::cout << std::endl << "SERVER RESPONSE :" << std::endl;
 			std::cout << this->_response << std::endl;
 		}
@@ -107,6 +107,8 @@ class httpResponse{
 
 		int								getStatus() const{return (this->_status);}
 
+		std::string						getStatusMessage() const{return ((*this->_statusMessages.find(this->_status)).second);}
+
 		std::string						getContent() const{return (this->_content);}
 
 		std::string						getContentType() const{return (this->_contentType);}
@@ -114,6 +116,16 @@ class httpResponse{
 		std::string						getRootToFile() const{return (this->_rootToFile);}
 
 		std::string						getResponse() const{return (this->_response);}
+
+		std::string						getMimeTypes(char const *path) const{
+			std::string tmp(path);
+			if (tmp.rfind(".") == std::string::npos)
+				return ("text/html");
+			std::map<std::string, std::string>::const_iterator it = this->_extensionTypes.find(tmp.substr(tmp.rfind(".") + 1));
+			if (it == this->_extensionTypes.end())
+				return ("text/html");
+			return ((*it).second);
+		}
 
 	/*
 		Underluying functions :
@@ -131,22 +143,36 @@ class httpResponse{
 		void _buildStatusLine(){
 			this->_response.append("HTTP/1.1 ");
 			this->_response.append(itos(this->_status) + " ");
-			this->_response.append(getStatusMessage(this->_status) + "\r\n");
+			this->_response.append(this->getStatusMessage() + "\r\n");
 		}
 
 		void _buildHeaders(){
-			//Mandatory HEADER (even if error)
 			this->_response.append("Server: " + this->_request.getServerName() + "\r\n");
 			this->_response.append("Date: " + buildDate() + "\r\n");
 			this->_response.append("Content-Type: " + this->_contentType + "\r\n");
 			this->_response.append("Content-Length: " + itos(this->_content.size()) + "\r\n");
 			this->_response.append("Connection: keep-alive\r\n");
-			//if (this->_status / 100 == 2 || this->_status / 100 == 3){
-			//	if (this->_request.getAutoindex() == false){
-			//		this->_response.append("Last-Modified: " + buildLastModified(this->_rootToFile) + "\r\n");
-			//		this->_response.append("Etag: " + buildETag(this->_rootToFile) + "\r\n");
-			//	}
-			//}
+			/*if (this->_status / 100 == 2 || this->_status / 100 == 3){
+				if (this->_request.getAutoindex() == false){
+					if (this->_request.getPath() == "/" && this->_request.getIndex().empty() == false){
+						std::string pathToIndex = buildPathTo(this->_request.getRootPath(), this->_request.getIndex(), "");
+						this->_response.append("Last-Modified: " + formatLastModified(pathToIndex) + "\r\n");
+						this->_response.append("Etag: " + formatETag(pathToIndex) + "\r\n");
+					}
+					else if (isPathDirectory(this->_rootToFile.c_str()) == false){
+						this->_response.append("Last-Modified: " + formatLastModified(this->_rootToFile) + "\r\n");
+						this->_response.append("Etag: " + formatETag(this->_rootToFile) + "\r\n");
+					}
+					else{
+						std::pair<std::string, std::string> indexLocation = retrieveLocationIndex(this->_request.getLocations(), this->_request.getRootPath(), this->_request.getPath());
+						if (indexLocation.first.empty() == false && isSameDirectory(indexLocation.second, this->_request.getPath()) == true){
+							std::string pathToLocationIndex = buildPathTo(this->_request.getRootPath(), indexLocation.first, "");
+							this->_response.append("Last-Modified: " + formatLastModified(pathToLocationIndex) + "\r\n");
+							this->_response.append("Etag: " + formatETag(pathToLocationIndex) + "\r\n");
+						}
+					}
+				}
+			}*/
 		}
 
 		void _buildBody(){
@@ -155,171 +181,119 @@ class httpResponse{
 		}
 
 		/*
-			Error pages :
-			- Build and return an error page (default or custom)
-			- Function to identify if the status code need a custom error page
-		*/
-
-		std::string	_buildErrorPage(int status){
-			std::string ret;
-
-			this->_status = status;
-			if (this->_request.getErrorPage().second == true){
-				for (std::map<std::string, std::string>::const_iterator it = this->_request.getErrorPage().first.begin(); it != this->_request.getErrorPage().first.end(); it++){
-					std::cout << (*it).first << " : " << (*it).second << std::endl;
-					//if (match(itos(status).c_str(), (*it).first.c_str(), 'x') == 1)
-					//	break;
-				}
-				//if (it == this->_request.getErrorPage().first.end()){
-				//	ret.append(buildErrorPage(status));
-				//	return (ret);
-				//}
-
-				//std::ifstream indata(buildPathTo(this->_request.getRootPath(), (*it).second, "").c_str());
-				//std::stringstream buff;
-				//buff << indata.rdbuf();
-				//ret.append(buff.str());
-				//return (ret);
-			}
-			ret.append(buildErrorPage(status));
-			return (ret);
-		}
-
-		/*
-			(COM) : Need to merge and clean retrieveContent / GET method
 			Retrieve a ressource :
 			- Retrieve the content
-			- Function to identify if the client need to refresh the content (ETag / Last-Modified)
+			- Identify if the client need to refresh the content (ETag / Last-Modified)
+			- Build the autoindex page
 		*/
 
-		bool	_contentNeedRefresh(){
+		void	_retrieveContent(const Server &server, const std::pair<std::string, std::string> &clientInfo){
+			if (this->_request.getMethod() == "GET" && isMethodAllowed(this->_request.getLocations(), this->_request.getPath(), this->_request.getMethod()) == true){
+				std::pair<bool,LocationContext> locationResult = getLocation(this->_request.getPath(), server.context.locations);
+				if (locationResult.first == true)
+					this->_retrieveCGIContent(server, clientInfo, locationResult.second);
+				else if (this->_request.getPath() == "/"/* && _contentNeedRefresh() == true*/){
+					this->_contentType = "text/html";
+					if (this->_request.getAutoindex() == true)
+						this->_buildAutoIndex(this->_request.getRootPath(), this->_request.getPath());
+					else
+						_retrieveFileContent(buildPathTo(this->_rootToFile, this->_request.getIndex(), ""));
+				}
+				else/* if (_contentNeedRefresh() == true)*/{
+					if (isPathValid(this->_rootToFile) == false){
+						this->_buildErrorPage(NOT_FOUND);
+						return;
+					}
+					std::pair<std::string, std::string> indexLocation = retrieveLocationIndex(this->_request.getLocations(), this->_request.getRootPath(), this->_request.getPath());
+					if (indexLocation.first.empty() == false && isSameDirectory(indexLocation.second, this->_request.getPath()) == true)
+						_retrieveFileContent(buildPathTo(this->_request.getRootPath(), indexLocation.first, ""));
+					else if (this->_request.getAutoindex() == true && isPathDirectory(this->_rootToFile) == true)
+						this->_buildAutoIndex(this->_request.getRootPath(), this->_request.getPath());
+					else
+						_retrieveFileContent(this->_rootToFile);
+				}
+			}
+			else if (this->_request.getMethod() == "GET")
+				this->_status = METHOD_NOT_ALLOWED;
+			if (this->_status / 100 == 4 || this->_status / 100 == 5){
+				this->_contentType = "text/html";
+				this->_buildErrorPage(this->_status);
+				return;
+			}
+		}
+
+		void			_retrieveCGIContent(Server const &server, const std::pair<std::string, std::string> &clientInfo, LocationContext context){
+			try{
+				std::pair<std::string, int> cgiResponse;
+				std::pair<ServerContext, LocationContext > serverLocation = 
+					std::make_pair(server.context, context);
+				CGI cgi(this->_request.getPath(), this->_request.getHeaders(), this->_request.getBody(), serverLocation, clientInfo, "GET");
+				cgiResponse = cgi.cgiHandler();
+				this->_content.append(cgiResponse.first);
+				this->_contentType = "text/html";
+				this->_status = cgiResponse.second;
+			}
+			catch(const std::exception &e){
+				std::string exception(e.what());
+				if (exception.find("No such file or directory") != std::string::npos){
+					this->_status = 404;
+					return;
+				}
+				this->_status = 500;
+				std::cerr << "Cgi failed: " << exception << std::endl;
+			}
+		}
+
+		void			_retrieveFileContent(std::string pathToIndex){
+			this->_contentType = this->getMimeTypes(pathToIndex.c_str());
+			std::ifstream indata(pathToIndex.c_str());
+			std::stringstream buff;
+			buff << indata.rdbuf();
+			this->_content.append(buff.str());
+		}
+
+		/*bool	_contentNeedRefresh(){
 			//Si le ETag de la ressource correspond au champs If-None-Match on renvoie 304 et pas de content (Prioritaire sur If-Modified-Since)
 			if (this->_request.findHeader("If-None-Match").empty() == false){
-				if (this->_request.findHeader("If-None-Match") == buildETag(this->_rootToFile)){
+				if (this->_request.findHeader("If-None-Match") == formatETag(this->_rootToFile)){
 					this->_status = NOT_MODIFIED;
 					return (false);
 				}
 			}
 			//Si la date de modification de la ressource correspond au champs If-Modified-Since on renvoie 304 et pas de content
 			if (this->_request.findHeader("If-Modified-Since").empty() == false){
-				if (this->_request.findHeader("If-Modified-Since") == buildLastModified(this->_rootToFile)){
+				if (this->_request.findHeader("If-Modified-Since") == formatLastModified(this->_rootToFile)){
 					this->_status = NOT_MODIFIED;
 					return (false);
 				}
 			}
 			return (true);
-		}
+		}*/
 
-		void	_retrieveContent(const Server &server, const std::pair<std::string, std::string> &clientInfo, const std::map<std::string, std::string> &headers){
-			if (this->_request.getMethod() == "GET"){
-				std::pair<bool,LocationContext> locationResult = getLocation(this->_request.getPath(), server.context.locations);
-				if (locationResult.first == true){
-					try{
-						std::pair<std::string, int> cgiResponse;
-						std::pair<ServerContext, LocationContext > serverLocation = 
-							std::make_pair(server.context, locationResult.second);
-						CGI cgi(this->_request.getPath(), headers, this->_request.getBody(), serverLocation, clientInfo, "GET");
-						cgiResponse = cgi.cgiHandler();
-						this->_content.append(cgiResponse.first);
-						this->_contentType = "text/html";
-						this->_status = cgiResponse.second;
-					}
-					catch(const std::exception &e){
-						std::string exception(e.what());
-						if (exception.find("No such file or directory") != std::string::npos){
-							this->_status = 404;
-							return;
-						}
-						this->_status = 500;
-						std::cerr << "Cgi failed: " << exception << std::endl;
-					}
-				}
-				//If request path is root
-				//else if (this->_request.getPath() == "/" && _contentNeedRefresh() == true){
-				else if (this->_request.getPath() == "/"){
-					this->_contentType = "text/html";
-					//Listing the directories from the root
-					if (this->_request.getAutoindex() == true)
-						this->_content.append(this->_buildAutoIndex(this->_request.getRootPath(), this->_request.getPath()));
-					//Get the index page
-					else{
-						std::string indexPath = _rootToFile + this->_request.getIndex();
-						std::ifstream indata(indexPath.c_str());
-						std::stringstream buff;
-						buff << indata.rdbuf();
-						this->_content.append(buff.str());
-					}
-				}
-				//else if (_contentNeedRefresh() == true){
-				else{
-					if (isPathValid(this->_rootToFile) == false){
-						//this->_status = NOT_FOUND;
-						this->_content.clear();
-						this->_content.append(this->_buildErrorPage(NOT_FOUND));
-						return;
-					}
-					if (this->_request.getAutoindex() == true && isPathDirectory(this->_rootToFile) == true)
-						this->_content.append(this->_buildAutoIndex(this->_request.getRootPath(), this->_request.getPath()));
-					else{
-						this->_contentType = getMimeTypes(this->_rootToFile.c_str());
-						std::ifstream indata(this->_rootToFile.c_str());
-						std::stringstream buff;
-						buff << indata.rdbuf();
-						this->_content.append(buff.str());
-					}
-				}
-			}
-			if (this->_status / 100 == 4 || this->_status / 100 == 5){
-				this->_contentType = "text/html";
-				this->_content.clear();
-				this->_content.append(this->_buildErrorPage(this->_status));
-				return;
-			}
-		}
-
-		static std::pair<bool,LocationContext>  getLocation(std::string path,const std::vector<LocationContext> &serverLocation){
-			LocationContext init;
-
-			std::pair<bool,LocationContext> locationPair = std::make_pair(true, init);
-			for (size_t i = 0; i < serverLocation.size(); i++){
-				if ((path.append("/").find(serverLocation[i].args[0]) != std::string::npos) && 
-					(serverLocation[i].directives.count("cgi_binary") == 1) &&
-					(serverLocation[i].directives.count("cgi_extension") == 1) &&
-					(path.find(serverLocation[i].directives.find("cgi_extension")->second[0])) != std::string::npos){
-					locationPair.second = serverLocation[i];
-					return(locationPair);
-				}
-			}
-			locationPair.first = false;
-			return (locationPair);
-		}
-
-		std::string		_buildAutoIndex(std::string rootPath, std::string path){
-			std::string ret;
-			ret.append("<html>\r\n<head>\r\n");
-			ret.append("<title>Index of " + path + "</title>\r\n</head>\r\n");
-
-			ret.append("<body>\r\n");
-			ret.append("<h1>Index of " + path + "</h1>\r\n");
-			ret.append("<hr>\r\n");
-
+		void			_buildAutoIndex(std::string rootPath, std::string path){
+			this->_content.append("<html>\r\n<head>\r\n");
+			this->_content.append("<title>Index of " + path + "</title>\r\n</head>\r\n<body>\r\n");
+			this->_content.append("<h1>Index of " + path + "</h1>\r\n<hr>\r\n");
 			DIR *rep = NULL;
 			struct dirent *fileRead = NULL;
 			rep = opendir(buildPathTo(rootPath, path, "").c_str());
-			if (rep == NULL)
-				return (this->_buildErrorPage(INTERNAL_SERVER_ERROR));
-			else{
-				ret.append(buildListingBlock(fileRead, rep, rootPath, path, this->_request.findHeader("Host")));
-				if (closedir(rep) == -1)
-					return (this->_buildErrorPage(INTERNAL_SERVER_ERROR));
+			if (rep == NULL){
+				this->_buildErrorPage(INTERNAL_SERVER_ERROR);
+				return ;
 			}
-			ret.append("<hr>\r\n");
-			ret.append("<form enctype=\"multipart/form-data\" action=\"/php-cgi/upload.php\" method=\"post\">");
-  			ret.append("Envoyer ce fichier : <input name=\"userfile\" type=\"file\" />");
- 			ret.append("<input type=\"submit\" value=\"Envoyer le fichier\" />");
-			ret.append("</form>");
-			ret.append("</body>\r\n</html>\r\n");
-			return (ret);
+			else{
+				this->_content.append(buildListingBlock(fileRead, rep, rootPath, path, this->_request.findHeader("Host")));
+				if (closedir(rep) == -1){
+					this->_buildErrorPage(INTERNAL_SERVER_ERROR);
+					return;
+				}
+			}
+			this->_content.append("<hr>\r\n");
+			this->_content.append("<form enctype=\"multipart/form-data\" action=\"/php-cgi/upload.php\" method=\"post\">");
+  			this->_content.append("Envoyer ce fichier : <input name=\"userfile\" type=\"file\" />");
+ 			this->_content.append("<input type=\"submit\" value=\"Envoyer le fichier\" />");
+			this->_content.append("</form>");
+			this->_content.append("</body>\r\n</html>\r\n");
 		}
 
 		/*
@@ -346,6 +320,13 @@ class httpResponse{
 					std::cerr << "Cgi failed: " << e.what() << std::endl;
 				}
 			}
+			else{
+				std::string pathToIndex = buildPathTo(this->_request.getRootPath(), this->_request.getPath(), "request.txt");
+				this->_contentType = this->getMimeTypes(pathToIndex.c_str());
+				std::ofstream outdata(pathToIndex.c_str());
+				outdata << this->_request.getBody() << std::endl;
+				outdata.close();
+			}
 			return;
 		}
 
@@ -354,38 +335,73 @@ class httpResponse{
 		*/
 
 		void	_deleteContent(){
-			if (this->_request.getPath() == "/"){
-				this->_content.clear();
-				this->_content = _buildErrorPage(FORBIDDEN);
-			}
-			else{
+			if (this->_request.getPath() == "/")
+				this->_buildErrorPage(FORBIDDEN);
+			else if (isMethodAllowed(this->_request.getLocations(), this->_request.getPath(), this->_request.getMethod()) == true){
 				if (isPathValid(_rootToFile) && isPathDirectory(_rootToFile) == false)
 					remove(_rootToFile.c_str());
 				else if (isPathValid(_rootToFile) && isPathDirectory(_rootToFile) == true){
-					if (removeDir(_rootToFile.c_str()) == -1){
-						this->_content.clear();
-						this->_content = _buildErrorPage(INTERNAL_SERVER_ERROR);
-					}
+					if (removeDir(_rootToFile.c_str()) == -1)
+						this->_buildErrorPage(FORBIDDEN);
 				}
-				else{
-					this->_content.clear();
-					this->_content = _buildErrorPage(NOT_FOUND);
-				}
+				else
+					this->_buildErrorPage(NOT_FOUND);
 			}
+			else
+				this->_buildErrorPage(METHOD_NOT_ALLOWED);
 			return;
+		}
+
+		/*
+			Error pages :
+			- Build an error page (custom or default)
+			- Build a default error page (generated)
+		*/
+
+		void					_buildErrorPage(int status){
+			std::string ret;
+
+			this->_content.clear();
+			this->_status = status;
+			if (this->_request.getErrorPage().second == true){
+				std::map<std::string, std::string>::const_iterator it = this->_request.getErrorPage().first.begin();
+				for (; it != this->_request.getErrorPage().first.end(); it++){
+					if (match(itos(status).c_str(), (*it).first.c_str(), 'x') == 1)
+						break;
+				}
+				if (it == this->_request.getErrorPage().first.end()){
+					this->_buildDefaultErrorPage();
+					return;
+				}
+				this->_retrieveFileContent(buildPathTo(this->_request.getRootPath(), (*it).second, ""));
+				return;
+			}
+			this->_buildDefaultErrorPage();
+		}
+
+		void					_buildDefaultErrorPage(){
+			std::string title = itos(this->_status) + " " + this->getStatusMessage();
+			this->_contentType = "text/html";
+			this->_content.clear();
+			this->_content.append("<html>\n<head><title>" + title + "</title></head>\n");
+			this->_content.append("<body>\n<center><h1>" + title + "</h1></center>\n");
+			this->_content.append("<hr><center>42webserv/0.0.1</center>\n");
+			this->_content.append("</body>\n</html>");
 		}
 
 		/*
 			Variables :
 		*/
 
-		httpRequest						_request;
+		httpRequest							_request;
 
-		int								_status;
-		std::string						_content;
-		std::string						_contentType;
-		std::string						_rootToFile;
-		std::string						_response;
+		int									_status;
+		std::map<int, std::string>			_statusMessages;
+		std::map<std::string, std::string>	_extensionTypes;
+		std::string							_content;
+		std::string							_contentType;
+		std::string							_rootToFile;
+		std::string							_response;
 };//end of class httpResponse
 
 #endif

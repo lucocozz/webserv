@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:46 by user42            #+#    #+#             */
-/*   Updated: 2022/04/12 18:36:07 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/15 00:57:04 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,16 +17,10 @@
 	Includes :
 */
 
-#include <algorithm>
-#include <vector>
-#include <map>
-#include <utility>
-#include <sys/stat.h>
-
-#include "../server/Server.hpp"
-#include "../config/Config.hpp"
+#include "Config.hpp"
+#include "configData.hpp"
 #include "statusCode.hpp"
-#include "utils.hpp"
+#include "fileRelated.hpp"
 
 /*
 	httpRequest class :
@@ -65,6 +59,7 @@ class httpRequest{
 			this->_errorPage = rhs.getErrorPage();
 			this->_maxBodySize = rhs.getMaxBodySize();
 			this->_bodySize = rhs.getBodySize();
+			this->_locations = rhs.getLocations();
 
 			this->_method = rhs.getMethod();
 			this->_path = rhs.getPath();
@@ -116,33 +111,33 @@ class httpRequest{
 			Getters :
 		*/
 
-		const std::string 								&getMethod() const{return (this->_method);}
+		const std::string 											&getMethod() const{return (this->_method);}
 
-		const std::string 								&getPath() const{return (this->_path);}
+		const std::string 											&getPath() const{return (this->_path);}
 
-		const std::string 								&getProtocol() const{return (this->_protocol);}
+		const std::string 											&getProtocol() const{return (this->_protocol);}
 
-		const std::map<std::string, std::string>			&getHeaders() const{return (this->_headers);}
+		const std::map<std::string, std::string>					&getHeaders() const{return (this->_headers);}
 
-		const std::string									&getBody() const{return (this->_body);}
+		const std::string											&getBody() const{return (this->_body);}
 
-		const int											&getStatus() const{return (this->_status);}
+		const int													&getStatus() const{return (this->_status);}
 
-		const std::string									&getServerName()	const{return (this->_serverName);}
+		const std::string											&getServerName()	const{return (this->_serverName);}
 
-		const std::string									&getRootPath() const{return (this->_rootPath);}
+		const std::string											&getRootPath() const{return (this->_rootPath);}
 
-		const std::string									&getIndex() const{return (this->_index);}
+		const std::string											&getIndex() const{return (this->_index);}
 
-		const bool										&getAutoindex() const{return (this->_autoindex);}
+		const bool													&getAutoindex() const{return (this->_autoindex);}
 
-		const size_t										&getMaxBodySize() const{return (this->_maxBodySize);}
+		const size_t												&getMaxBodySize() const{return (this->_maxBodySize);}
 
 		const std::pair<std::map<std::string, std::string>, bool> 	&getErrorPage() const{return (this->_errorPage);}
 
-		const size_t										&getBodySize() const{return (this->_bodySize);}
+		const size_t												&getBodySize() const{return (this->_bodySize);}
 
-		const std::vector<LocationContext>				&getLocations() const{return (this->_locations);}
+		const std::vector<LocationContext>							&getLocations() const{return (this->_locations);}
 
 
 	/*
@@ -157,133 +152,20 @@ class httpRequest{
 		*/
 
 		void	_retrieveConfigInfo(Server const &server){
-			//server name
-			try{
-				std::vector<std::string> server_name = server.context.directives.at("server_name");
-				this->_serverName = server_name[0];
-			}
-			catch (std::exception const &e){this->_serverName = "server";}
-			//root
-			try{
-				std::vector<std::string> root_path = server.context.directives.at("root");
-				this->_rootPath = root_path[0];
-			}
-			catch (std::exception const &e){this->_rootPath = "/";}
-			//server index
-			try{
-				std::vector<std::string> index = server.context.directives.at("index");
-				this->_index = checkIndex(_rootPath, index);
-			}
-			catch (std::exception const &e){this->_index = "default_index.html";}
-			//auto index
-			try{
-				std::string autoindex = server.context.directives.at("autoindex")[0];
-				if (autoindex == "on")
-					this->_autoindex = true;
-				else
-					this->_autoindex = false;
-			}
-			catch (std::exception const &e){this->_autoindex = false;}
-			//client max body size
-			try{
-				if (atoi((server.context.directives.at("client_max_body_size")[0]).c_str()) < 100)
-					this->_maxBodySize = atoi((server.context.directives.at("client_max_body_size")[0]).c_str()) * 1000;
-				else
-					this->_maxBodySize = 1 * 1000;
-			}
-			catch (std::exception const &e){this->_maxBodySize = 1 * 1000;}
-			//error pages
-			/*std::vector<std::string> rawErrorPages;
-			try{
-				rawErrorPages = server.context.directives.at("error_page");
-				this->_errorPage.second = true;
-			}
-			catch (std::exception const &e){
-				this->_errorPage.second = false;
-			}
-			std::map<std::string, std::string> map;
-			std::string status;
-			std::string path;
-			std::pair<std::string, std::string> pair;
-			if (this->_errorPage.second == true){
-				for (size_t i = 0; i < rawErrorPages.size(); i++){
-					if (i % 2 == 0)
-						status = rawErrorPages.at(i);
-					else{
-						if (status.find_first_not_of("0123456789x") == std::string::npos){
-							path = rawErrorPages.at(i);
-							pair.first = status;
-							pair.second = path;
-							//map.insert(std::make_pair(status, path));
-							map.insert(pair);
-						}
-						status.clear();
-						path.clear();
-					}
-				}
-			}
-			this->_errorPage.first.insert(map.begin(), map.end());
-			for (std::map<std::string, std::string>::iterator it = this->_errorPage.first.begin(); it != this->_errorPage.first.end(); it++){
-				std::cout << (*it).first << " : " << (*it).second << std::endl;
-			}*/
-			try{
-				//this->_errorPage.first = server.context.directives.at("error_page");
-				std::vector<std::string> rawErrorPages = server.context.directives.at("error_page");
-				//Retrieve
-				std::string status;
-				std::string path;
-				std::map<std::string, std::string> map;
-				for (size_t i = 0; i < rawErrorPages.size(); i++){
-					if (i % 2 == 0)
-						status = rawErrorPages.at(i);
-					else{
-						if (status.find_first_not_of("0123456789x") == std::string::npos){
-							path = rawErrorPages.at(i);
-							map.insert(std::make_pair(status, path));
-						}
-						status.clear();
-						path.clear();
-					}
-				}
-				//this->_errorPage.first = map;
-				this->_errorPage.first.insert(map.begin(), map.end());
-				for (std::map<std::string, std::string>::iterator it = this->_errorPage.first.begin(); it != this->_errorPage.first.end(); it++){
-					std::cout << (*it).first << " : " << (*it).second << std::endl;
-				}
-				this->_errorPage.second = true;
-			}
-			catch (std::exception const &e){
-				this->_errorPage.second = false;
-			}
-
-			//location index & limit_except
-			{
-				std::vector<LocationContext> locations = server.context.locations;
-				for (std::vector<LocationContext>::iterator it = locations.begin(); it != locations.end(); it++){
-					int needDel = 0;
-					//Index
-					try {std::vector<std::string> vec = (*it).directives.at("index");}
-					catch (std::exception const &e){needDel++;}
-					//Limit Except
-					try {std::vector<std::string> vec = (*it).directives.at("limit_except");}
-					catch (std::exception const &e){needDel++;}
-					//Delete useless locations
-					if (needDel == 2){
-						locations.erase(it);
-						if (locations.empty() == true)
-							break;
-						it = locations.begin();
-					}
-				}
-				this->_locations = locations;
-			}
+			this->_serverName = getConfigServerName(server);
+			this->_rootPath = getConfigRootPath(server);
+			this->_index = getConfigIndex(server, _rootPath);
+			this->_autoindex = getConfigAutoIndex(server);
+			this->_maxBodySize = getConfigMaxBodySize(server);
+			this->_errorPage = getConfigErrorPage(server);
+			this->_locations = getConfigLocations(server);
 		}
 
 		/*
 			Parsing :
-			-	Retrieve the body first
-			-	Retrieve the request line (Method + Path + Protocol)
-			-	Retrieve the headers in a map
+			-	Parse the request
+			-	Parse the request line part
+			-	Parse the headers
 		*/
 
 		void	_parse(std::string const &rawRequest){
@@ -292,47 +174,54 @@ class httpRequest{
 			std::vector<std::string> vecHeaders = split(rawHeaders, "\r\n");
 
 			if (vecHeaders.size() > 0){
-				//RequestLine
-				std::vector<std::string> requestLine = split(vecHeaders.at(0), " ");
-				if (requestLine.size() == 3){
-					this->_method = requestLine.at(0);
-					this->_path = requestLine.at(1);
-					this->_protocol = requestLine.at(2);
-					vecHeaders.erase(vecHeaders.begin());
-				}
-				else{
-					this->_status = BAD_REQUEST;
-					return;
-				}
-				//Headers map
-				std::map<std::string, std::string>				mapHeaders;
-				for (size_t i = 0; i < vecHeaders.size(); i++){
-					if (vecHeaders.at(i).find(": ") == std::string::npos){
-						this->_status = BAD_REQUEST;
-						return;
-					}
-					std::vector<std::string> res = split(vecHeaders.at(i), ": ");
-					if (res.size() == 2){
-						std::pair<std::string, std::string> pair = std::make_pair(res.at(0), res.at(1));
-						mapHeaders.insert(pair);
-					}
-					else{
-						this->_status = BAD_REQUEST;
-						return;
-					}
-					res.clear();
-				}
-				this->_headers = mapHeaders; 
-				//Body
-				std::string rawBody;
-				rawBody.append(rawRequest.substr(rawRequest.find("\r\n\r\n") + 4));
-				this->_body = rawBody;
+				this->_parseRequestLine(vecHeaders);
+				this->_parseHeaders(vecHeaders);
+				this->_body.append(rawRequest.substr(rawRequest.find("\r\n\r\n") + 4));
 				this->_bodySize = this->_body.size();
 			}
 			else{
 				this->_status = BAD_REQUEST;
 				return;
 			}
+		}
+
+		void	_parseRequestLine(std::vector<std::string> &vecHeaders){
+			std::vector<std::string> requestLine = split(vecHeaders.at(0), " ");
+			if (requestLine.size() == 3){
+				this->_method = requestLine.at(0);
+				this->_path = requestLine.at(1);
+				for (std::string::iterator it = this->_path.end() - 1; it != this->_path.begin() && *it == '/'; it--){
+					this->_path.erase(it);
+					it = this->_path.end() - 1;
+				}
+				this->_protocol = requestLine.at(2);
+				vecHeaders.erase(vecHeaders.begin());
+			}
+			else{
+				this->_status = BAD_REQUEST;
+				return;
+			}
+		}
+
+		void	_parseHeaders(std::vector<std::string> &vecHeaders){
+			std::map<std::string, std::string>				mapHeaders;
+			for (size_t i = 0; i < vecHeaders.size(); i++){
+				if (vecHeaders.at(i).find(": ") == std::string::npos){
+					this->_status = BAD_REQUEST;
+					return;
+				}
+				std::vector<std::string> res = split(vecHeaders.at(i), ": ");
+				if (res.size() == 2){
+					std::pair<std::string, std::string> pair = std::make_pair(res.at(0), res.at(1));
+					mapHeaders.insert(pair);
+				}
+				else{
+					this->_status = BAD_REQUEST;
+					return;
+				}
+				res.clear();
+			}
+			this->_headers = mapHeaders; 
 		}
 
 		/*
@@ -386,7 +275,6 @@ class httpRequest{
 		std::string											_rootPath;
 		std::string											_index;
 		bool												_autoindex;
-		//std::pair<std::vector<std::string>, bool>			_errorPage;
 		std::pair<std::map<std::string, std::string>, bool> _errorPage;
 		size_t												_maxBodySize;
 		std::vector<LocationContext>						_locations;

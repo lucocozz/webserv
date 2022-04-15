@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/09 14:37:30 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/04/14 14:25:19 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/04/15 18:17:58 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 #include <vector>
 #include "EpollSocket.hpp"
 #include "Server.hpp"
+//#include "response.hpp"
 
 class Client
 {
@@ -23,6 +24,8 @@ private:
 
 public:
 	EpollSocket	socket;
+	//httpRequest 			request;
+	//httpResponse			response;
 
 	Client(void) {}
 

@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+         #
+#    By: user42 <user42@student.42.fr>              +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2022/01/21 19:56:36 by lucocozz          #+#    #+#              #
-#    Updated: 2022/04/12 18:11:06 by lucocozz         ###   ########.fr        #
+#    Updated: 2022/04/14 23:31:17 by user42           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -29,7 +29,15 @@ SRC := 	main.cpp					\
 		handleSignal.cpp			\
 		createServers.cpp			\
 		closeServers.cpp			\
-		eventLoop.cpp
+		eventLoop.cpp				\
+		statusCode.cpp				\
+		mimeTypes.cpp				\
+		configData.cpp				\
+		fileRelated.cpp				\
+		locationRelated.cpp			\
+		pathRelated.cpp				\
+		stringRelated.cpp			\
+		URLRelated.cpp
 
 MAKE = make
 MAKEFLAGS += --no-print-directory
