@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/04/15 20:26:39 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/15 22:27:53 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -329,24 +329,12 @@ class httpResponse{
 			}
 			//MULTIPART
 			else if (this->_request.getBoundarie().first == true){
-				std::cout << "DEBUG MULTIPART" << std::endl;
-				int test = 0;
 				for (std::map<std::map<std::string, std::string>, std::string>::const_iterator it = this->_request.getBodyMultipart().begin(); it != this->_request.getBodyMultipart().end(); it++){
-					//DEBUG
-					test++;
-					for (std::map<std::string, std::string>::const_iterator itt = (*it).first.begin(); itt != (*it).first.end(); itt++)
-						std::cout << "DEBUG " << test << "= " << (*itt).first << " | '" << (*itt).second << "'" << std::endl;
-
-					if ((*it).first.find("filename") != (*it).first.end()){
-						std::cout << "DEBUG filename = " << (*(*it).first.find("filename")).second << std::endl;
-						std::string pathToFile = buildPathTo(this->_request.getRootPath(), this->_request.getPath(), (*(*it).first.find("filename")).second);
-						this->_contentType = this->getMimeTypes(pathToFile.c_str());
-						std::ofstream outdata(pathToFile.c_str());
-						outdata << (*it).second << std::endl;
-						outdata.close();
-					}
-					else
-						std::cout << "DEBUG no filename" << std::endl;
+					std::string pathToFile = buildPathTo(this->_request.getRootPath(), this->_request.getPath(), (*(*it).first.find("filename")).second);
+					this->_contentType = this->getMimeTypes(pathToFile.c_str());
+					std::ofstream outdata(pathToFile.c_str());
+					outdata << (*it).second << std::endl;
+					outdata.close();
 				}
 			}
 			else{

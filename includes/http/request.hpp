@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:46 by user42            #+#    #+#             */
-/*   Updated: 2022/04/15 20:48:14 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/15 22:38:30 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -244,7 +244,6 @@ class httpRequest{
 				}
 				//SPLITS HEADERS
 				for (size_t i = 0; i < separedMultipart.size(); i++){
-					//std::pair<std::vector<std::string>, std::string>	pair;
 					std::pair<std::map<std::string,std::string>, std::string>	pair;
 					std::vector<std::string> tmpVec = split(separedMultipart.at(i).substr(0, separedMultipart.at(i).find("\r\n\r\n")), "\r\n");
 					for (std::vector<std::string>::iterator itt = tmpVec.begin(); itt != tmpVec.end(); itt++){
@@ -259,8 +258,6 @@ class httpRequest{
 									std::vector<std::string> keyValue = split(splitedHeader.at(x), "=\"");
 									pair.first.insert(std::make_pair(keyValue.at(0), keyValue.at(1).substr(0, keyValue.at(1).find("\""))));
 								}
-								//std::vector<std::string> keyValue = split(splitedHeader.at(x), ": ");
-								//pair.first.insert(std::make_pair(keyValue.at(0), keyValue.at(1)));
 							}
 						}
 						else{
@@ -362,10 +359,10 @@ class httpRequest{
 
 		//Request
 		std::pair<bool, std::string>						_boundarie;
-		//std::map<std::vector<std::string>, std::string> 	_bodyMultipart;
 		std::map<std::map<std::string, std::string>, std::string> 	_bodyMultipart;
 		std::string											_body;
 		size_t												_bodySize;
+		std::string											_filename;
 
 		std::string 										_method;
 		std::string 										_path;
