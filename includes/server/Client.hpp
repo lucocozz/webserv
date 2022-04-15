@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/09 14:37:30 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/04/11 22:04:54 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/04/14 14:25:19 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,15 +46,13 @@ public:
 		return (*this);
 	}
 
-	Server	*getServerLinks(std::string hostName) const {
+	Server	*getServerLinks(std::string hostName) const
+	{
 		if (this->_serverLinks.size() == 1)
 			return (this->_serverLinks.at(0));
-		size_t i = 0;
-		while (i < this->_serverLinks.size()){
+		for (size_t i = 0; i < this->_serverLinks.size(); ++i)
 			if (this->_serverLinks.at(i)->context.directives.find("server_name")->second[0] == hostName)
 				return (this->_serverLinks.at(i));
-			i++;
-		}
 		return (this->_serverLinks.at(0));
 	}
 };
