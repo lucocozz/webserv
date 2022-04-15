@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/15 00:58:36 by user42            #+#    #+#             */
-/*   Updated: 2022/04/15 00:58:50 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/15 20:19:12 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,6 +35,7 @@ std::map<int, std::string>	initStatusMessages(){
 	ret.insert(std::make_pair(METHOD_NOT_ALLOWED, "Method Not Allowed"));
 	ret.insert(std::make_pair(LENGTH_REQUIRED, "Length Required"));
 	ret.insert(std::make_pair(REQUEST_ENTITY_TOO_LARGE, "Request Entity Too Large"));
+	ret.insert(std::make_pair(UNPROCESSABLE_ENTITY, "Unprocessable Entity"));
 	//Error server
 	ret.insert(std::make_pair(INTERNAL_SERVER_ERROR, "Internal Server Error"));
 	ret.insert(std::make_pair(NOT_IMPLEMENTED, "Not Implemented"));

@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:57 by user42            #+#    #+#             */
-/*   Updated: 2022/04/15 00:26:02 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/15 20:19:12 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,6 +37,7 @@ enum STATUS_CODE{
 	METHOD_NOT_ALLOWED = 405,
 	LENGTH_REQUIRED = 411,
 	REQUEST_ENTITY_TOO_LARGE = 413,
+	UNPROCESSABLE_ENTITY = 422,
 	//Error server
 	INTERNAL_SERVER_ERROR = 500,
 	NOT_IMPLEMENTED = 501,

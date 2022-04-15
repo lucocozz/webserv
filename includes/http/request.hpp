@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:46 by user42            #+#    #+#             */
-/*   Updated: 2022/04/15 19:54:50 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/15 20:48:14 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -295,6 +295,25 @@ class httpRequest{
 				return;
 			this->_checkRequestLine();
 
+			//Check if there is a multipart without "filename";
+			if (this->_boundarie.first == true){
+				for (std::map<std::map<std::string, std::string>, std::string>::const_iterator it = this->_bodyMultipart.begin(); it != this->_bodyMultipart.end(); it++){
+					if ((*it).first.find("filename") == (*it).first.end()){
+						this->_status = UNPROCESSABLE_ENTITY;
+						return;
+					}
+				}
+			}
+			//Or check is there is Content-Disposition with a filename
+			//else{
+			//	if (this->findHeader("Content-Disposition").empty() == true || this->findHeader("Content-Disposition").find("; filename=\"") != std::string::npos){
+			//	
+			//	}
+			//	else{
+			//		this->_status = UNPROCESSABLE_ENTITY;
+			//		return;
+			//	}
+			//}
 			//Check if the body size exceed the max body size
 			if (this->_maxBodySize < this->_bodySize){
 				this->_status = REQUEST_ENTITY_TOO_LARGE;

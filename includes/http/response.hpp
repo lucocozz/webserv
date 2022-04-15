@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/04/15 20:06:34 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/15 20:26:39 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -292,14 +292,6 @@ class httpResponse{
 			this->_content.append("<form enctype=\"multipart/form-data\" action=\"/php-cgi/upload.php\" method=\"post\">");
   			this->_content.append("Envoyer ce fichier : <input name=\"userfile\" type=\"file\" />");
  			this->_content.append("<input type=\"submit\" value=\"Envoyer le fichier\" />");
-			this->_content.append("</form>");
-			//POST form 2 input
-			this->_content.append("<hr>\r\n");
-			this->_content.append("Multipart Form POST 2 input : \r\n");
-			this->_content.append("<form enctype=\"multipart/form-data\" action=\"/\" method=\"post\">");
-  			this->_content.append("<input type=\"text\" name=\"description\" value=\"du texte\" />");
-			this->_content.append("<input type=\"file\" name=\"monFichier\" />");
- 			this->_content.append("<button type =\"submit\">Envoyer</button>");
 			this->_content.append("</form>");
 			//POST form 1 input
 			this->_content.append("<hr>\r\n");
