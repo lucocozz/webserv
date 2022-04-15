@@ -5,6 +5,7 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <sys/wait.h>
 #include <iostream>
 #include <map>
@@ -55,6 +56,7 @@ public:
         int                             fdToParent[2];
         int                             childExitStatus = 0;                                    
         char                            **cMetaVar;
+        struct stat                     *dummy = new struct stat[1];
 
         cMetaVar = this->_createCMetaVar();
         for (size_t i = 0; cMetaVar[i]; i++){
@@ -66,12 +68,20 @@ public:
             throw pipeError();
         if ((pid = fork()) == -1)
             throw forkError();
+        chdir(_getCurrentLocation().c_str());
+        if (stat(_mapMetaVars.find("SCRIPT_NAME=")->second.c_str(), dummy) == -1){
+            for (size_t i = 0; cMetaVar[i]; i++)
+                delete [] cMetaVar[i];
+            delete dummy;
+            return (std::make_pair("", 404));
+        }
         if (pid == 0)
             this->_childProcess(fdToChild, fdToParent, cMetaVar);
         
         for (size_t i = 0; cMetaVar[i]; i++)
             delete [] cMetaVar[i];
         delete [] cMetaVar;
+        delete dummy;
 
         if (_mapMetaVars.find("REQUEST_METHOD=")->second.compare("POST") == 0){
             write(fdToChild[1], _requestBody.c_str(),  _requestBody.size());
@@ -209,18 +219,17 @@ private:
     }
 
     void _setPathInfo(){
-        std::string varName("PATH_INFO=");
-        std::string pathInfo(this->_locationContext.args[0]);
+        std::string             varName("PATH_INFO=");
+        std::string             pathInfo("");
+        std::string::iterator   itb;
+        std::string::iterator   ite;
 
-        pathInfo.append(this->_mapMetaVars.find("SCRIPT_NAME=")->second);
-		if (pathInfo.find('?') != std::string::npos){
-			std::string::iterator begin;
-			std::string::iterator end;
-
-			begin = pathInfo.begin() + pathInfo.find('?');
-			end = pathInfo.end();
-			pathInfo.erase(begin, end);
-		}
+        itb = _decodedURL.begin();
+        ite = itb;
+        while (ite != _decodedURL.end() && *ite != '?'){
+            ite++;
+        }
+        pathInfo.append(itb, ite);
         this->_mapMetaVars.insert(std::make_pair(varName, pathInfo));
     }
 
@@ -229,15 +238,9 @@ private:
         std::string             pathTranslated("");
         std::string             pathInfo(this->_mapMetaVars.find("PATH_INFO=")->second);
 		std::string             root(this->_serverContext.directives.at("root")[0]);
-        std::string::iterator   it;
         
         pathTranslated.append(root + pathInfo);
-        it = pathTranslated.begin();
-        while (it != pathTranslated.end()){
-            if (*it == '/' && *(it + 1) == '/')
-                pathTranslated.erase(it);
-            it++;
-        }
+        _clearUrl(pathTranslated);
         this->_mapMetaVars.insert(std::make_pair(varName, pathTranslated));
     }
 
@@ -394,7 +397,6 @@ private:
         dup2(fdToChild[0], STDIN_FILENO);
         close(fdToChild[0]);
 
-        chdir(cgiLocationPath.c_str());
         std::cerr << "currentdir |" << get_current_dir_name() << "| cgi binary: |" << args[0]  << "| cgi script name: |" << args[1] << "|" << std::endl;
         execve(args[0], args, cMetaVar);
         exit(errno);
@@ -459,6 +461,30 @@ private:
         else
             end = begin;
         cgiOutput.erase(begin, end);
+    }
+
+    void _clearUrl(std::string &url){
+        std::string::iterator   it = url.begin();
+
+        while (it != url.end()){
+            if (*it == '/' && *(it + 1) == '/')
+                url.erase(it);
+            it++;
+        }
+    }
+
+    std::string _getCurrentLocation(){
+        std::string                         url(_decodedURL);
+        std::string                         location("");
+        std::string::reverse_iterator rit = url.rbegin();
+
+        while(*rit != '/'){
+            url.erase(--rit.base());
+            rit++;
+        }
+        location = this->_serverContext.directives.at("root")[0].append(url);
+        _clearUrl(location);
+        return (location);
     }
 };
 

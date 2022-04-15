@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Config.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
+/*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/03 01:11:36 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/04/13 15:15:23 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/15 18:19:36 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,6 +36,9 @@ inline bool	operator==(const LocationContext &lhs, const LocationContext &rhs)
 	return (lhs.args == rhs.args && lhs.directives == rhs.directives);
 }
 
+
+
+
 struct ServerContext
 {
 	std::map<std::string, std::vector<std::string> >	directives;
@@ -47,10 +50,16 @@ inline bool	operator==(const ServerContext &lhs, const ServerContext &rhs)
 	return (lhs.directives == rhs.directives && lhs.locations == rhs.locations);
 }
 
+
+
+
+
+
+
 class Config: public Lexer, public Parser
 {
 private:
-	std::string					_filePath;
+	std::string	_filePath;
 
 public:
 	std::vector<ServerContext>	servers;
@@ -96,7 +105,6 @@ private:
 	void	_checkConfig(void)
 	{
 		this->_checkPortValidity();
-		//this->_checkDefaultErrorPage();
 		this->_checkDefaultRoot();
 	}
 
@@ -108,18 +116,6 @@ private:
 				this->servers[i].directives["root"].push_back(DEFAULT_ROOT);
 		}
 	}
-
-	//void	_checkDefaultErrorPage(void)
-	//{
-	//	for (size_t i = 0; i < this->servers.size(); ++i)
-	//	{
-	//		for (size_t j = 0; j < this->servers[i].locations.size(); ++j)
-	//		{
-	//			if (this->servers[i].locations[j].directives.find("error_page") == this->servers[i].locations[j].directives.end())
-	//				this->servers[i].locations[j].directives["error_page"].push_back(std::string(WEBSERV_PATH) + "/pages/error.html");
-	//		}
-	//	}
-	//}
 
 	void	_checkPortValidity(void)
 	{
