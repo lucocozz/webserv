@@ -3,19 +3,18 @@
 /*                                                        :::      ::::::::   */
 /*   Client.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
+/*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/09 14:37:30 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/04/15 22:24:47 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/17 23:00:55 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
 #include <vector>
-#include "EpollSocket.hpp"
 #include "Server.hpp"
-//#include "response.hpp"
+#include "response.hpp"
 
 class Client
 {
@@ -23,9 +22,9 @@ private:
 	std::vector<Server*>	_serverLinks;
 
 public:
-	EpollSocket	socket;
-	//httpRequest 			request;
-	//httpResponse			response;
+	EpollSocket		socket;
+	httpRequest 	request;
+	httpResponse	response;
 
 	Client(void) {}
 

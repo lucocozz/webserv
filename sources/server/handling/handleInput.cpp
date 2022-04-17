@@ -3,19 +3,13 @@
 /*                                                        :::      ::::::::   */
 /*   handleInput.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
+/*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/22 21:55:31 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/04/15 00:44:31 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/17 23:11:10 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "EpollSocket.hpp"
-#include "Config.hpp"
-#include "CGI.hpp"
-#include "response.hpp"
-#include "Server.hpp"
-#include "response.hpp"
 #include "Client.hpp"
 
 void	handleInput(Client &client)

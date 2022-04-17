@@ -11,9 +11,9 @@
 #include <map>
 #include <exception>
 
-#include "../socket/Epoll.hpp"
-#include "../socket/Socket.hpp"
-#include "../socket/EpollSocket.hpp"
+#include "Epoll.hpp"
+#include "Socket.hpp"
+#include "EpollSocket.hpp"
 
 #include "URLDecoder.hpp"
 
