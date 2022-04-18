@@ -6,15 +6,17 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:57 by user42            #+#    #+#             */
-/*   Updated: 2022/04/15 20:19:12 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/18 16:49:00 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef STATUSCODE_HPP
 #define STATUSCODE_HPP
 
-#include "stringRelated.hpp"
+
+//#include "stringRelated.hpp"
 #include <map>
+#include <string>
 
 enum STATUS_CODE{
 	//Information

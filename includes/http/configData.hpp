@@ -6,15 +6,19 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/15 00:57:23 by user42            #+#    #+#             */
-/*   Updated: 2022/04/15 00:58:10 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/18 16:42:41 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef CONFIGDATA_HPP
 #define CONFIGDATA_HPP
 
+
 #include "Server.hpp"
-#include "locationRelated.hpp"
+//#include "locationRelated.hpp"
+
+#include <vector>
+#include <utility>
 
 std::string												getConfigServerName(Server const &server);
 std::string												getConfigRootPath(Server const &server);

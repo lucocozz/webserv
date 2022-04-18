@@ -6,11 +6,15 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/15 00:58:45 by user42            #+#    #+#             */
-/*   Updated: 2022/04/15 00:58:50 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/18 16:48:20 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "URLRelated.hpp"
+
+#include "pathRelated.hpp"
+#include "fileRelated.hpp"
+#include <cstring>
 
 std::string 				buildUrlTo(std::string host, std::string path, std::string fileName){
 	std::string ret;

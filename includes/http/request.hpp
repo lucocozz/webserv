@@ -6,21 +6,26 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:46 by user42            #+#    #+#             */
-/*   Updated: 2022/04/15 22:38:30 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/18 17:24:52 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef REQUEST_HPP
 #define REQUEST_HPP
 
+
 /*
 	Includes :
 */
 
-#include "Config.hpp"
+//#include "Config.hpp"
 #include "configData.hpp"
-#include "statusCode.hpp"
 #include "fileRelated.hpp"
+#include "pathRelated.hpp"
+#include "statusCode.hpp"
+#include "stringRelated.hpp"
+#include "URLRelated.hpp"
+#include "locationRelated.hpp"
 
 /*
 	httpRequest class :
@@ -108,6 +113,27 @@ class httpRequest{
 		//	}
 		//	return (std::make_pair(ret, "--" + boundarie));
 		//}
+
+		void					clear(){
+			this->_request.clear();
+			this->_serverName.clear();
+			this->_rootPath.clear();
+			this->_index.clear();
+			this->_autoindex = false;
+			this->_errorPage.second = false;
+			this->_maxBodySize = 0;
+			this->_locations.clear();
+			this->_boundarie.first = false;
+			this->_bodyMultipart.clear();
+			this->_body.clear();
+			this->_bodySize = 0;
+			this->_filename.clear();
+			this->_method.clear();
+			this->_path.clear();
+			this->_protocol.clear();
+			this->_headers.clear();
+			this->_status = 200;
+		}
 
 		/*
 			Getters :

@@ -3,27 +3,32 @@
 /*                                                        :::      ::::::::   */
 /*   response.hpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
+/*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/04/17 22:55:44 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/04/18 17:56:31 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef RESPONSE_HPP
 #define RESPONSE_HPP
 
+
 /*
 	Includes :
 */
 
-#include "EpollSocket.hpp"
-#include "CGI.hpp"
 
 #include "request.hpp"
-#include "mimeTypes.hpp"
-#include "statusCode.hpp"
-#include "URLRelated.hpp"
+#include "CGI.hpp"
+
+//#include "EpollSocket.hpp"
+//#include "statusCode.hpp"
+//#include "locationRelated.hpp"
+//#include "URLRelated.hpp"
+
+
+
 
 #include <fstream>
 
@@ -97,6 +102,19 @@ class httpResponse{
 
 		void	sendResponse(EpollSocket socketEvent){
 			socketEvent.sendData(this->_response);
+			this->clear();
+		}
+
+		void					clear(){
+			this->_request.clear();
+
+			this->_status = 200;
+			this->_statusMessages.clear();
+			this->_extensionTypes.clear();
+			this->_content.clear();
+			this->_contentType.clear();
+			this->_rootToFile.clear();
+			this->_response.clear();
 		}
 
 		/*
@@ -189,10 +207,15 @@ class httpResponse{
 
 		void	_retrieveContent(const Server &server, const std::pair<std::string, std::string> &clientInfo){
 			if (this->_request.getMethod() == "GET" && isMethodAllowed(this->_request.getLocations(), this->_request.getPath(), this->_request.getMethod()) == true){
-				std::pair<bool,LocationContext> locationResult = getLocation(this->_request.getPath(), server.context.locations);
-				if (locationResult.first == true)
+				//SEGFAULT
+				(void)server;(void)clientInfo;
+				/*std::pair<bool,LocationContext> locationResult = getLocation(this->_request.getPath(), server.context.locations);
+				std::cout << "DEBUG ?" << std::endl;
+				if (locationResult.first == true){
+					std::cout << "DEBUG je veux acceder aux CGI" << std::endl;
 					this->_retrieveCGIContent(server, clientInfo, locationResult.second);
-				else if (this->_request.getPath() == "/"/* && _contentNeedRefresh() == true*/){
+				}
+				else */if (this->_request.getPath() == "/"/* && _contentNeedRefresh() == true*/){
 					this->_contentType = "text/html";
 					if (this->_request.getAutoindex() == true)
 						this->_buildAutoIndex(this->_request.getRootPath(), this->_request.getPath());
@@ -213,8 +236,9 @@ class httpResponse{
 						_retrieveFileContent(this->_rootToFile);
 				}
 			}
-			else if (this->_request.getMethod() == "GET")
+			else if (this->_request.getMethod() == "GET" || isMethodAllowed(this->_request.getLocations(), this->_request.getPath(), this->_request.getMethod()) == false)
 				this->_status = METHOD_NOT_ALLOWED;
+
 			if (this->_status / 100 == 4 || this->_status / 100 == 5){
 				this->_contentType = "text/html";
 				this->_buildErrorPage(this->_status);

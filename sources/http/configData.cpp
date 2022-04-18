@@ -6,11 +6,13 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/15 00:57:56 by user42            #+#    #+#             */
-/*   Updated: 2022/04/15 00:58:10 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/18 16:51:29 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "configData.hpp"
+
+#include "locationRelated.hpp"
 
 std::string												getConfigServerName(Server const &server){
 	try{

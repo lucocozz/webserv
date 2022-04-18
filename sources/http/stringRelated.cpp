@@ -6,11 +6,17 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/15 00:58:41 by user42            #+#    #+#             */
-/*   Updated: 2022/04/15 00:58:50 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/18 16:40:18 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "stringRelated.hpp"
+#include <utility>
+#include <algorithm>
+//#include <vector>
+//#include <string>
+#include <cstring>
+#include <sstream>
 
 std::vector<std::string>	split(std::string str, std::string delimiter){
 	size_t posStart = 0;

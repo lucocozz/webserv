@@ -6,11 +6,19 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/15 00:58:00 by user42            #+#    #+#             */
-/*   Updated: 2022/04/15 00:58:10 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/18 17:05:36 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "fileRelated.hpp"
+
+//#include "locationRelated.hpp"
+#include "stringRelated.hpp"
+#include <sstream>
+#include <iostream>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <cstdlib>
 
 std::string					formatDate(std::vector<std::string> vect){
 	std::string ret;

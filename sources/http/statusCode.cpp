@@ -6,11 +6,12 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/15 00:58:36 by user42            #+#    #+#             */
-/*   Updated: 2022/04/15 20:19:12 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/18 16:49:59 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "statusCode.hpp"
+
 
 std::map<int, std::string>	initStatusMessages(){
 	std::map<int, std::string> ret;

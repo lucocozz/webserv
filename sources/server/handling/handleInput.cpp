@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   handleInput.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
+/*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/22 21:55:31 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/04/17 23:11:10 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/04/18 17:24:01 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,9 +34,6 @@ void	handleInput(Client &client)
 		hostName.append(itb, ite);
 	}
 	serverLink = client.getServerLinks(hostName);
-	//client.request.treatRequest(data.first, *serverLink);
-	//client.response.buildResponse(client.request, *serverLink, clientInfo);
-	//client.response.sendResponse(client.socket);
 	request.treatRequest(data.first, *serverLink);
 	response.buildResponse(request, *serverLink, clientInfo);
 	response.sendResponse(client.socket);
