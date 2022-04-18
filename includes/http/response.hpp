@@ -209,13 +209,13 @@ class httpResponse{
 			if (this->_request.getMethod() == "GET" && isMethodAllowed(this->_request.getLocations(), this->_request.getPath(), this->_request.getMethod()) == true){
 				//SEGFAULT
 				(void)server;(void)clientInfo;
-				/*std::pair<bool,LocationContext> locationResult = getLocation(this->_request.getPath(), server.context.locations);
+				std::pair<bool,LocationContext> locationResult = getLocation(this->_request.getPath(), server.context.locations);
 				std::cout << "DEBUG ?" << std::endl;
 				if (locationResult.first == true){
 					std::cout << "DEBUG je veux acceder aux CGI" << std::endl;
 					this->_retrieveCGIContent(server, clientInfo, locationResult.second);
 				}
-				else */if (this->_request.getPath() == "/"/* && _contentNeedRefresh() == true*/){
+				else if (this->_request.getPath() == "/"/* && _contentNeedRefresh() == true*/){
 					this->_contentType = "text/html";
 					if (this->_request.getAutoindex() == true)
 						this->_buildAutoIndex(this->_request.getRootPath(), this->_request.getPath());

@@ -35,8 +35,9 @@ std::pair<bool,LocationContext>  getLocation(std::string path,const std::vector<
 	std::pair<bool,LocationContext> locationPair = std::make_pair(true, init);
 	
 	for (size_t i = 0; i < serverLocation.size(); i++){
-		if ((path.append("/").find(serverLocation[i].args[0]) != std::string::npos && path.find(serverLocation[i].directives.find("cgi_extension")->second[0]) != std::string::npos) ||
-			(match(serverLocation[i].args[0].c_str(), path.c_str(), '*') == true) ){
+		if ((path.append("/").find(serverLocation[i].args[0]) != std::string::npos && 
+			(serverLocation[i].directives.count("cgi_extension") == 1 && path.find(serverLocation[i].directives.find("cgi_extension")->second[0]) != std::string::npos)) ||
+			((match(serverLocation[i].args[0].c_str(), path.c_str(), '*') == true) && serverLocation[i].directives.count("cgi_binary") == 1)){
 			locationPair.second = serverLocation[i];
 			return(locationPair);
 		}

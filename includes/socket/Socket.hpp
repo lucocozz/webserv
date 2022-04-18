@@ -14,6 +14,7 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/ioctl.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <netdb.h>
@@ -167,9 +168,13 @@ public:
 	{
 		char	buffer[RECV_BUFFER] = {0};
 		int		bytesReceived = 0;
+		int		queueSize = 0;
 
+		if (ioctl(this->_listenSocket, FIONREAD, &queueSize) == -1)
+			queueSize = 2048;
+		std::cout << "queusize " << queueSize << std::endl;
 		std::cout << "Reading data..." << std::endl;
-		bytesReceived = recv(this->_listenSocket, buffer, RECV_BUFFER, flags);
+		bytesReceived = recv(this->_listenSocket, buffer, queueSize, flags);
 		if (bytesReceived == -1)
 			throw (std::runtime_error(strerror(errno)));
 		std::cout << "Received " << bytesReceived << " bytes." << std::endl;
