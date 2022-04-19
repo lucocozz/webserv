@@ -341,7 +341,7 @@ private:
         }
     }
 
-    std::string _formateVarName(std::string varName){
+    std::string _formateVarName(const std::string &varName){
         std::string formated("");
         std::string ret("HTTP_");
 
@@ -412,7 +412,7 @@ private:
         return (exitCode);
     }
 
-    int _getCgiReturnStatus(std::string response){
+    int _getCgiReturnStatus(std::string &response){
         int status = 200;
         if (response.find("Status:") != std::string::npos){
             std::string strStatus;
