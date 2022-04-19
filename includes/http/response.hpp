@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/04/19 14:45:06 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/19 16:58:44 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -169,7 +169,7 @@ class httpResponse{
 			this->_response.append("Date: " + buildDate() + "\r\n");
 			this->_response.append("Content-Type: " + this->_contentType + "\r\n");
 			this->_response.append("Content-Length: " + itos(this->_content.size()) + "\r\n");
-			//Transfert-Encoding
+			//Transfer-Encoding
 			//this->_response.append("Connection: keep-alive\r\n");
 			/*if (this->_status / 100 == 2 || this->_status / 100 == 3){
 				if (this->_request.getAutoindex() == false){
