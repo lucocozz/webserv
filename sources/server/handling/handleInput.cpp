@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/22 21:55:31 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/04/19 22:30:47 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/20 01:33:16 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,6 +33,6 @@ void	handleInput(Client &client)
 	}
 	serverLink = client.getServerLinks(hostName);
 	client.request.treatRequest(data.first, *serverLink);
-	client.response.buildResponse(client.request, *serverLink, clientInfo);
+	client.response.buildResponse(&client.request, *serverLink, clientInfo);
 	client.response.sendResponse(client.socket);
 }
