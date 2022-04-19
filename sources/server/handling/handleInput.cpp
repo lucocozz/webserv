@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/22 21:55:31 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/04/18 22:35:51 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/19 22:30:47 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,8 +18,6 @@ void	handleInput(Client &client)
 	std::string 								hostName("");
 	Server										*serverLink;
 	const std::pair<std::string, std::string> 	clientInfo(client.socket.getNameInfo(NI_NUMERICHOST), client.socket.getNameInfo());
-	httpRequest 								request;
-	httpResponse								response;
 
 	data = client.socket.recvData();
 	std::cout << "client datas: |" << data.first << "|" << std::endl;
@@ -34,7 +32,7 @@ void	handleInput(Client &client)
 		hostName.append(itb, ite);
 	}
 	serverLink = client.getServerLinks(hostName);
-	request.treatRequest(data.first, *serverLink);
-	response.buildResponse(request, *serverLink, clientInfo);
-	response.sendResponse(client.socket);
+	client.request.treatRequest(data.first, *serverLink);
+	client.response.buildResponse(client.request, *serverLink, clientInfo);
+	client.response.sendResponse(client.socket);
 }

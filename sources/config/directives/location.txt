@@ -4,3 +4,4 @@ upload_location
 index
 root
 allowed_method
+autoindex

@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/15 00:58:32 by user42            #+#    #+#             */
-/*   Updated: 2022/04/18 17:07:08 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/19 22:01:53 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,6 +49,8 @@ std::string 				buildPathTo(std::string rootPath, std::string path, std::string 
 
 	//rootPath
 	ret.append(rootPath);
+	if(*(ret.end() - 1) != '/')
+		ret.append("/");
 	//path
 	if (*(ret.end() - 1) == '/' && *(path.begin()) == '/'){
 		path.erase(path.begin());
@@ -61,7 +63,8 @@ std::string 				buildPathTo(std::string rootPath, std::string path, std::string 
 	if (fileName.empty() == false){
 		if (*(ret.end() - 1) != '/')
 			ret.append("/");
-		ret.append(fileName);
+		if (fileName != "/")
+			ret.append(fileName);
 	}
 
 	return (ret);

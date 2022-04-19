@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/15 00:58:45 by user42            #+#    #+#             */
-/*   Updated: 2022/04/18 16:48:20 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/19 19:08:53 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,16 +58,18 @@ std::string					buildListFilesUrls(struct dirent *fileRead, DIR *rep, std::strin
 	return (ret);
 }
 
+#include <iostream>
 std::string					buildListingBlock(struct dirent *fileRead, DIR *rep, std::string rootPath, std::string path, std::string host){
 	std::string ret;
 	ret.append("<pre>\r\n");
-	if (path == rootPath)
-		ret.append("<a href=\"" + buildUrlTo(host, path, "") + "\"><p>../</p></a>\r\n");
-	else{
-		ret.append("<a href=\"");
+	ret.append("<a href=\"");
+
+	if (rootPath == path)
+		ret.append(buildUrlTo(host, path, ""));
+	else
 		ret.append(buildUrlTo(host, path, ".."));
-		ret.append("\">../</a>\r\n");
-	}
+
+	ret.append("\">../</a>\r\n");
 	ret.append(buildListFilesUrls(fileRead, rep, rootPath, path, host));
 	ret.append("</pre>\r\n");
 	return (ret);

@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:46 by user42            #+#    #+#             */
-/*   Updated: 2022/04/19 17:29:44 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/19 19:28:34 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -125,6 +125,10 @@ class httpRequest{
 
 		const std::string 											&getPath() const{return (this->_path);}
 
+		void														setPath(std::string path){
+			this->_path = path;
+		}
+
 		const std::string 											&getProtocol() const{return (this->_protocol);}
 
 		const std::map<std::string, std::string>					&getHeaders() const{return (this->_headers);}
@@ -136,6 +140,10 @@ class httpRequest{
 		const std::string											&getServerName()	const{return (this->_serverName);}
 
 		const std::string											&getRootPath() const{return (this->_rootPath);}
+
+		//void														setRootPath(std::string rootPath){
+		//	this->_rootPath = rootPath;
+		//}
 
 		const std::string											&getIndex() const{return (this->_index);}
 

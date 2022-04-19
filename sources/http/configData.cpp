@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/15 00:57:56 by user42            #+#    #+#             */
-/*   Updated: 2022/04/19 17:08:51 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/19 19:18:42 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -103,10 +103,13 @@ std::vector<LocationContext>							getConfigLocations(Server const &server){
 		int needDel = 0;
 		try {std::vector<std::string> vec = (*it).directives.at("index");}
 		catch (std::exception const &e){needDel++;}
-		//try {std::vector<std::string> vec = (*it).directives.at("limit_except");}
 		try {std::vector<std::string> vec = (*it).directives.at("allowed_method");}
 		catch (std::exception const &e){needDel++;}
-		if (needDel == 2){
+		try {std::vector<std::string> vec = (*it).directives.at("autoindex");}
+		catch (std::exception const &e){needDel++;}
+		try {std::vector<std::string> vec = (*it).directives.at("root");}
+		catch (std::exception const &e){needDel++;}
+		if (needDel == 4){
 			locations.erase(it);
 			if (locations.empty() == true)
 				break;

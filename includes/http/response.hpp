@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/04/19 17:19:16 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/19 23:55:57 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,11 +85,25 @@ class httpResponse{
 			this->_status = request.getStatus();
 			this->_rootToFile = buildPathTo(this->_request.getRootPath(), this->_request.getPath(), "");
 
+			//TEST
+			std::pair<std::string, std::string> locationRoot = retrieveLocationRoot(this->_request.getLocations(), this->_request.getRootPath(), this->_request.getPath());
+			std::string oldPath;
+			//std::cout << "DEBUG rootpath = " << this->_request.getRootPath() << std::endl;
+			//std::cout << "DEBUG locationroot = " << locationRoot.first << std::endl;
+			std::cout << "DEBUG locationRoot.first = " << locationRoot.first << " | second = " << locationRoot.second << std::endl;
+			if (locationRoot.first != this->_request.getRootPath()){
+				oldPath = this->_request.getPath();
+				this->_request.setPath(locationToRoot(this->_request.getPath(), locationRoot.first, locationRoot.second));
+				this->_rootToFile = buildPathTo(this->_request.getRootPath(), this->_request.getPath(), "");
+				//std::cout << "DEBUG oldpath = " << oldPath << std::endl;
+				//std::cout << "DEBUG setpath = " << this->_request.getPath() << std::endl;
+			}
+
 			if (this->_request.getMethod() == "POST" && isMethodAllowed(this->_request.getLocations(), this->_request.getPath(), this->_request.getMethod()) == true)
-				this->_uploadContent(request.getPath(), server, clientInfo, request.getHeaders());
+				this->_uploadContent(request.getPath(), server, clientInfo, request.getHeaders(), oldPath);
 			else if (this->_request.getMethod() == "DELETE" && isMethodAllowed(this->_request.getLocations(), this->_request.getPath(), this->_request.getMethod()) == true)
 				this->_deleteContent();
-			this->_retrieveContent(server, clientInfo);
+			this->_retrieveContent(server, clientInfo, oldPath);
 
 			this->_buildStatusLine();
 			this->_buildHeaders();
@@ -170,7 +184,7 @@ class httpResponse{
 			this->_response.append("Content-Type: " + this->_contentType + "\r\n");
 			this->_response.append("Content-Length: " + itos(this->_content.size()) + "\r\n");
 			//Transfer-Encoding
-			//this->_response.append("Connection: keep-alive\r\n");
+			this->_response.append("Connection: keep-alive\r\n");
 			/*if (this->_status / 100 == 2 || this->_status / 100 == 3){
 				if (this->_request.getAutoindex() == false){
 					if (this->_request.getPath() == "/" && this->_request.getIndex().empty() == false){
@@ -206,28 +220,26 @@ class httpResponse{
 			- Build the autoindex page
 		*/
 
-		void	_retrieveContent(const Server &server, const std::pair<std::string, std::string> &clientInfo){
+		void	_retrieveContent(const Server &server, const std::pair<std::string, std::string> &clientInfo, std::string oldPath){
 			if (this->_request.getMethod() == "GET" && isMethodAllowed(this->_request.getLocations(), this->_request.getPath(), this->_request.getMethod()) == true){
 				std::pair<bool,LocationContext> locationResult = getLocation(this->_request.getPath(), server.context.locations);
 				if (locationResult.first == true)
 					this->_retrieveCGIContent(server, clientInfo, locationResult.second);
 				else if (this->_request.getPath() == "/"/* && _contentNeedRefresh() == true*/){
 					this->_contentType = "text/html";
-					if (this->_request.getAutoindex() == true)
-						this->_buildAutoIndex(this->_request.getRootPath(), this->_request.getPath());
-					else
-						_retrieveFileContent(buildPathTo(this->_rootToFile, this->_request.getIndex(), ""));
+					_retrieveFileContent(buildPathTo(this->_rootToFile, this->_request.getIndex(), ""));
 				}
 				else/* if (_contentNeedRefresh() == true)*/{
 					if (isPathValid(this->_rootToFile) == false){
 						this->_buildErrorPage(NOT_FOUND);
 						return;
 					}
-					std::pair<std::string, std::string> indexLocation = retrieveLocationIndex(this->_request.getLocations(), this->_request.getRootPath(), this->_request.getPath());
-					if (indexLocation.first.empty() == false && isSameDirectory(indexLocation.second, this->_request.getPath()) == true)
+					std::pair<std::string, std::string> indexLocation;
+					indexLocation = retrieveLocationIndex(this->_request.getLocations(), this->_request.getRootPath(), oldPath);
+					if (retrieveLocationAutoIndex(this->_request.getLocations(), oldPath) == true && isPathDirectory(this->_rootToFile) == true)
+						this->_buildLocationAutoIndex(this->_request.getRootPath(), this->_request.getPath(), oldPath);
+					else if (indexLocation.first.empty() == false && isSameDirectory(indexLocation.second, oldPath) == true)
 						_retrieveFileContent(buildPathTo(this->_request.getRootPath(), indexLocation.first, ""));
-					else if (this->_request.getAutoindex() == true && isPathDirectory(this->_rootToFile) == true)
-						this->_buildAutoIndex(this->_request.getRootPath(), this->_request.getPath());
 					else
 						_retrieveFileContent(this->_rootToFile);
 				}
@@ -289,10 +301,10 @@ class httpResponse{
 			return (true);
 		}*/
 
-		void			_buildAutoIndex(std::string rootPath, std::string path){
+		void			_buildLocationAutoIndex(std::string rootPath, std::string path, std::string oldPath){
 			this->_content.append("<html>\r\n<head>\r\n");
-			this->_content.append("<title>Index of " + path + "</title>\r\n</head>\r\n<body>\r\n");
-			this->_content.append("<h1>Index of " + path + "</h1>\r\n<hr>\r\n");
+			this->_content.append("<title>Index of " + oldPath + "/</title>\r\n</head>\r\n<body>\r\n");
+			this->_content.append("<h1>Index of " + oldPath + "/</h1>\r\n<hr>\r\n");
 			DIR *rep = NULL;
 			struct dirent *fileRead = NULL;
 			rep = opendir(buildPathTo(rootPath, path, "").c_str());
@@ -322,12 +334,13 @@ class httpResponse{
 			this->_content.append("</body>\r\n</html>\r\n");
 			//POST form 2 input
 			this->_content.append("<hr>\r\n");
-			this->_content.append("Multipart Form POST 1 input : \r\n");
+			this->_content.append("Multipart Form POST 2 input : \r\n");
 			this->_content.append("<form enctype=\"multipart/form-data\" action=\"/\" method=\"post\">");
 			this->_content.append("<input type=\"file\" name=\"monFichier1\" />");
 			this->_content.append("<input type=\"file\" name=\"monFichier2\" />");
  			this->_content.append("<button type =\"submit\">Envoyer</button>");
 			this->_content.append("</form>");
+			this->_content.append("</body>\r\n</html>\r\n");
 			this->_content.append("</body>\r\n</html>\r\n");
 		}
 
@@ -335,7 +348,7 @@ class httpResponse{
 			Upload a ressource :
 		*/
 
-		void	_uploadContent(const std::string &path, const Server &server, const std::pair<std::string, std::string> &clientInfo, const std::map<std::string, std::string> &headers){
+		void	_uploadContent(const std::string &path, const Server &server, const std::pair<std::string, std::string> &clientInfo, const std::map<std::string, std::string> &headers, std::string oldPath){
 			std::pair<bool,LocationContext> locationResult = 
 				getLocation(this->_request.getPath(), server.context.locations);
 			if (locationResult.first == true){
@@ -358,20 +371,16 @@ class httpResponse{
 			//MULTIPART
 			else if (this->_request.getBoundarie().first == true){
 				for (std::map<std::map<std::string, std::string>, std::string>::const_iterator it = this->_request.getBodyMultipart().begin(); it != this->_request.getBodyMultipart().end(); it++){
-					std::string pathToFile = buildPathTo(this->_request.getRootPath(), this->_request.getPath(), (*(*it).first.find("filename")).second);
+					std::string pathToFile;
+					pathToFile = buildPathTo(this->_request.getRootPath(), oldPath, (*(*it).first.find("filename")).second);
 					this->_contentType = this->getMimeTypes(pathToFile.c_str());
 					std::ofstream outdata(pathToFile.c_str());
 					outdata << (*it).second << std::endl;
 					outdata.close();
 				}
 			}
-			else{
-				std::string pathToFile = buildPathTo(this->_request.getRootPath(), this->_request.getPath(), "request.txt");
-				this->_contentType = this->getMimeTypes(pathToFile.c_str());
-				std::ofstream outdata(pathToFile.c_str());
-				outdata << this->_request.getBody() << std::endl;
-				outdata.close();
-			}
+			else
+				this->_status = UNPROCESSABLE_ENTITY;
 			return;
 		}
 
