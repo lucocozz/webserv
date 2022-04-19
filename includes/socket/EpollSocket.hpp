@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/16 23:19:48 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/03/31 00:28:52 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/04/19 21:08:07 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,18 +59,12 @@ public:
 		this->_infoEvent.data.fd = this->_listenSocket;
 	}
 
-	uint32_t events(int events)
+	void setEvents(int events)
 	{
 		this->_infoEvent.events = events;
-		return (this->_infoEvent.events);
-	}
-
-	uint32_t events(void)
-	{
-		return (this->_infoEvent.events);
 	}
 	
-	uint32_t events(void) const
+	uint32_t getEvents(void) const
 	{
 		return (this->_infoEvent.events);
 	}
@@ -83,5 +77,5 @@ public:
 
 inline bool	operator==(const EpollSocket &lhs, const EpollSocket &rhs)
 {
-	return (lhs.listener() == rhs.listener() && lhs.events() == rhs.events());
+	return (lhs.listener() == rhs.listener() && lhs.getEvents() == rhs.getEvents());
 }

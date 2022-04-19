@@ -56,7 +56,7 @@ public:
         int                             fdToParent[2];
         int                             childExitStatus = 0;                                    
         char                            **cMetaVar;
-        struct stat                     *dummy = new struct stat[1];
+        struct stat                     dummy;
 
         cMetaVar = this->_createCMetaVar();
         for (size_t i = 0; cMetaVar[i]; i++){
@@ -69,10 +69,9 @@ public:
         if ((pid = fork()) == -1)
             throw forkError();
         chdir(_getCurrentLocation().c_str());
-        if (stat(_mapMetaVars.find("SCRIPT_NAME=")->second.c_str(), dummy) == -1){
+        if (stat(_mapMetaVars.find("SCRIPT_NAME=")->second.c_str(), &dummy) == -1){
             for (size_t i = 0; cMetaVar[i]; i++)
                 delete [] cMetaVar[i];
-            delete dummy;
             return (std::make_pair("", 404));
         }
         if (pid == 0)
@@ -81,7 +80,6 @@ public:
         for (size_t i = 0; cMetaVar[i]; i++)
             delete [] cMetaVar[i];
         delete [] cMetaVar;
-        delete dummy;
 
         if (_mapMetaVars.find("REQUEST_METHOD=")->second.compare("POST") == 0){
             write(fdToChild[1], _requestBody.c_str(),  _requestBody.size());
@@ -343,7 +341,7 @@ private:
         }
     }
 
-    std::string _formateVarName(std::string varName){
+    std::string _formateVarName(const std::string &varName){
         std::string formated("");
         std::string ret("HTTP_");
 
@@ -414,7 +412,7 @@ private:
         return (exitCode);
     }
 
-    int _getCgiReturnStatus(std::string response){
+    int _getCgiReturnStatus(std::string &response){
         int status = 200;
         if (response.find("Status:") != std::string::npos){
             std::string strStatus;

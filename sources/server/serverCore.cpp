@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:14:35 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/04/11 22:01:29 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/04/19 21:20:15 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,7 @@ static void	initServer(std::vector<Server> &serverList, Epoll &epoll)
 		socket = serverList[i].socket;
 		if (std::find(controledSocket.begin(), controledSocket.end(), socket.listener()) == controledSocket.end())
 		{
-			socket.events(EPOLLIN | EPOLLET | EPOLLOUT | EPOLLRDHUP);
+			socket.setEvents(EPOLLIN);
 			epoll.control(EPOLL_CTL_ADD, socket);
 			controledSocket.push_back(socket.listener());
 		}

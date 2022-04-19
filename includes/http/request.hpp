@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:46 by user42            #+#    #+#             */
-/*   Updated: 2022/04/19 19:28:34 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/20 01:39:17 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,6 +74,10 @@ class httpRequest{
 			this->_headers = rhs.getHeaders();
 			this->_body = rhs.getBody();
 			this->_status = rhs.getStatus();
+
+			this->_chunked = rhs.getChunked();
+			this->_concatenedRequest = rhs.getConcatenedRequest();
+			this->_contentLength = rhs.getContentLenght();
 			return (*this);
 		}
 
@@ -83,10 +87,46 @@ class httpRequest{
 			- Return the specified header if found
 		*/
 
-		void								treatRequest(std::string const &rawRequest, Server const &server){
-			this->_retrieveConfigInfo(server);
-			this->_parse(rawRequest);
-			this->_check();
+		static size_t	getHeaderContentLenght(std::string &request){
+			std::cout << "getheadercontentlength\n";
+			std::string::iterator 	itb = request.begin() + request.find("Content-Length:") + 16;
+			std::string::iterator 	ite = itb;
+			std::string				contentLengthStr("");
+
+			while (isdigit(*ite))
+				ite++;
+			contentLengthStr.append(itb, ite);
+			return (atoi(contentLengthStr.c_str()));
+		}
+
+		bool								treatRequest(std::string &rawRequest, Server const &server){
+
+			//check if the request is POST, if it is I set contentLength
+			if (rawRequest.find("POST") != std::string::npos){
+				this->_concatenedRequest.clear();
+				if (rawRequest.find("Transfer-Encoding: chunked") != std::string::npos)
+					this->_chunked = true;
+				else
+					this->_contentLength = getHeaderContentLenght(rawRequest);
+			}
+			else if (rawRequest.find("GET") != std::string::npos){
+				this->_concatenedRequest.clear();
+				this->_contentLength = rawRequest.size();
+			}
+			//While the concatened request is smaller than the header content-length I keep concatenating || if the chunked bool is still true
+			if (this->_concatenedRequest.size() < this->_contentLength || this->_chunked == true)
+				this->_concatenedRequest.append(rawRequest);
+			//If there is 0\r\n at the end of a chunked request chunked bool is set to false which means that the request has been fully received
+			if (this->_concatenedRequest.find("0\r\n", this->_concatenedRequest.size() - 5) != std::string::npos && this->_chunked == true)
+				this->_chunked = false;
+			//If the request has been fully received we treat it and build the response then set all the statics to default
+			if (this->_concatenedRequest.size() >= this->_contentLength && this->_chunked == false){
+				this->_retrieveConfigInfo(server);
+				this->_parse(this->_concatenedRequest);
+				this->_check();
+				return (true);
+			}
+			return (false);
 		}
 
 		std::string							findHeader(std::string key){
@@ -115,6 +155,9 @@ class httpRequest{
 			this->_protocol.clear();
 			this->_headers.clear();
 			this->_status = 200;
+			this->_chunked = false;
+			this->_contentLength = 0;
+			this->_concatenedRequest.clear();
 		}
 
 		/*
@@ -161,6 +204,11 @@ class httpRequest{
 
 		const std::vector<LocationContext>							&getLocations() const{return (this->_locations);}
 
+		const std::string											&getConcatenedRequest() const {return (this->_concatenedRequest);}
+
+		const size_t												&getContentLenght() const {return (this->_contentLength);}
+ 
+		const bool													&getChunked() const {return (this->_chunked);}
 
 	/*
 		Underluying functions :
@@ -325,10 +373,10 @@ class httpRequest{
 				}
 			}
 			//Check if the body size exceed the max body size
-			if (this->_maxBodySize < this->_bodySize){
-				this->_status = REQUEST_ENTITY_TOO_LARGE;
-				return;
-			}
+			// if (this->_maxBodySize < this->_bodySize){
+			// 	this->_status = REQUEST_ENTITY_TOO_LARGE;
+			// 	return;
+			// }
 			//Check if the host is specified
 			if (this->findHeader("Host").empty() == true){
 				this->_status = BAD_REQUEST;
@@ -357,6 +405,10 @@ class httpRequest{
 		/*
 			Variables :
 		*/
+
+		std::string											_concatenedRequest;
+		size_t												_contentLength;
+		bool												_chunked;
 
 		//rawRequest
 		std::vector<std::string> 							_request;

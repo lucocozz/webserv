@@ -15,6 +15,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
+#include <linux/sockios.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <netdb.h>
@@ -161,24 +162,27 @@ public:
 		return (socketClient);
 	}
 
-
-
-
 	std::pair<std::string, int>	recvData(int flags = 0)
 	{
-		char	buffer[RECV_BUFFER] = {0};
-		int		bytesReceived = 0;
-		int		queueSize = 0;
-
-		if (ioctl(this->_listenSocket, FIONREAD, &queueSize) == -1)
+		int							queueSize = 0;
+		std::pair<std::string, int> dataPair;
+		char						*buffer;
+		int							bytesReceived = 0;
+		
+		if ((ioctl(this->_listenSocket, SIOCINQ, &queueSize) == -1))
 			queueSize = 2048;
-		std::cout << "queusize " << queueSize << std::endl;
+		buffer = new char[queueSize];
+
 		std::cout << "Reading data..." << std::endl;
 		bytesReceived = recv(this->_listenSocket, buffer, queueSize, flags);
-		if (bytesReceived == -1)
+		if (bytesReceived == -1){
+			delete buffer;
 			throw (std::runtime_error(strerror(errno)));
+		}
 		std::cout << "Received " << bytesReceived << " bytes." << std::endl;
-		return (std::make_pair(std::string().append(buffer, bytesReceived), bytesReceived));
+		dataPair = std::make_pair(std::string().append(buffer, bytesReceived), bytesReceived);
+		delete buffer;
+		return (dataPair);
 	}
 
 	int	sendData(std::string data, int flags = 0)
