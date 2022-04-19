@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:46 by user42            #+#    #+#             */
-/*   Updated: 2022/04/19 14:56:25 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/19 15:43:26 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -165,7 +165,6 @@ class httpRequest{
 
 		const std::pair<bool, std::string>							&getBoundarie() const{return (this->_boundarie);}
 
-		//const std::map<std::vector<std::string>, std::string> 		&getBodyMultipart() const{return (this->_bodyMultipart);}
 		const std::map<std::map<std::string, std::string>, std::string> 		&getBodyMultipart() const{return (this->_bodyMultipart);}
 
 		const size_t												&getBodySize() const{return (this->_bodySize);}
@@ -243,7 +242,6 @@ class httpRequest{
 					if (res.at(1).find("; boundary=") != std::string::npos){
 						this->_boundarie.first = true;
 						this->_boundarie.second = "--" + res.at(1).substr(res.at(1).find("; boundary=") + 11, res.at(1).size() - 2);
-						res.at(1) = res.at(1).substr(0, res.at(1).find("; boundary="));
 					}
 					std::pair<std::string, std::string> pair = std::make_pair(res.at(0), res.at(1));
 					mapHeaders.insert(pair);
@@ -258,17 +256,18 @@ class httpRequest{
 		}
 
 		void		_parseBody(std::string rawRequest){
+			//If multipart
 			if (this->_boundarie.first == true){
 				std::string rawBody = rawRequest.substr(rawRequest.find("\r\n\r\n") + 4);
 				std::vector<std::string> separedMultipart = split(rawBody, this->_boundarie.second + "\r\n");
-				//CLEAR EMPTY STRINGS
+
 				for (std::vector<std::string>::iterator it = separedMultipart.begin(); it != separedMultipart.end(); it++){
 					if ((*it).empty() == true){
 						separedMultipart.erase(it);
 						it = separedMultipart.begin();
 					}
 				}
-				//SPLITS HEADERS
+
 				for (size_t i = 0; i < separedMultipart.size(); i++){
 					std::pair<std::map<std::string,std::string>, std::string>	pair;
 					std::vector<std::string> tmpVec = split(separedMultipart.at(i).substr(0, separedMultipart.at(i).find("\r\n\r\n")), "\r\n");
@@ -297,22 +296,20 @@ class httpRequest{
 							}
 						}
 					}
-					std::string test = _boundarie.second + "--";
-					if (separedMultipart.at(i).find(test) != std::string::npos){
-						std::cout << "DEBUG FINDED IT" << std::endl;
+					//End of multipart
+					if (separedMultipart.at(i).find(_boundarie.second + "--") != std::string::npos){
 						pair.second = separedMultipart.at(i).substr(separedMultipart.at(i).find("\r\n\r\n") + 4);
-						pair.second = pair.second.substr(0, pair.second.find(test));
+						pair.second = pair.second.substr(0, pair.second.find(_boundarie.second + "--"));
 					}
-					else{
-						std::cout << "DEBUG DIDNT FIND IT" << std::endl;
+					//Not ended
+					else
 						pair.second = separedMultipart.at(i).substr(separedMultipart.at(i).find("\r\n\r\n") + 4);
-					}
-					//pair.second = separedMultipart.at(i).substr(separedMultipart.at(i).find("\r\n\r\n") + 4);
 					this->_bodyMultipart.insert(pair);
 				}
 				this->_body.append(rawBody);
 				this->_bodySize = this->_body.size();
 			}
+			//If content is identity
 			else{
 				this->_body.append(rawRequest.substr(rawRequest.find("\r\n\r\n") + 4));
 				this->_bodySize = this->_body.size();
