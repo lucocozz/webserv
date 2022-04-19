@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   handleInput.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
+/*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/22 21:55:31 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/04/19 21:41:24 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/04/20 01:07:08 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,7 @@ void	handleInput(Client &client, Epoll &epoll)
 	//std::cout << "client datas: |" << data.first << "|" << std::endl;
 	serverLink = client.getServerLinks(hostName);
 	if (client.request.treatRequest(data.first, *serverLink) == true){
-		client.response.buildResponse(client.request, *serverLink, clientInfo);
+		client.response.buildResponse(&client.request, *serverLink, clientInfo);
 		client.response.sendResponse(client.socket);
 
 		// executer ces lignes si le server doit envoyer une reponse au client
