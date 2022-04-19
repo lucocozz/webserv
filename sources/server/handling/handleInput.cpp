@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/22 21:55:31 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/04/19 21:39:11 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/04/19 21:41:24 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,7 +66,7 @@ void	handleInput(Client &client, Epoll &epoll)
 	}
 
 
-	// executer ces lignes si le client doit envoyer des données
+	// executer ces lignes si le server doit envoyer une reponse au client
 	client.socket.setEvents(client.socket.getEvents() | EPOLLOUT);
 	epoll.control(EPOLL_CTL_MOD, client.socket);
 }

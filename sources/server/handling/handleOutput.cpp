@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/19 21:19:14 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/04/19 21:35:53 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/04/19 21:41:51 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 
 void	handleOutput(Client &client, Epoll &epoll)
 {
-	// exectuer ces lignes si une fois que le client a envoyer toutes ses données
+	// exectuer ces lignes si le client a envoyer toutes ses données
 	client.socket.setEvents(client.socket.getEvents() & ~EPOLLOUT);
 	epoll.control(EPOLL_CTL_MOD, client.socket);
 }
