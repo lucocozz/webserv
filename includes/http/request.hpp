@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:46 by user42            #+#    #+#             */
-/*   Updated: 2022/04/19 15:43:26 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/19 17:29:44 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -95,24 +95,6 @@ class httpRequest{
 				return (std::string());
 			return ((*it).second);
 		}
-
-		//std::pair<bool, std::string>		findBoundarie(){
-		//	std::map<std::string, std::string>::iterator it = this->_headers.find("Content-Type");
-		//	std::string boundarie;
-		//	bool ret = false;
-		//	if (it == this->_headers.end())
-		//		return (std::make_pair(ret, boundarie));
-		//	else{
-		//		if ((*it).second.find("multipart/form-data", 0, 18) != std::string::npos){
-		//			std::vector<std::string> vec = split((*it).second, "; boundary=");
-		//			if (vec.size() == 2){
-		//				boundarie = vec.at(1);
-		//				ret = true;
-		//			}
-		//		}
-		//	}
-		//	return (std::make_pair(ret, "--" + boundarie));
-		//}
 
 		void					clear(){
 			this->_request.clear();

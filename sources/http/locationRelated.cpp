@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/15 00:58:14 by user42            #+#    #+#             */
-/*   Updated: 2022/04/18 22:22:38 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/19 17:20:40 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,16 +58,23 @@ std::vector<std::string>				retrieveDirectiveArgs(LocationContext const &locatio
 }
 
 bool						isMethodAllowed(std::vector<LocationContext> locations, std::string path, std::string method){
-	std::pair<bool,LocationContext> isLocation = pathIsLocation(path, locations, "limit_except");
+	//std::pair<bool,LocationContext> isLocation = pathIsLocation(path, locations, "limit_except");
+	std::pair<bool,LocationContext> isLocation = pathIsLocation(path, locations, "allowed_method");
 	if (isLocation.first == false)
 		return (true);
 
-	std::vector<std::string> limits = retrieveDirectiveArgs(isLocation.second, "limit_except");
-	for (size_t i = 0; i < limits.size(); i++){
-		if (method == limits.at(i))
-			return (false);
+	//std::vector<std::string> limits = retrieveDirectiveArgs(isLocation.second, "limit_except");
+	std::vector<std::string> allowedMethods = retrieveDirectiveArgs(isLocation.second, "allowed_method");
+	for (size_t i = 0; i < allowedMethods.size(); i++){
+		if (method == allowedMethods.at(i))
+			return (true);
 	}
-	return (true);
+	//for (size_t i = 0; i < limits.size(); i++){
+	//	if (method == limits.at(i))
+	//		return (false);
+	//}
+	//return (true);
+	return (false);
 }
 
 std::string					checkIndex(std::string rootPath, std::vector<std::string> index){

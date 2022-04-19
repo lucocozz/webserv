@@ -2,4 +2,5 @@ cgi_extension
 cgi_binary
 upload_location
 index
-limit_except
+root
+allowed_method
