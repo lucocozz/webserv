@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/15 00:58:14 by user42            #+#    #+#             */
-/*   Updated: 2022/04/18 17:06:32 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/18 22:22:38 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -92,7 +92,7 @@ std::pair<std::string, std::string>				retrieveLocationIndex(std::vector<Locatio
 	return (ret);
 }
 
-std::map<std::string, std::string>	initExtensionTypes(){
+/*std::map<std::string, std::string>	initExtensionTypes(){
 	std::map<std::string, std::string> ret;
 
 	//Text
@@ -170,4 +170,4 @@ std::map<std::string, std::string>	initExtensionTypes(){
 	ret.insert(std::make_pair("7z", "application/x-7z-compressed"));
 
 	return (ret);
-}
+}*/

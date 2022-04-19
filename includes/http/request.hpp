@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:46 by user42            #+#    #+#             */
-/*   Updated: 2022/04/18 17:24:52 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/19 14:56:25 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -297,7 +297,17 @@ class httpRequest{
 							}
 						}
 					}
-					pair.second = separedMultipart.at(i).substr(separedMultipart.at(i).find("\r\n\r\n") + 4);
+					std::string test = _boundarie.second + "--";
+					if (separedMultipart.at(i).find(test) != std::string::npos){
+						std::cout << "DEBUG FINDED IT" << std::endl;
+						pair.second = separedMultipart.at(i).substr(separedMultipart.at(i).find("\r\n\r\n") + 4);
+						pair.second = pair.second.substr(0, pair.second.find(test));
+					}
+					else{
+						std::cout << "DEBUG DIDNT FIND IT" << std::endl;
+						pair.second = separedMultipart.at(i).substr(separedMultipart.at(i).find("\r\n\r\n") + 4);
+					}
+					//pair.second = separedMultipart.at(i).substr(separedMultipart.at(i).find("\r\n\r\n") + 4);
 					this->_bodyMultipart.insert(pair);
 				}
 				this->_body.append(rawBody);
@@ -327,16 +337,6 @@ class httpRequest{
 					}
 				}
 			}
-			//Or check is there is Content-Disposition with a filename
-			//else{
-			//	if (this->findHeader("Content-Disposition").empty() == true || this->findHeader("Content-Disposition").find("; filename=\"") != std::string::npos){
-			//	
-			//	}
-			//	else{
-			//		this->_status = UNPROCESSABLE_ENTITY;
-			//		return;
-			//	}
-			//}
 			//Check if the body size exceed the max body size
 			if (this->_maxBodySize < this->_bodySize){
 				this->_status = REQUEST_ENTITY_TOO_LARGE;

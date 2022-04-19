@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/04/18 18:01:49 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/19 14:45:06 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -169,7 +169,8 @@ class httpResponse{
 			this->_response.append("Date: " + buildDate() + "\r\n");
 			this->_response.append("Content-Type: " + this->_contentType + "\r\n");
 			this->_response.append("Content-Length: " + itos(this->_content.size()) + "\r\n");
-			this->_response.append("Connection: keep-alive\r\n");
+			//Transfert-Encoding
+			//this->_response.append("Connection: keep-alive\r\n");
 			/*if (this->_status / 100 == 2 || this->_status / 100 == 3){
 				if (this->_request.getAutoindex() == false){
 					if (this->_request.getPath() == "/" && this->_request.getIndex().empty() == false){
@@ -207,14 +208,9 @@ class httpResponse{
 
 		void	_retrieveContent(const Server &server, const std::pair<std::string, std::string> &clientInfo){
 			if (this->_request.getMethod() == "GET" && isMethodAllowed(this->_request.getLocations(), this->_request.getPath(), this->_request.getMethod()) == true){
-				//SEGFAULT
-				(void)server;(void)clientInfo;
 				std::pair<bool,LocationContext> locationResult = getLocation(this->_request.getPath(), server.context.locations);
-				std::cout << "DEBUG ?" << std::endl;
-				if (locationResult.first == true){
-					std::cout << "DEBUG je veux acceder aux CGI" << std::endl;
+				if (locationResult.first == true)
 					this->_retrieveCGIContent(server, clientInfo, locationResult.second);
-				}
 				else if (this->_request.getPath() == "/"/* && _contentNeedRefresh() == true*/){
 					this->_contentType = "text/html";
 					if (this->_request.getAutoindex() == true)
@@ -238,7 +234,6 @@ class httpResponse{
 			}
 			else if (this->_request.getMethod() == "GET" || isMethodAllowed(this->_request.getLocations(), this->_request.getPath(), this->_request.getMethod()) == false)
 				this->_status = METHOD_NOT_ALLOWED;
-
 			if (this->_status / 100 == 4 || this->_status / 100 == 5){
 				this->_contentType = "text/html";
 				this->_buildErrorPage(this->_status);
@@ -322,6 +317,15 @@ class httpResponse{
 			this->_content.append("Multipart Form POST 1 input : \r\n");
 			this->_content.append("<form enctype=\"multipart/form-data\" action=\"/\" method=\"post\">");
 			this->_content.append("<input type=\"file\" name=\"monFichier\" />");
+ 			this->_content.append("<button type =\"submit\">Envoyer</button>");
+			this->_content.append("</form>");
+			this->_content.append("</body>\r\n</html>\r\n");
+			//POST form 2 input
+			this->_content.append("<hr>\r\n");
+			this->_content.append("Multipart Form POST 1 input : \r\n");
+			this->_content.append("<form enctype=\"multipart/form-data\" action=\"/\" method=\"post\">");
+			this->_content.append("<input type=\"file\" name=\"monFichier1\" />");
+			this->_content.append("<input type=\"file\" name=\"monFichier2\" />");
  			this->_content.append("<button type =\"submit\">Envoyer</button>");
 			this->_content.append("</form>");
 			this->_content.append("</body>\r\n</html>\r\n");

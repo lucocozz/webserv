@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/15 00:57:32 by user42            #+#    #+#             */
-/*   Updated: 2022/04/18 16:45:08 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/18 22:22:38 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,6 @@ bool									isMethodAllowed(std::vector<LocationContext> locations, std::string
 std::string								checkIndex(std::string rootPath, std::vector<std::string> index);
 std::pair<std::string, std::string>		retrieveLocationIndex(std::vector<LocationContext> locations, std::string rootPath, std::string path);
 
-std::map<std::string, std::string>		initExtensionTypes();
+//std::map<std::string, std::string>		initExtensionTypes();
 
 #endif

@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/15 00:57:56 by user42            #+#    #+#             */
-/*   Updated: 2022/04/18 16:51:29 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/19 14:09:46 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,8 +59,8 @@ bool													getConfigAutoIndex(Server const &server){
 
 size_t													getConfigMaxBodySize(Server const &server){
 	try{
-		if (atoi((server.context.directives.at("client_max_body_size")[0]).c_str()) < 100)
-			return (atoi((server.context.directives.at("client_max_body_size")[0]).c_str()) * 1000);
+		if (std::atoi((server.context.directives.at("client_max_body_size")[0]).c_str()) <= (2147483647))
+			return (std::atoi((server.context.directives.at("client_max_body_size")[0]).c_str()) * 1000);
 		else
 			return (1 * 1000);
 	}
