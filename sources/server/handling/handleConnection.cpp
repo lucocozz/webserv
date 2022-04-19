@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/22 21:58:10 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/04/11 17:48:05 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/04/19 21:23:21 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,8 +30,9 @@ static std::vector<Server*>	getLinkedServer(std::vector<Server> &serverList, Epo
 void	handleConnection(std::vector<Server> &serverList,
 	std::map<int, Client> &clientList, EpollSocket &socketEvent, Epoll &epoll)
 {
-	EpollSocket	client(socketEvent.acceptConnection(), EPOLLIN | EPOLLOUT | EPOLLET | EPOLLRDHUP);
-
+	EpollSocket	client(socketEvent.acceptConnection());
+	
+	client.setEvents(EPOLLIN | EPOLLOUT | EPOLLET | EPOLLRDHUP | EPOLLHUP);
 	client.setNonBlocking();
 	epoll.control(EPOLL_CTL_ADD, client);
 	clientList.insert(std::make_pair(client.listener(), Client(client, getLinkedServer(serverList, socketEvent))));

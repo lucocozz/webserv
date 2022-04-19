@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   eventLoop.cpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
+/*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/09 16:50:53 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/04/12 18:07:05 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/19 21:27:12 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,17 +33,21 @@ void	eventLoop(std::vector<Server> &serverList,
 {
 	EpollSocket	socketEvent;
 
-	for (int n = 0; n < events; ++n)
+	if (events == -1)
+		std::cout << "Internal error" << std::endl;
+	else
 	{
-		socketEvent = epoll.socketAt(n);
-		if (isAServer(serverList, socketEvent) == true)
-			handleConnection(serverList, clientList, socketEvent, epoll);
-		else if (socketEvent.events() & (EPOLLERR | EPOLLRDHUP | EPOLLHUP))
-			handleDeconnection(clientList, socketEvent, epoll);
-		else if (socketEvent.events() & EPOLLIN)
-			handleInput(clientList[socketEvent.listener()]);
-		else if (socketEvent.events() & EPOLLOUT)
-			std::cout << "EPOLLOUT" << std::endl;
-			// handleOutput(clientList[socketEvent.listener()]);
+		for (int n = 0; n < events; ++n)
+		{
+			socketEvent = epoll.socketAt(n);
+			if (isAServer(serverList, socketEvent) == true)
+				handleConnection(serverList, clientList, socketEvent, epoll);
+			else if (socketEvent.getEvents() & (EPOLLERR | EPOLLRDHUP | EPOLLHUP))
+				handleDeconnection(clientList, socketEvent, epoll);
+			else if (socketEvent.getEvents() & EPOLLIN)
+				handleInput(clientList[socketEvent.listener()], epoll);
+			else if (socketEvent.getEvents() & EPOLLOUT)
+				handleOutput(clientList[socketEvent.listener()], epoll);
+		}
 	}
 }

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   handleInput.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
+/*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/22 21:55:31 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/04/18 22:35:51 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/19 21:39:11 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,7 @@ static size_t	getContentLenght(std::string &request){
 	return (atoi(contentLengthStr.c_str()));
 }
 
-void	handleInput(Client &client)
+void	handleInput(Client &client, Epoll &epoll)
 {
 	std::pair<std::string, int>					data;
 	static std::string							rawRequest("");
@@ -64,4 +64,9 @@ void	handleInput(Client &client)
 		contentLength = 0;
 		chunked = false;
 	}
+
+
+	// executer ces lignes si le client doit envoyer des données
+	client.socket.setEvents(client.socket.getEvents() | EPOLLOUT);
+	epoll.control(EPOLL_CTL_MOD, client.socket);
 }

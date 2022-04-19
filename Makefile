@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: user42 <user42@student.42.fr>              +#+  +:+       +#+         #
+#    By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2022/01/21 19:56:36 by lucocozz          #+#    #+#              #
-#    Updated: 2022/04/18 17:11:30 by user42           ###   ########.fr        #
+#    Updated: 2022/04/19 21:34:07 by lucocozz         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -24,6 +24,7 @@ DEFINES = $(addprefix -D ,$(foreach tmp,$(DEF),$(tmp)='$($(tmp))'))
 SRC := 	main.cpp					\
 		serverCore.cpp				\
 		handleInput.cpp				\
+		handleOutput.cpp			\
 		handleConnection.cpp		\
 		handleDeconnection.cpp		\
 		handleSignal.cpp			\
