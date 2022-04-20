@@ -107,7 +107,7 @@ class httpResponse{
 
 			//DEBUG OUTPUT
 			std::cout << std::endl << "SERVER RESPONSE :" << std::endl;
-			std::cout << this->_response << std::endl;
+			//std::cout << this->_response << std::endl;
 		}
 
 		void	sendResponse(EpollSocket socketEvent){

@@ -43,6 +43,7 @@ public:
     _mapMetaVars(),
     _serverContext(serverLocation.first),
     _locationContext(serverLocation.second){
+        chdir(_getCurrentLocation().c_str());
         _setMapEnvVar(headers, serverLocation, clientInfo, method);
     }
 
@@ -68,7 +69,6 @@ public:
             throw pipeError();
         if ((pid = fork()) == -1)
             throw forkError();
-        chdir(_getCurrentLocation().c_str());
         if (stat(_mapMetaVars.find("SCRIPT_NAME=")->second.c_str(), &dummy) == -1){
             for (size_t i = 0; cMetaVar[i]; i++)
                 delete [] cMetaVar[i];
@@ -236,8 +236,9 @@ private:
         std::string             pathTranslated("");
         std::string             pathInfo(this->_mapMetaVars.find("PATH_INFO=")->second);
 		std::string             root(this->_serverContext.directives.at("root")[0]);
-        
-        pathTranslated.append(root + pathInfo);
+        char                    *buf = getcwd(NULL, 0);
+
+        pathTranslated.append(buf + pathInfo);
         _clearUrl(pathTranslated);
         this->_mapMetaVars.insert(std::make_pair(varName, pathTranslated));
     }
