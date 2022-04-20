@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/04/20 01:34:30 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/20 02:10:39 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -86,24 +86,19 @@ class httpResponse{
 			this->_status = request->getStatus();
 			this->_rootToFile = buildPathTo(this->_request->getRootPath(), this->_request->getPath(), "");
 
-			//TEST
 			std::pair<std::string, std::string> locationRoot = retrieveLocationRoot(this->_request->getLocations(), this->_request->getRootPath(), this->_request->getPath());
 			std::string oldPath;
-			//std::cout << "DEBUG rootpath = " << this->_request->getRootPath() << std::endl;
-			//std::cout << "DEBUG locationroot = " << locationRoot.first << std::endl;
-			std::cout << "DEBUG locationRoot.first = " << locationRoot.first << " | second = " << locationRoot.second << std::endl;
+
 			if (locationRoot.first != this->_request->getRootPath()){
 				oldPath = this->_request->getPath();
 				this->_request->setPath(locationToRoot(this->_request->getPath(), locationRoot.first, locationRoot.second));
 				this->_rootToFile = buildPathTo(this->_request->getRootPath(), this->_request->getPath(), "");
-				//std::cout << "DEBUG oldpath = " << oldPath << std::endl;
-				//std::cout << "DEBUG setpath = " << this->_request->getPath() << std::endl;
 			}
 
 			if (this->_request->getMethod() == "POST" && isMethodAllowed(this->_request->getLocations(), this->_request->getPath(), this->_request->getMethod()) == true)
 				this->_uploadContent(request->getPath(), server, clientInfo, request->getHeaders(), oldPath);
 			else if (this->_request->getMethod() == "DELETE" && isMethodAllowed(this->_request->getLocations(), this->_request->getPath(), this->_request->getMethod()) == true)
-				this->_deleteContent();
+				this->_deleteContent(oldPath);
 			this->_retrieveContent(server, clientInfo, oldPath);
 
 			this->_buildStatusLine();
@@ -229,7 +224,7 @@ class httpResponse{
 					this->_retrieveCGIContent(server, clientInfo, locationResult.second);
 				else if (this->_request->getPath() == "/"/* && _contentNeedRefresh() == true*/){
 					this->_contentType = "text/html";
-					_retrieveFileContent(buildPathTo(this->_rootToFile, this->_request->getIndex(), ""));
+					this->_retrieveFileContent(buildPathTo(this->_rootToFile, this->_request->getIndex(), ""));
 				}
 				else/* if (_contentNeedRefresh() == true)*/{
 					if (isPathValid(this->_rootToFile) == false){
@@ -241,9 +236,9 @@ class httpResponse{
 					if (retrieveLocationAutoIndex(this->_request->getLocations(), oldPath) == true && isPathDirectory(this->_rootToFile) == true)
 						this->_buildLocationAutoIndex(this->_request->getRootPath(), this->_request->getPath(), oldPath);
 					else if (indexLocation.first.empty() == false && isSameDirectory(indexLocation.second, oldPath) == true)
-						_retrieveFileContent(buildPathTo(this->_request->getRootPath(), indexLocation.first, ""));
+						this->_retrieveFileContent(buildPathTo(this->_request->getRootPath(), indexLocation.first, ""));
 					else
-						_retrieveFileContent(this->_rootToFile);
+						this->_retrieveFileContent(this->_rootToFile);
 				}
 			}
 			else if (this->_request->getMethod() == "GET" || isMethodAllowed(this->_request->getLocations(), this->_request->getPath(), this->_request->getMethod()) == false)
@@ -315,7 +310,7 @@ class httpResponse{
 				return ;
 			}
 			else{
-				this->_content.append(buildListingBlock(fileRead, rep, rootPath, path, this->_request->findHeader("Host")));
+				this->_content.append(buildListingBlock(fileRead, rep, rootPath, oldPath, this->_request->findHeader("Host")));
 				if (closedir(rep) == -1){
 					this->_buildErrorPage(INTERNAL_SERVER_ERROR);
 					return;
@@ -390,10 +385,10 @@ class httpResponse{
 			Delete a ressource :
 		*/
 
-		void	_deleteContent(){
+		void	_deleteContent(std::string oldPath){
 			if (this->_request->getPath() == "/")
 				this->_buildErrorPage(FORBIDDEN);
-			else if (isMethodAllowed(this->_request->getLocations(), this->_request->getPath(), this->_request->getMethod()) == true){
+			else if (isMethodAllowed(this->_request->getLocations(), oldPath, this->_request->getMethod()) == true){
 				if (isPathValid(_rootToFile) && isPathDirectory(_rootToFile) == false)
 					remove(_rootToFile.c_str());
 				else if (isPathValid(_rootToFile) && isPathDirectory(_rootToFile) == true){

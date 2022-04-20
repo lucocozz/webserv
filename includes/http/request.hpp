@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:46 by user42            #+#    #+#             */
-/*   Updated: 2022/04/20 01:39:17 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/20 01:59:09 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,6 @@
 	Includes :
 */
 
-//#include "Config.hpp"
 #include "configData.hpp"
 #include "fileRelated.hpp"
 #include "pathRelated.hpp"
