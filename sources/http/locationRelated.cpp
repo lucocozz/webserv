@@ -30,15 +30,31 @@ std::pair<bool,LocationContext>  pathIsLocation(std::string path,const std::vect
 	return (locationPair);
 }
 
+int	match2(const char *s1, const char *s2)
+{
+	if (*s1 != '\0' && *s2 == '*')
+		return (match2(s1 + 1, s2) || match2(s1, s2 + 1));
+	if (*s1 == '\0' && *s2 == '*')
+		return (match2(s1, s2 + 1));
+	if (*s1 == *s2 && *s1 != '\0' && *s2 != '\0')
+		return (match2(s1 + 1, s2 + 1));
+	if (*s1 == *s2 && *s1 == '\0' && *s2 == '\0')
+		return (1);
+	return (0);
+}
+
 std::pair<bool,LocationContext>  getLocation(std::string path,const std::vector<LocationContext> &serverLocation){
 	LocationContext 				init;
 	std::pair<bool,LocationContext> locationPair = std::make_pair(false, init);
 
-	path.append("/");
+	//path.append("/");
 	for (size_t i = 0; i < serverLocation.size(); i++){
+		std::cout << "lalocation:  |" << serverLocation[i].args[0] << "|\n";
+		std::cout << "lepath :  |" << path << "|\n";
+		std::cout << "match: " << match(path.c_str(), serverLocation[i].args[0].c_str(), '*') << std::endl;
 		if ((path.find(serverLocation[i].args[0]) != std::string::npos && 
 			(serverLocation[i].directives.count("cgi_extension") == 1 && path.find(serverLocation[i].directives.find("cgi_extension")->second[0]) != std::string::npos)) ||
-			((match(serverLocation[i].args[0].c_str(), path.c_str(), '*') == true) && serverLocation[i].directives.count("cgi_binary") == 1)){
+			((match(path.c_str(), serverLocation[i].args[0].c_str(), '*') == true) && serverLocation[i].directives.count("cgi_binary") == 1)){
 			locationPair.first = true;
 			locationPair.second = serverLocation[i];
 			return(locationPair);

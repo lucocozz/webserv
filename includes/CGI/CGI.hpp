@@ -201,12 +201,18 @@ private:
     }
     
     void _setScriptName(){
-        std::string				varName("SCRIPT_NAME=");
-        std::string             name("");
-        const std::string       cgiExtension(this->_locationContext.directives.find("cgi_extension")->second[0]);
+        std::string		varName("SCRIPT_NAME=");
+        std::string     name("");
+        std::string     cgiExtension("");
+
+        if (this->_locationContext.directives.count("cgi_extension") == 1)
+            cgiExtension.append(this->_locationContext.directives.find("cgi_extension")->second[0]);
+        else{
+            cgiExtension.append(this->_locationContext.args[0]);
+            cgiExtension.erase(cgiExtension.begin());
+        }
         std::string::iterator   begin = this->_decodedURL.begin() + this->_decodedURL.find(cgiExtension);
         std::string::iterator	end = this->_decodedURL.begin() + this->_decodedURL.find(cgiExtension);
-
 		while (*begin != '/')
             begin--;
         begin++;
