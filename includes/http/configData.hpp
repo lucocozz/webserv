@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/15 00:57:23 by user42            #+#    #+#             */
-/*   Updated: 2022/04/18 16:42:41 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/21 12:20:40 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,7 @@ std::string												getConfigServerName(Server const &server);
 std::string												getConfigRootPath(Server const &server);
 std::string 											getConfigIndex(Server const &server, std::string _rootPath);
 bool													getConfigAutoIndex(Server const &server);
+std::vector<std::string>								getConfigAllowedMethod(Server const &server);
 size_t													getConfigMaxBodySize(Server const &server);
 std::pair<std::map<std::string, std::string>, bool>		getConfigErrorPage(Server const &server);
 std::vector<LocationContext>							getConfigLocations(Server const &server);

@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/15 00:57:56 by user42            #+#    #+#             */
-/*   Updated: 2022/04/19 19:18:42 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/21 12:17:58 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,6 +54,18 @@ bool													getConfigAutoIndex(Server const &server){
 	}
 	catch (std::exception const &e){
 		return (false);
+	}
+}
+
+std::vector<std::string>								getConfigAllowedMethod(Server const &server){
+	std::vector<std::string> allowedMethod;
+	try{
+		allowedMethod = server.context.directives.at("allowed_method");
+
+		return (allowedMethod);
+	}
+	catch (std::exception const &e){
+		return (allowedMethod);
 	}
 }
 
@@ -108,6 +120,8 @@ std::vector<LocationContext>							getConfigLocations(Server const &server){
 		try {std::vector<std::string> vec = (*it).directives.at("autoindex");}
 		catch (std::exception const &e){needDel++;}
 		try {std::vector<std::string> vec = (*it).directives.at("root");}
+		catch (std::exception const &e){needDel++;}
+		try {std::vector<std::string> vec = (*it).directives.at("upload_location");}
 		catch (std::exception const &e){needDel++;}
 		if (needDel == 4){
 			locations.erase(it);

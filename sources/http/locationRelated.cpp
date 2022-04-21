@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/15 00:58:14 by user42            #+#    #+#             */
-/*   Updated: 2022/04/19 23:45:03 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/21 17:04:17 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,9 +57,16 @@ std::vector<std::string>				retrieveDirectiveArgs(LocationContext const &locatio
 	return (ret);
 }
 
-bool						isMethodAllowed(std::vector<LocationContext> locations, std::string path, std::string method){
+bool						isMethodAllowed(std::vector<LocationContext> locations, std::string path, std::string method, std::vector<std::string> allowedRoot){
 	std::pair<bool,LocationContext> isLocation = pathIsLocation(path, locations, "allowed_method");
-	if (isLocation.first == false)
+	if (isLocation.first == false && allowedRoot.empty() == false){
+		for (size_t i = 0; i < allowedRoot.size(); i++){
+			if (method == allowedRoot.at(i))
+				return (true);
+		}
+		return (false);
+	}
+	else if (isLocation.first == false)
 		return (true);
 
 	std::vector<std::string> allowedMethods = retrieveDirectiveArgs(isLocation.second, "allowed_method");
@@ -109,16 +116,7 @@ bool											retrieveLocationAutoIndex(std::vector<LocationContext> locations,
 }
 
 std::pair<std::string, std::string>				retrieveLocationRoot(std::vector<LocationContext> locations, std::string rootPath, std::string path){
-	std::pair<std::string, std::string> ret; 
-
-	//DEBUG
-	//std::cout << "DEBUG LOCATION:" << std::endl;
-	//for (std::vector<LocationContext>::iterator it = locations.begin(); it != locations.end(); it++){
-	//	std::cout << "location= " << (*it).args[0] << std::endl;
-	//	for (std::map<std::string, std::vector<std::string> >::iterator itt = (*it).directives.begin(); itt != (*it).directives.end(); itt++){
-	//		std::cout << "    " << (*itt).first << std::endl;
-	//	}
-	//}
+	std::pair<std::string, std::string> ret;
 
 	std::pair<bool,LocationContext> isLocation = pathIsLocation(path, locations, "root");
 	if (isLocation.first == false)
@@ -151,5 +149,56 @@ std::string		locationToRoot(std::string path, std::string rootLocation, std::str
 	}
 	std::string ret;
 	ret = path.replace(0, i, rootLocation);
+	return (ret);
+}
+
+std::pair<bool, std::string>					retrieveLocationUpload(std::vector<LocationContext> locations, std::string path){
+	std::pair<bool, std::string> ret;
+
+	//DEBUG
+	//std::cout << "DEBUG LOCATION:" << std::endl;
+	//for (std::vector<LocationContext>::iterator it = locations.begin(); it != locations.end(); it++){
+	//	std::cout << "location= " << (*it).args[0] << std::endl;
+	//	for (std::map<std::string, std::vector<std::string> >::iterator itt = (*it).directives.begin(); itt != (*it).directives.end(); itt++){
+	//		std::cout << "    " << (*itt).first << std::endl;
+	//	}
+	//}
+
+	std::pair<bool,LocationContext> isLocation = pathIsLocation(path, locations, "upload_location");
+	if (isLocation.first == false){
+		ret.first = false;
+		return (ret);
+	}
+	std::vector<std::string> uploadLocation = retrieveDirectiveArgs(isLocation.second, "upload_location");
+	if (uploadLocation.empty() == false){
+		ret.first = true;
+		ret.second = uploadLocation.at(0);
+	}
+	else
+		ret.first = false;
+	return (ret);
+}
+
+std::string				retrieveUploadLocationName(std::vector<LocationContext> locations, std::string path){
+	std::string ret;
+
+	std::pair<bool,LocationContext> isLocation = pathIsLocation(path, locations, "upload_location");
+	if (isLocation.first == false)
+		return (ret);
+	std::vector<std::string> uploadLocation = retrieveDirectiveArgs(isLocation.second, "upload_location");
+	if (uploadLocation.empty() == false)
+		ret = isLocation.second.args[0];
+	return (ret);
+}
+
+std::string				retrieveRootLocationName(std::vector<LocationContext> locations, std::string path){
+	std::string ret;
+
+	std::pair<bool,LocationContext> isLocation = pathIsLocation(path, locations, "root");
+	if (isLocation.first == false)
+		return (ret);
+	std::vector<std::string> root = retrieveDirectiveArgs(isLocation.second, "root");
+	if (root.empty() == false)
+		ret = isLocation.second.args[0];
 	return (ret);
 }
