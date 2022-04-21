@@ -43,20 +43,45 @@ int	match2(const char *s1, const char *s2)
 	return (0);
 }
 
-std::pair<bool,LocationContext>  getLocation(std::string path,const std::vector<LocationContext> &serverLocation){
+static bool isCgi(std::string path){
+	size_t					dot = 0;
+	std::string				extension("");
+	std::string::iterator 	itb = path.begin();
+	std::string::iterator 	ite;
+
+	if ((dot = path.find(".")) == std::string::npos)
+		return(false);
+	itb += dot;
+	ite = itb;
+	while (*ite != '/' && *ite != '?' && ite != path.end())
+		ite++;
+	extension.append(itb, ite);
+	if (extension != ".php" && extension != ".py")
+		return (false);
+	return(true);
+}
+
+std::pair<bool,LocationContext>  cgiChecker(std::string path,const std::vector<LocationContext> &serverLocation){
 	LocationContext 				init;
 	std::pair<bool,LocationContext> locationPair = std::make_pair(false, init);
 
-	//path.append("/");
+	if (isCgi(path) == false)
+		return (locationPair);
 	for (size_t i = 0; i < serverLocation.size(); i++){
-		std::cout << "lalocation:  |" << serverLocation[i].args[0] << "|\n";
-		std::cout << "lepath :  |" << path << "|\n";
-		std::cout << "match: " << match(path.c_str(), serverLocation[i].args[0].c_str(), '*') << std::endl;
+		if ((path.find(serverLocation[i].args[0]) != std::string::npos && 
+			(serverLocation[i].directives.count("cgi_extension") == 1 && path.find(serverLocation[i].directives.find("cgi_extension")->second[0]) != std::string::npos))){
+			locationPair.first = true;
+			locationPair.second = serverLocation[i];
+			return(locationPair);
+		}
+	}
+	for (size_t i = 0; i < serverLocation.size(); i++){
 		if ((path.find(serverLocation[i].args[0]) != std::string::npos && 
 			(serverLocation[i].directives.count("cgi_extension") == 1 && path.find(serverLocation[i].directives.find("cgi_extension")->second[0]) != std::string::npos)) ||
 			((match(path.c_str(), serverLocation[i].args[0].c_str(), '*') == true) && serverLocation[i].directives.count("cgi_binary") == 1)){
 			locationPair.first = true;
 			locationPair.second = serverLocation[i];
+			std::cout << "location choisi " << serverLocation[i].args[0] << std::endl;
 			return(locationPair);
 		}
 	}

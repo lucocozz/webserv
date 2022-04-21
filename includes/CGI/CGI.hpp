@@ -240,12 +240,14 @@ private:
     void _setPathTranslated(){
         std::string             varName("PATH_TRANSLATED=");
         std::string             pathTranslated("");
-        std::string             pathInfo(this->_mapMetaVars.find("PATH_INFO=")->second);
-		std::string             root(this->_serverContext.directives.at("root")[0]);
-        char                    *buf = getcwd(NULL, 0);
+        std::string             scriptName(this->_mapMetaVars.find("SCRIPT_NAME=")->second);
+        char                    *cwdBuffer = getcwd(NULL, 0);
+        std::string             path(cwdBuffer);
 
-        pathTranslated.append(buf + pathInfo);
+        path.append("/");
+        pathTranslated.append(path + scriptName);
         _clearUrl(pathTranslated);
+        free(cwdBuffer);
         this->_mapMetaVars.insert(std::make_pair(varName, pathTranslated));
     }
 

@@ -107,7 +107,7 @@ class httpResponse{
 
 			//DEBUG OUTPUT
 			std::cout << std::endl << "SERVER RESPONSE :" << std::endl;
-			//std::cout << this->_response << std::endl;
+			std::cout << this->_response << std::endl;
 		}
 
 		void	sendResponse(EpollSocket socketEvent){
@@ -219,7 +219,7 @@ class httpResponse{
 
 		void	_retrieveContent(const Server &server, const std::pair<std::string, std::string> &clientInfo, std::string oldPath){
 			if (this->_request->getMethod() == "GET" && isMethodAllowed(this->_request->getLocations(), this->_request->getPath(), this->_request->getMethod()) == true){
-				std::pair<bool,LocationContext> locationResult = getLocation(this->_request->getPath(), server.context.locations);
+				std::pair<bool,LocationContext> locationResult = cgiChecker(this->_request->getPath(), server.context.locations);
 				if (locationResult.first == true)
 					this->_retrieveCGIContent(server, clientInfo, locationResult.second);
 				else if (this->_request->getPath() == "/"/* && _contentNeedRefresh() == true*/){
@@ -347,7 +347,7 @@ class httpResponse{
 
 		void	_uploadContent(const std::string &path, const Server &server, const std::pair<std::string, std::string> &clientInfo, const std::map<std::string, std::string> &headers, std::string oldPath){
 			std::pair<bool,LocationContext> locationResult = 
-				getLocation(this->_request->getPath(), server.context.locations);
+				cgiChecker(this->_request->getPath(), server.context.locations);
 			if (locationResult.first == true){
 				try{
 					std::pair<std::string, int> cgiResponse;
