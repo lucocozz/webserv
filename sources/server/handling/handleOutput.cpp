@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   handleOutput.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
+/*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/19 21:19:14 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/04/19 21:41:51 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/04/22 17:17:51 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 
 void	handleOutput(Client &client, Epoll &epoll)
 {
+	client.response.sendResponse(client.socket);
 	// exectuer ces lignes si le client a envoyer toutes ses données
 	client.socket.setEvents(client.socket.getEvents() & ~EPOLLOUT);
 	epoll.control(EPOLL_CTL_MOD, client.socket);

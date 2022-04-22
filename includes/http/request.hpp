@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:46 by user42            #+#    #+#             */
-/*   Updated: 2022/04/22 11:32:32 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/22 17:16:22 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -100,6 +100,7 @@ class httpRequest{
 		}
 
 		bool								treatRequest(std::string &rawRequest, Server const &server){
+			//std::cout << "DEBUG treatRequest - chunked = " << _chunked << std::endl;
 			if (rawRequest.find("POST") != std::string::npos){
 				if (rawRequest.find("Transfer-Encoding: chunked") != std::string::npos)
 					this->_chunked = true;
@@ -116,8 +117,12 @@ class httpRequest{
 			if (this->_concatenedRequest.size() < this->_contentLength || this->_chunked == true)
 				this->_concatenedRequest.append(rawRequest);
 
-			if (this->_concatenedRequest.find("0\r\n", this->_concatenedRequest.size() - 5) != std::string::npos && this->_chunked == true)
-				this->_chunked = false;
+			if (this->_concatenedRequest.find("0\r\n\r\n", this->_concatenedRequest.size() - 5) != std::string::npos && this->_chunked == true){
+				this->_retrieveConfigInfo(server);
+				this->_parse(this->_concatenedRequest);
+				this->_check();
+				return (true);
+			}
 				
 			if (this->_concatenedRequest.size() >= this->_contentLength && this->_chunked == false){
 				this->_retrieveConfigInfo(server);
@@ -125,6 +130,7 @@ class httpRequest{
 				this->_check();
 				return (true);
 			}
+			//else if (this->_concatenedRequest.find)
 			return (false);
 		}
 
@@ -240,6 +246,7 @@ class httpRequest{
 			std::string rawHeaders;
 			rawHeaders.append(rawRequest.substr(0, rawRequest.find("\r\n\r\n")));
 			std::vector<std::string> vecHeaders = split(rawHeaders, "\r\n");
+			//std::cout << "DEBUG HEADERS = " << std::endl << rawHeaders << std::endl;
 
 			if (vecHeaders.size() > 0){
 				this->_parseRequestLine(vecHeaders);
@@ -292,6 +299,11 @@ class httpRequest{
 		}
 
 		void		_parseBody(std::string rawRequest){
+			//If chunked
+			//if (this->_chunked == true){
+			//	
+			//}
+
 			//If multipart
 			if (this->_boundarie.first == true){
 				std::string rawBody = rawRequest.substr(rawRequest.find("\r\n\r\n") + 4);
