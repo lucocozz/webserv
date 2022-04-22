@@ -181,7 +181,7 @@ public:
 		}
 		std::cout << "Received " << bytesReceived << " bytes." << std::endl;
 		dataPair = std::make_pair(std::string().append(buffer, bytesReceived), bytesReceived);
-		delete buffer;
+		delete [] buffer;
 		return (dataPair);
 	}
 

@@ -122,7 +122,7 @@ private:
 
 	bool	_isKeyword(const char &c)
 	{
-		std::string	charset = "_./$-";
+		std::string	charset = "_./$-*";
 
 		if (std::isalnum(c) > 0 || charset.find(c) != std::string::npos)
 			return (true);

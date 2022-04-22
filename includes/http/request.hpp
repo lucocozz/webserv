@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:46 by user42            #+#    #+#             */
-/*   Updated: 2022/04/22 01:24:33 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/22 11:32:32 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,6 +43,7 @@ class httpRequest{
 
 		httpRequest(){
 			this->_status = OK;
+			this->_chunked = false;
 			return;
 		}
 
@@ -99,18 +100,14 @@ class httpRequest{
 		}
 
 		bool								treatRequest(std::string &rawRequest, Server const &server){
-			//check if the request is POST, if it is I set contentLength
 			if (rawRequest.find("POST") != std::string::npos){
-				this->_concatenedRequest.clear();
 				if (rawRequest.find("Transfer-Encoding: chunked") != std::string::npos)
 					this->_chunked = true;
 				else
 					this->_contentLength = getHeaderContentLenght(rawRequest);
 			}
-			else if (rawRequest.find("GET") != std::string::npos){
-				this->_concatenedRequest.clear();
+			else if (rawRequest.find("GET") != std::string::npos)
 				this->_contentLength = rawRequest.size();
-			}
 			else if (rawRequest.find("DELETE") != std::string::npos){
 				this->_concatenedRequest.clear();
 				this->_contentLength = rawRequest.size();
@@ -118,10 +115,10 @@ class httpRequest{
 			//While the concatened request is smaller than the header content-length I keep concatenating || if the chunked bool is still true
 			if (this->_concatenedRequest.size() < this->_contentLength || this->_chunked == true)
 				this->_concatenedRequest.append(rawRequest);
-			//If there is 0\r\n at the end of a chunked request chunked bool is set to false which means that the request has been fully received
+
 			if (this->_concatenedRequest.find("0\r\n", this->_concatenedRequest.size() - 5) != std::string::npos && this->_chunked == true)
 				this->_chunked = false;
-			//If the request has been fully received we treat it and build the response then set all the statics to default
+				
 			if (this->_concatenedRequest.size() >= this->_contentLength && this->_chunked == false){
 				this->_retrieveConfigInfo(server);
 				this->_parse(this->_concatenedRequest);

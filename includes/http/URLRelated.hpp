@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/15 00:57:51 by user42            #+#    #+#             */
-/*   Updated: 2022/04/21 15:07:40 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/22 11:31:33 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,4 +22,5 @@
 std::string 				buildUrlTo(std::string host, std::string path, std::string fileName);
 std::string					buildListFilesUrls(struct dirent *fileRead, DIR *rep, std::string rootPath, std::string path, std::string host);
 std::string					buildListingBlock(struct dirent *fileRead, DIR *rep, std::string rootPath, std::string path, std::string host);
+
 #endif

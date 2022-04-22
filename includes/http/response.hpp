@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/04/22 02:34:19 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/22 13:53:55 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -215,8 +215,8 @@ class httpResponse{
 		*/
 
 		void	_retrieveContent(const Server &server, const std::pair<std::string, std::string> &clientInfo, std::string oldPath){
-			if (this->_request->getMethod() == "GET" && isMethodAllowed(this->_request->getLocations(), oldPath, this->_request->getMethod(), this->_request->getAllowedMethod()) == true){
-				std::pair<bool,LocationContext> locationResult = getLocation(this->_request->getPath(), server.context.locations);
+			if (this->_request->getMethod() == "GET" && isMethodAllowed(this->_request->getLocations(), this->_request->getPath(), this->_request->getMethod(), this->_request->getAllowedMethod()) == true){
+				std::pair<bool,LocationContext> locationResult = cgiChecker(this->_request->getPath(), server.context.locations);
 				if (locationResult.first == true)
 					this->_retrieveCGIContent(server, clientInfo, locationResult.second);
 				else if (this->_request->getPath() == "/"/* && _contentNeedRefresh() == true*/){
@@ -229,6 +229,7 @@ class httpResponse{
 				}
 				else/* if (_contentNeedRefresh() == true)*/{
 					if (isPathValid(this->_rootToFile) == false){
+						std::cout << "DEBUG _rootToFile = " << _rootToFile << std::endl;
 						this->_buildErrorPage(NOT_FOUND);
 						return;
 					}
@@ -265,10 +266,10 @@ class httpResponse{
 			catch(const std::exception &e){
 				std::string exception(e.what());
 				if (exception.find("No such file or directory") != std::string::npos){
-					this->_status = 404;
+					this->_status = NOT_FOUND;
 					return;
 				}
-				this->_status = 500;
+				this->_status = INTERNAL_SERVER_ERROR;
 				std::cerr << "Cgi failed: " << exception << std::endl;
 			}
 		}
@@ -279,12 +280,10 @@ class httpResponse{
 			if (this->_contentType.find("text/") != std::string::npos){
 				std::ifstream indata(pathToIndex.c_str());
 				buff << indata.rdbuf();
-				//std::cout << "DEBUG TEXT" << std::endl;
 			}
 			else{
 				std::ifstream indata(pathToIndex.c_str(), std::ios::binary);
 				buff << indata.rdbuf();
-				//std::cout << "DEBUG BINARY" << std::endl;
 			}
 			this->_content.append(buff.str());
 		}
@@ -358,7 +357,7 @@ class httpResponse{
 
 		void	_uploadContent(const std::string &path, const Server &server, const std::pair<std::string, std::string> &clientInfo, const std::map<std::string, std::string> &headers, std::string oldPath){
 			std::pair<bool,LocationContext> locationResult = 
-				getLocation(this->_request->getPath(), server.context.locations);
+				cgiChecker(this->_request->getPath(), server.context.locations);
 			std::pair<bool, std::string> uploadLocation = retrieveLocationUpload(this->_request->getLocations(), oldPath);
 
 			if (locationResult.first == true){
@@ -418,8 +417,7 @@ class httpResponse{
 		void			_uploadFileContent(std::string oldPath, std::string filename, std::string body){
 			std::string pathToFile;
 			pathToFile = buildPathTo(this->_request->getRootPath(), oldPath, filename);
-			this->_contentType = this->getMimeTypes(pathToFile.c_str());
-			if (this->_contentType.find("text/") != std::string::npos){
+			if (this->getMimeTypes(pathToFile.c_str()).find("text/") != std::string::npos){
 				std::ofstream outdata(pathToFile.c_str());
 				outdata << body;
 				outdata.close();
@@ -429,6 +427,7 @@ class httpResponse{
 				outdata << body;
 				outdata.close();
 			}
+			this->_contentType = "text/html";
 		}
 
 		/*

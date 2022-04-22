@@ -44,11 +44,11 @@ std::string					itos(int nb){
 
 bool							match(char const *s1, char const *s2, char wildcard){
 	if (*s1 != '\0' && *s2 == wildcard)
-		return (match(s1 + 1, s2, 'x') || match(s1, s2 + 1, 'x'));
+		return (match(s1 + 1, s2, wildcard) || match(s1, s2 + 1, wildcard));
 	if (*s1 == '\0' && *s2 == wildcard)
-		return (match(s1, s2 + 1, 'x'));
+		return (match(s1, s2 + 1, wildcard));
 	if (*s1 == *s2 && *s1 != '\0' && *s2 != '\0')
-		return (match(s1 + 1, s2 + 1, 'x'));
+		return (match(s1 + 1, s2 + 1, wildcard));
 	if (*s1 == *s2 && *s1 == '\0' && *s2 == '\0')
 		return (true);
 	return (false);

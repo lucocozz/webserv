@@ -43,6 +43,7 @@ public:
     _mapMetaVars(),
     _serverContext(serverLocation.first),
     _locationContext(serverLocation.second){
+        chdir(_getCurrentLocation().c_str());
         _setMapEnvVar(headers, serverLocation, clientInfo, method);
     }
 
@@ -68,7 +69,6 @@ public:
             throw pipeError();
         if ((pid = fork()) == -1)
             throw forkError();
-        chdir(_getCurrentLocation().c_str());
         if (stat(_mapMetaVars.find("SCRIPT_NAME=")->second.c_str(), &dummy) == -1){
             for (size_t i = 0; cMetaVar[i]; i++)
                 delete [] cMetaVar[i];
@@ -76,7 +76,6 @@ public:
         }
         if (pid == 0)
             this->_childProcess(fdToChild, fdToParent, cMetaVar);
-        
         for (size_t i = 0; cMetaVar[i]; i++)
             delete [] cMetaVar[i];
         delete [] cMetaVar;
@@ -201,12 +200,18 @@ private:
     }
     
     void _setScriptName(){
-        std::string				varName("SCRIPT_NAME=");
-        std::string             name("");
-        const std::string       cgiExtension(this->_locationContext.directives.find("cgi_extension")->second[0]);
+        std::string		varName("SCRIPT_NAME=");
+        std::string     name("");
+        std::string     cgiExtension("");
+
+        if (this->_locationContext.directives.count("cgi_extension") == 1)
+            cgiExtension.append(this->_locationContext.directives.find("cgi_extension")->second[0]);
+        else{
+            cgiExtension.append(this->_locationContext.args[0]);
+            cgiExtension.erase(cgiExtension.begin());
+        }
         std::string::iterator   begin = this->_decodedURL.begin() + this->_decodedURL.find(cgiExtension);
         std::string::iterator	end = this->_decodedURL.begin() + this->_decodedURL.find(cgiExtension);
-
 		while (*begin != '/')
             begin--;
         begin++;
@@ -234,11 +239,14 @@ private:
     void _setPathTranslated(){
         std::string             varName("PATH_TRANSLATED=");
         std::string             pathTranslated("");
-        std::string             pathInfo(this->_mapMetaVars.find("PATH_INFO=")->second);
-		std::string             root(this->_serverContext.directives.at("root")[0]);
-        
-        pathTranslated.append(root + pathInfo);
+        std::string             scriptName(this->_mapMetaVars.find("SCRIPT_NAME=")->second);
+        char                    *cwdBuffer = getcwd(NULL, 0);
+        std::string             path(cwdBuffer);
+
+        path.append("/");
+        pathTranslated.append(path + scriptName);
         _clearUrl(pathTranslated);
+        free(cwdBuffer);
         this->_mapMetaVars.insert(std::make_pair(varName, pathTranslated));
     }
 
