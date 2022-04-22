@@ -43,7 +43,6 @@ public:
     _mapMetaVars(),
     _serverContext(serverLocation.first),
     _locationContext(serverLocation.second){
-        chdir(_getCurrentLocation().c_str());
         _setMapEnvVar(headers, serverLocation, clientInfo, method);
     }
 
@@ -69,13 +68,14 @@ public:
             throw pipeError();
         if ((pid = fork()) == -1)
             throw forkError();
-        if (stat(_mapMetaVars.find("SCRIPT_NAME=")->second.c_str(), &dummy) == -1){
+        if (stat(_mapMetaVars.find("PATH_TRANSLATED=")->second.c_str(), &dummy) == -1){
             for (size_t i = 0; cMetaVar[i]; i++)
                 delete [] cMetaVar[i];
             return (std::make_pair("", 404));
         }
         if (pid == 0)
             this->_childProcess(fdToChild, fdToParent, cMetaVar);
+        
         for (size_t i = 0; cMetaVar[i]; i++)
             delete [] cMetaVar[i];
         delete [] cMetaVar;
@@ -240,13 +240,12 @@ private:
         std::string             varName("PATH_TRANSLATED=");
         std::string             pathTranslated("");
         std::string             scriptName(this->_mapMetaVars.find("SCRIPT_NAME=")->second);
-        char                    *cwdBuffer = getcwd(NULL, 0);
-        std::string             path(cwdBuffer);
+        std::string             currentDirName(get_current_dir_name());
+        std::string             path(currentDirName.append("/") + _getCurrentLocation());
 
         path.append("/");
         pathTranslated.append(path + scriptName);
         _clearUrl(pathTranslated);
-        free(cwdBuffer);
         this->_mapMetaVars.insert(std::make_pair(varName, pathTranslated));
     }
 
@@ -386,14 +385,12 @@ private:
     }
 
     void _childProcess(int fdToChild[2], int fdToParent[2], char **cMetaVar){
-        char        **args = new char*[3];
-        std::string cgiLocationPath;
+        char                    **args = new char*[3];
+        std::string             cgiLocationPath(this->_mapMetaVars.find("PATH_TRANSLATED=")->second);
 
         args[0] = strdupa(this->_locationContext.directives.at("cgi_binary")[0].c_str());
         args[1] = strdupa(this->_mapMetaVars.find("SCRIPT_NAME=")->second.c_str());
         args[2] = NULL;
-
-        cgiLocationPath = this->_serverContext.directives.at("root")[0] + this->_locationContext.args[0];
 
         close(fdToParent[0]);
         dup2(fdToParent[1], STDOUT_FILENO);
@@ -403,6 +400,7 @@ private:
         dup2(fdToChild[0], STDIN_FILENO);
         close(fdToChild[0]);
 
+        chdir(cgiLocationPath.c_str());
         std::cerr << "currentdir |" << get_current_dir_name() << "| cgi binary: |" << args[0]  << "| cgi script name: |" << args[1] << "|" << std::endl;
         execve(args[0], args, cMetaVar);
         exit(errno);

@@ -68,7 +68,6 @@ std::pair<bool,LocationContext>  cgiChecker(std::string path,const std::vector<L
 			((match(path.c_str(), serverLocation[i].args[0].c_str(), '*') == true) && serverLocation[i].directives.count("cgi_binary") == 1)){
 			locationPair.first = true;
 			locationPair.second = serverLocation[i];
-			std::cout << "location choisi " << serverLocation[i].args[0] << std::endl;
 			return(locationPair);
 		}
 	}
