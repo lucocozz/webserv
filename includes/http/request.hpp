@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:46 by user42            #+#    #+#             */
-/*   Updated: 2022/04/21 14:02:48 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/22 01:24:33 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -369,7 +369,7 @@ class httpRequest{
 			if (this->_boundarie.first == true){
 				for (std::map<std::map<std::string, std::string>, std::string>::const_iterator it = this->_bodyMultipart.begin(); it != this->_bodyMultipart.end(); it++){
 					if ((*it).first.find("filename") == (*it).first.end()){
-						this->_status = UNPROCESSABLE_ENTITY;
+						this->_status = FORBIDDEN;
 						return;
 					}
 				}

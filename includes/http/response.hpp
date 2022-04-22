@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/04/21 17:12:07 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/22 02:34:19 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -275,9 +275,17 @@ class httpResponse{
 
 		void			_retrieveFileContent(std::string pathToIndex){
 			this->_contentType = this->getMimeTypes(pathToIndex.c_str());
-			std::ifstream indata(pathToIndex.c_str());
 			std::stringstream buff;
-			buff << indata.rdbuf();
+			if (this->_contentType.find("text/") != std::string::npos){
+				std::ifstream indata(pathToIndex.c_str());
+				buff << indata.rdbuf();
+				//std::cout << "DEBUG TEXT" << std::endl;
+			}
+			else{
+				std::ifstream indata(pathToIndex.c_str(), std::ios::binary);
+				buff << indata.rdbuf();
+				//std::cout << "DEBUG BINARY" << std::endl;
+			}
 			this->_content.append(buff.str());
 		}
 
@@ -332,7 +340,6 @@ class httpResponse{
 			this->_content.append("<input type=\"file\" name=\"monFichier\" />");
  			this->_content.append("<button type =\"submit\">Envoyer</button>");
 			this->_content.append("</form>");
-			this->_content.append("</body>\r\n</html>\r\n");
 			//POST form 2 input
 			this->_content.append("<hr>\r\n");
 			this->_content.append("Multipart Form POST 2 input : \r\n");
@@ -341,7 +348,7 @@ class httpResponse{
 			this->_content.append("<input type=\"file\" name=\"monFichier2\" />");
  			this->_content.append("<button type =\"submit\">Envoyer</button>");
 			this->_content.append("</form>");
-			this->_content.append("</body>\r\n</html>\r\n");
+
 			this->_content.append("</body>\r\n</html>\r\n");
 		}
 
@@ -373,50 +380,55 @@ class httpResponse{
 			}
 			//MULTIPART
 			else if (this->_request->getBoundarie().first == true){
+				std::string locationName = retrieveUploadLocationName(this->_request->getLocations(), oldPath);
 				if (uploadLocation.first == true){
-					std::string locationName = retrieveUploadLocationName(this->_request->getLocations(), oldPath);
 					oldPath = buildPathTo(oldPath, uploadLocation.second, "");
 					oldPath.replace(0, locationName.size(), this->_locationRootPath);
 				}
-				else{
-					std::string locationName = retrieveRootLocationName(this->_request->getLocations(), oldPath);
+				else
 					oldPath.replace(0, locationName.size(), this->_locationRootPath);
-				}
 
-				for (std::map<std::map<std::string, std::string>, std::string>::const_iterator it = this->_request->getBodyMultipart().begin(); it != this->_request->getBodyMultipart().end(); it++){
-					std::string pathToFile;
-					pathToFile = buildPathTo(this->_request->getRootPath(), oldPath, (*(*it).first.find("filename")).second);
-					this->_contentType = this->getMimeTypes(pathToFile.c_str());
-					std::ofstream outdata(pathToFile.c_str());
-					outdata << (*it).second;
-					outdata.close();
-				}
+				for (std::map<std::map<std::string, std::string>, std::string>::const_iterator it = this->_request->getBodyMultipart().begin(); it != this->_request->getBodyMultipart().end(); it++)
+					_uploadFileContent(oldPath, (*(*it).first.find("filename")).second, (*it).second);
 				this->_status = CREATED;
 			}
-			else if (path != "/" && isPathDirectory(buildPathTo(this->_request->getRootPath(), path, "")) == false){
+			//CONTENT DISPOSITION
+			else if (path != "/" && (*this->_request->getHeaders().find("Content-Disposition")).second.find("filename=") != std::string::npos){
+				std::string contentDisposition = (*this->_request->getHeaders().find("Content-Disposition")).second;
+				std::string filename = contentDisposition.substr(contentDisposition.find("filename=\"") + 10);
+				filename.erase(filename.end() - 1);
+
 				std::string locationName = retrieveUploadLocationName(this->_request->getLocations(), oldPath);
 				if (uploadLocation.first == true){
-					std::string locationName = retrieveUploadLocationName(this->_request->getLocations(), oldPath);
 					oldPath.insert(oldPath.find(locationName) + locationName.size(), uploadLocation.second);
 					oldPath.replace(0, locationName.size(), this->_locationRootPath);
 				}
 				else{
-					std::string locationName = retrieveRootLocationName(this->_request->getLocations(), oldPath);
 					oldPath.erase(0, locationName.size());
 					oldPath = buildPathTo(this->_locationRootPath, oldPath, "");
 				}
-
-				std::string pathToFile;
-				pathToFile = buildPathTo(this->_request->getRootPath(), oldPath, "");
-				this->_contentType = this->getMimeTypes(pathToFile.c_str());
-				std::ofstream outdata(pathToFile.c_str());
-				outdata << this->_request->getBody();
-				outdata.close();
+				_uploadFileContent(oldPath, filename, this->_request->getBody());
 				this->_status = CREATED;
 			}
 			else
-				this->_status = UNPROCESSABLE_ENTITY;
+				this->_status = FORBIDDEN;
 			return;
+		}
+
+		void			_uploadFileContent(std::string oldPath, std::string filename, std::string body){
+			std::string pathToFile;
+			pathToFile = buildPathTo(this->_request->getRootPath(), oldPath, filename);
+			this->_contentType = this->getMimeTypes(pathToFile.c_str());
+			if (this->_contentType.find("text/") != std::string::npos){
+				std::ofstream outdata(pathToFile.c_str());
+				outdata << body;
+				outdata.close();
+			}
+			else{
+				std::ofstream outdata(pathToFile.c_str(), std::ios::binary);
+				outdata << body;
+				outdata.close();
+			}
 		}
 
 		/*
