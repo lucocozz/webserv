@@ -29,6 +29,7 @@ private:
     std::map<std::string, std::string>  _mapMetaVars;
     ServerContext                       _serverContext;
     LocationContext                     _locationContext;
+    std::string                         _scriptPath;
 
 
 public:
@@ -42,7 +43,8 @@ public:
     _requestBody(body),
     _mapMetaVars(),
     _serverContext(serverLocation.first),
-    _locationContext(serverLocation.second){
+    _locationContext(serverLocation.second),
+    _scriptPath(){
         _setMapEnvVar(headers, serverLocation, clientInfo, method);
     }
 
@@ -240,10 +242,15 @@ private:
         std::string             varName("PATH_TRANSLATED=");
         std::string             pathTranslated("");
         std::string             scriptName(this->_mapMetaVars.find("SCRIPT_NAME=")->second);
-        std::string             currentDirName(get_current_dir_name());
-        std::string             path(currentDirName.append("/") + _getCurrentLocation());
+        std::string             root("");
+        std::string             path(root + _getCurrentLocation());
 
+        if (this->_locationContext.directives.count("root"))
+            root.append(this->_locationContext.directives.find("root")->second[0]);
+        else if (this->_serverContext.directives.count("root"))
+            root.append(this->_serverContext.directives.find("root")->second[0]);
         path.append("/");
+        this->_scriptPath = path;
         pathTranslated.append(path + scriptName);
         _clearUrl(pathTranslated);
         this->_mapMetaVars.insert(std::make_pair(varName, pathTranslated));
@@ -386,7 +393,7 @@ private:
 
     void _childProcess(int fdToChild[2], int fdToParent[2], char **cMetaVar){
         char                    **args = new char*[3];
-        std::string             cgiLocationPath(this->_mapMetaVars.find("PATH_TRANSLATED=")->second);
+        std::string             cgiLocationPath(this->_scriptPath);
 
         args[0] = strdupa(this->_locationContext.directives.at("cgi_binary")[0].c_str());
         args[1] = strdupa(this->_mapMetaVars.find("SCRIPT_NAME=")->second.c_str());
