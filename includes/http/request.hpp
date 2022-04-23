@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:46 by user42            #+#    #+#             */
-/*   Updated: 2022/04/22 17:16:22 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/23 02:20:17 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -130,7 +130,6 @@ class httpRequest{
 				this->_check();
 				return (true);
 			}
-			//else if (this->_concatenedRequest.find)
 			return (false);
 		}
 
@@ -246,7 +245,7 @@ class httpRequest{
 			std::string rawHeaders;
 			rawHeaders.append(rawRequest.substr(0, rawRequest.find("\r\n\r\n")));
 			std::vector<std::string> vecHeaders = split(rawHeaders, "\r\n");
-			//std::cout << "DEBUG HEADERS = " << std::endl << rawHeaders << std::endl;
+			//std::cout << "DEBUG1" << std::endl;
 
 			if (vecHeaders.size() > 0){
 				this->_parseRequestLine(vecHeaders);
@@ -299,14 +298,59 @@ class httpRequest{
 		}
 
 		void		_parseBody(std::string rawRequest){
+			std::string unchunkedBody;
 			//If chunked
-			//if (this->_chunked == true){
-			//	
-			//}
+			if (this->_chunked == true){
+				//std::cout << "BODY IS CHUNKED" << std::endl;
+				std::string rawBody = rawRequest.substr(rawRequest.find("\r\n\r\n") + 4);
+				size_t contentLength = 0;
+				//std::string unchunkedBody;
+				bool chunkReading = false;
+				size_t chunkSize = 0;
+				size_t chunkMaxSize = 0;
+				std::string hexSize;
+				for (std::string::iterator it = rawBody.begin(); it != rawBody.end(); it++){
+					if (chunkReading == false && *it != '\r')
+						hexSize.push_back(*it);
+					else if (chunkReading == false && *it == '\r'){
+						it += 2;
+						std::stringstream ss;
+						ss << std::hex << hexSize;
+						ss >> chunkMaxSize;
+						chunkReading = true;
+						if (chunkMaxSize == 0){
+							break;
+						}
+						//std::cout << "DEBUG hexSize = " << hexSize << std::endl;
+						//std::cout << "DEBUG chunkMaxSize = " << chunkMaxSize << std::endl;
+					}
+					else if (chunkReading == true){
+						unchunkedBody.push_back(*it);
+						contentLength++;
+						chunkSize++;
+					}
+
+					if (chunkSize == chunkMaxSize && chunkMaxSize != 0 && chunkSize != 0){
+						//std::cout << "DEBUG FIN DE CHUNK" << std::endl;
+						chunkReading = false;
+						hexSize.clear();
+						chunkSize = 0;
+						chunkMaxSize = 0;
+					}
+				}
+				//std::cout << "[START]" << std::endl << unchunkedBody << "[END]" << std::endl;
+				(void)contentLength;
+			}
 
 			//If multipart
 			if (this->_boundarie.first == true){
-				std::string rawBody = rawRequest.substr(rawRequest.find("\r\n\r\n") + 4);
+				//std::cout << "BODY IS MULTIPART" << std::endl;
+				std::string rawBody;
+				if (this->_chunked == false)
+					rawBody = rawRequest.substr(rawRequest.find("\r\n\r\n") + 4);
+				else
+					rawBody = unchunkedBody;
+				//std::cout << "rawBody = " << rawBody << std::endl;
 				std::vector<std::string> separedMultipart = split(rawBody, this->_boundarie.second + "\r\n");
 
 				for (std::vector<std::string>::iterator it = separedMultipart.begin(); it != separedMultipart.end(); it++){
@@ -352,7 +396,7 @@ class httpRequest{
 					//Not ended
 					else
 						pair.second = separedMultipart.at(i).substr(separedMultipart.at(i).find("\r\n\r\n") + 4);
-					//pair.second.erase(pair.second.end() - 1);
+					//std::cout << "[MULTIPART]" << std::endl << pair.second << "[/MULTIPART]" << std::endl;
 					this->_bodyMultipart.insert(pair);
 				}
 				this->_body.append(rawBody);

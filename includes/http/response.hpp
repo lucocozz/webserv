@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/04/22 13:53:55 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/23 02:14:34 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -176,9 +176,12 @@ class httpResponse{
 		void _buildHeaders(){
 			this->_response.append("Server: " + this->_request->getServerName() + "\r\n");
 			this->_response.append("Date: " + buildDate() + "\r\n");
-			this->_response.append("Content-Type: " + this->_contentType + "\r\n");
+			if (this->_contentType.empty() == false)
+				this->_response.append("Content-Type: " + this->_contentType + "\r\n");
 			this->_response.append("Content-Length: " + itos(this->_content.size()) + "\r\n");
+			this->_response.append("Transfer-Encoding: identity\r\n");
 			this->_response.append("Connection: keep-alive\r\n");
+
 			/*if (this->_status / 100 == 2 || this->_status / 100 == 3){
 				if (this->_request->getAutoindex() == false){
 					if (this->_request->getPath() == "/" && this->_request->getIndex().empty() == false){
@@ -229,7 +232,6 @@ class httpResponse{
 				}
 				else/* if (_contentNeedRefresh() == true)*/{
 					if (isPathValid(this->_rootToFile) == false){
-						std::cout << "DEBUG _rootToFile = " << _rootToFile << std::endl;
 						this->_buildErrorPage(NOT_FOUND);
 						return;
 					}
@@ -355,7 +357,7 @@ class httpResponse{
 			Upload a ressource :
 		*/
 
-		void	_uploadContent(const std::string &path, const Server &server, const std::pair<std::string, std::string> &clientInfo, const std::map<std::string, std::string> &headers, std::string oldPath){
+		void	_uploadContent(const std::string &path, const Server &server, const std::pair<std::string, std::string> &clientInfo, const std::map<std::string, std::string> &headers, std::string &oldPath){
 			std::pair<bool,LocationContext> locationResult = 
 				cgiChecker(this->_request->getPath(), server.context.locations);
 			std::pair<bool, std::string> uploadLocation = retrieveLocationUpload(this->_request->getLocations(), oldPath);
@@ -386,9 +388,20 @@ class httpResponse{
 				}
 				else
 					oldPath.replace(0, locationName.size(), this->_locationRootPath);
+				if (isPathValid(buildPathTo(this->_request->getRootPath(), oldPath, "")) == false){
+					this->_buildErrorPage(NOT_FOUND);
+					return;
+				}
+				//std::cout << "DEBUG2" << std::endl;
 
-				for (std::map<std::map<std::string, std::string>, std::string>::const_iterator it = this->_request->getBodyMultipart().begin(); it != this->_request->getBodyMultipart().end(); it++)
+				for (std::map<std::map<std::string, std::string>, std::string>::const_iterator it = this->_request->getBodyMultipart().begin(); it != this->_request->getBodyMultipart().end(); it++){
+					//std::cout << "DEBUG2.1" << std::endl;
+					//std::cout << "oldPath = " << oldPath << std::endl;
+					//std::cout << "(*it).second = " << (*it).second << std::endl;
+					//std::cout << "(*(*it).first.find(\"filename\")).second = " << (*(*it).first.find("filename")).second << std::endl;
 					_uploadFileContent(oldPath, (*(*it).first.find("filename")).second, (*it).second);
+				}
+				//std::cout << "DEBUG3" << std::endl;
 				this->_status = CREATED;
 			}
 			//CONTENT DISPOSITION
@@ -406,6 +419,12 @@ class httpResponse{
 					oldPath.erase(0, locationName.size());
 					oldPath = buildPathTo(this->_locationRootPath, oldPath, "");
 				}
+				//std::cout << "DEBUG2 _rootPath + oldPath = " << buildPathTo(this->_request->getRootPath(), oldPath, "") << std::endl;
+				if (isPathValid(buildPathTo(this->_request->getRootPath(), oldPath, "")) == false){
+					this->_buildErrorPage(NOT_FOUND);
+					return;
+				}
+
 				_uploadFileContent(oldPath, filename, this->_request->getBody());
 				this->_status = CREATED;
 			}
@@ -414,7 +433,10 @@ class httpResponse{
 			return;
 		}
 
-		void			_uploadFileContent(std::string oldPath, std::string filename, std::string body){
+		void			_uploadFileContent(std::string const &oldPath, std::string const &filename, std::string const &body){
+			//std::cout << "Le bug est entre ici :" << std::endl;
+			//std::cout << "oldpath = " << oldPath << std::endl;
+			//std::cout << "fullPath = " << buildPathTo(this->_request->getRootPath(), oldPath, filename) << std::endl;
 			std::string pathToFile;
 			pathToFile = buildPathTo(this->_request->getRootPath(), oldPath, filename);
 			if (this->getMimeTypes(pathToFile.c_str()).find("text/") != std::string::npos){
@@ -427,7 +449,8 @@ class httpResponse{
 				outdata << body;
 				outdata.close();
 			}
-			this->_contentType = "text/html";
+			//this->_contentType = "text/html";
+			//std::cout << "Et ici." << std::endl;
 		}
 
 		/*
