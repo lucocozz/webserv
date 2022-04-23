@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/15 00:58:14 by user42            #+#    #+#             */
-/*   Updated: 2022/04/22 12:46:44 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/23 16:10:21 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -183,15 +183,6 @@ std::string		locationToRoot(std::string path, std::string rootLocation, std::str
 std::pair<bool, std::string>					retrieveLocationUpload(std::vector<LocationContext> locations, std::string path){
 	std::pair<bool, std::string> ret;
 
-	//DEBUG
-	//std::cout << "DEBUG LOCATION:" << std::endl;
-	//for (std::vector<LocationContext>::iterator it = locations.begin(); it != locations.end(); it++){
-	//	std::cout << "location= " << (*it).args[0] << std::endl;
-	//	for (std::map<std::string, std::vector<std::string> >::iterator itt = (*it).directives.begin(); itt != (*it).directives.end(); itt++){
-	//		std::cout << "    " << (*itt).first << std::endl;
-	//	}
-	//}
-
 	std::pair<bool,LocationContext> isLocation = pathIsLocation(path, locations, "upload_location");
 	if (isLocation.first == false){
 		ret.first = false;
@@ -228,5 +219,32 @@ std::string				retrieveRootLocationName(std::vector<LocationContext> locations, 
 	std::vector<std::string> root = retrieveDirectiveArgs(isLocation.second, "root");
 	if (root.empty() == false)
 		ret = isLocation.second.args[0];
+	return (ret);
+}
+
+std::pair<int, std::string>				retrieveLocationRedirection(std::vector<LocationContext> locations, std::string path){
+	std::pair<int, std::string> ret;
+
+	std::pair<bool,LocationContext> isLocation = pathIsLocation(path, locations, "return");
+	if (isLocation.first == false)
+		return (ret);
+	std::vector<std::string> redirection = retrieveDirectiveArgs(isLocation.second, "return");
+	if (redirection.empty() == false){
+		ret.first = atoi(redirection.at(0).c_str());
+		//need better check if status code is valid
+		if (ret.first >= 100 && ret.first <= 511 && ret.first % 100 <= 51){
+			if (redirection.size() > 2 && !((ret.first >= 301 && ret.first <= 303) || ret.first == 307)){
+				for (size_t i = 1; i < redirection.size(); i++){
+					ret.second.append(redirection.at(i));
+					if (i != redirection.size() - 1)
+						ret.second.append(" ");
+				}
+			}
+			else
+				ret.second = redirection.at(1);
+		}
+		else
+			ret.first = 0;
+	}
 	return (ret);
 }

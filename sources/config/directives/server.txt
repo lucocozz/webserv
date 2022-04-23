@@ -7,5 +7,4 @@ access_log
 server_name
 autoindex
 client_max_body_size
-upload
 allowed_method

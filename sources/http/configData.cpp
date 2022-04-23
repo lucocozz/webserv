@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/15 00:57:56 by user42            #+#    #+#             */
-/*   Updated: 2022/04/21 12:17:58 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/23 14:37:51 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -123,7 +123,9 @@ std::vector<LocationContext>							getConfigLocations(Server const &server){
 		catch (std::exception const &e){needDel++;}
 		try {std::vector<std::string> vec = (*it).directives.at("upload_location");}
 		catch (std::exception const &e){needDel++;}
-		if (needDel == 4){
+		try {std::vector<std::string> vec = (*it).directives.at("return");}
+		catch (std::exception const &e){needDel++;}
+		if (needDel == 6){
 			locations.erase(it);
 			if (locations.empty() == true)
 				break;

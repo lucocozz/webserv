@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/15 00:57:32 by user42            #+#    #+#             */
-/*   Updated: 2022/04/21 17:04:56 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/23 15:02:31 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,5 +32,6 @@ std::string								locationToRoot(std::string path, std::string rootLocation, st
 std::pair<bool, std::string>			retrieveLocationUpload(std::vector<LocationContext> locations, std::string path);
 std::string								retrieveUploadLocationName(std::vector<LocationContext> locations, std::string path);
 std::string								retrieveRootLocationName(std::vector<LocationContext> locations, std::string path);
+std::pair<int, std::string>				retrieveLocationRedirection(std::vector<LocationContext> locations, std::string path);
 
 #endif
