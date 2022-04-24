@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/22 21:55:31 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/04/23 01:08:17 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/24 19:32:27 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,7 +24,6 @@ void	handleInput(Client &client, Epoll &epoll)
 	serverLink = client.getServerLinks(hostName);
 	if (client.request.treatRequest(data.first, *serverLink) == true){
 		client.response.buildResponse(&client.request, *serverLink, clientInfo);
-
 
 		// executer ces lignes si le server doit envoyer une reponse au client
 		client.socket.setEvents(client.socket.getEvents() | EPOLLOUT);

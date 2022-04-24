@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Socket.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
+/*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/16 22:47:17 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/04/11 21:43:37 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/04/24 19:01:49 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -175,7 +175,7 @@ public:
 
 		std::cout << "Reading data..." << std::endl;
 		bytesReceived = recv(this->_listenSocket, buffer, queueSize, flags);
-		if (bytesReceived == -1){
+		if (bytesReceived < 0){
 			delete buffer;
 			throw (std::runtime_error(strerror(errno)));
 		}
@@ -191,7 +191,7 @@ public:
 
 		std::cout << "Sending data..." << std::endl;
 		bytesSent = send(this->_listenSocket, data.c_str(), data.length(), flags);
-		if (bytesSent == -1)
+		if (bytesSent < 0)
 			throw (std::runtime_error(strerror(errno)));
 		std::cout << "Sent " << bytesSent << " of " << data.length() << " bytes." << std::endl;
 		return (bytesSent);

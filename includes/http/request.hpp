@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:46 by user42            #+#    #+#             */
-/*   Updated: 2022/04/23 02:20:17 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/24 18:56:29 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -141,7 +141,7 @@ class httpRequest{
 		}
 
 		void					clear(){
-			this->_request.clear();
+			//this->_request.clear();
 			this->_serverName.clear();
 			this->_rootPath.clear();
 			this->_index.clear();
@@ -466,7 +466,7 @@ class httpRequest{
 		bool												_chunked;
 
 		//rawRequest
-		std::vector<std::string> 							_request;
+		//std::vector<std::string> 							_request;
 
 		//Config
 		std::string											_serverName;
