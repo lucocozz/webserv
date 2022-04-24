@@ -6,7 +6,7 @@
 #    By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2022/01/21 19:56:36 by lucocozz          #+#    #+#              #
-#    Updated: 2022/04/24 21:22:03 by lucocozz         ###   ########.fr        #
+#    Updated: 2022/04/24 21:23:50 by lucocozz         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -60,6 +60,7 @@ config:
 	mkdir -p $(WEBSERV_PATH)
 	mkdir -p $(DEFAULT_ROOT)
 	cp -r config/* $(WEBSERV_PATH)
+	cp -r tests $(DEFAULT_ROOT)
 
 clean:
 	rm -rf $(BUILD_DIR)
