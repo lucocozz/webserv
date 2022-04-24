@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:14:35 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/04/19 21:20:15 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/04/24 21:31:49 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,4 +46,6 @@ void	serverCore(std::vector<Server> &serverList)
 	initServer(serverList, epoll);
 	while (g_running == true)
 		eventLoop(serverList, clientList, epoll, epoll.wait());
+	for (std::map<int, Client>::iterator it = clientList.begin(); it != clientList.end(); ++it)
+		it->second.socket.closeSocket();
 }
