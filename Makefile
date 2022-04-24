@@ -6,7 +6,7 @@
 #    By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2022/01/21 19:56:36 by lucocozz          #+#    #+#              #
-#    Updated: 2022/04/24 21:06:43 by lucocozz         ###   ########.fr        #
+#    Updated: 2022/04/24 21:22:03 by lucocozz         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -77,4 +77,4 @@ $(BUILD_DIR):
 $(BUILD_DIR)/%.o: %.cpp | $(BUILD_DIR)
 	$(CXX) $(DEFINES) $(CXXFLAGS) $(INCLUDES_DIR:%=-I %) -c $< -o $@
 
-.PHONY: all clean fclean re test
+.PHONY: all clean fclean re test config
