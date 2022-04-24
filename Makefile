@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+         #
+#    By: user42 <user42@student.42.fr>              +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2022/01/21 19:56:36 by lucocozz          #+#    #+#              #
-#    Updated: 2022/04/19 21:34:07 by lucocozz         ###   ########.fr        #
+#    Updated: 2022/04/24 19:01:49 by user42           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -42,7 +42,7 @@ SRC := 	main.cpp					\
 MAKE = make
 MAKEFLAGS += --no-print-directory
 CXX := c++
-CXXFLAGS := -Wall -Wextra -Werror -MMD -MD -std=c++98 -Wpedantic -g3
+CXXFLAGS := -Wall -Wextra -Werror -MMD -std=c++98 -Wpedantic -g3
 BUILD_DIR := .build
 INCLUDES_DIR := $(shell find includes -type d)
 SOURCE_DIR := sources
