@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:46 by user42            #+#    #+#             */
-/*   Updated: 2022/04/23 16:14:15 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/25 14:27:01 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -113,7 +113,6 @@ class httpRequest{
 				this->_concatenedRequest.clear();
 				this->_contentLength = rawRequest.size();
 			}
-			//While the concatened request is smaller than the header content-length I keep concatenating || if the chunked bool is still true
 			if (this->_concatenedRequest.size() < this->_contentLength || this->_chunked == true)
 				this->_concatenedRequest.append(rawRequest);
 
@@ -141,7 +140,6 @@ class httpRequest{
 		}
 
 		void					clear(){
-			this->_request.clear();
 			this->_serverName.clear();
 			this->_rootPath.clear();
 			this->_index.clear();
@@ -168,13 +166,11 @@ class httpRequest{
 			Getters :
 		*/
 
-		const std::string 											&getMethod() const{return (this->_method);}
+		const std::string 													&getMethod() const{return (this->_method);}
 
-		const std::string 											&getPath() const{return (this->_path);}
+		const std::string 													&getPath() const{return (this->_path);}
 
-		void														setPath(std::string path){
-			this->_path = path;
-		}
+		void																setPath(std::string path){this->_path = path;}
 
 		const std::string 													&getProtocol() const{return (this->_protocol);}
 
@@ -449,7 +445,7 @@ class httpRequest{
 		bool												_chunked;
 
 		//rawRequest
-		std::vector<std::string> 							_request;
+		//std::vector<std::string> 							_request;
 
 		//Config
 		std::string											_serverName;

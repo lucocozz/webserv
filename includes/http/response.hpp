@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/04/23 16:14:39 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/25 16:10:11 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -115,7 +115,6 @@ class httpResponse{
 
 		void					clear(){
 			this->_request->clear();
-
 			this->_status = 200;
 			this->_statusMessages.clear();
 			this->_extensionTypes.clear();
@@ -176,13 +175,16 @@ class httpResponse{
 		void _buildHeaders(){
 			this->_response.append("Server: " + this->_request->getServerName() + "\r\n");
 			this->_response.append("Date: " + buildDate() + "\r\n");
+			if (this->_status / 100 == 3 && this->_redirectionHeader.empty() == false){
+				this->_response.append("Location: " + this->_redirectionHeader + "\r\n");
+			}
 			if (this->_contentType.empty() == false)
 				this->_response.append("Content-Type: " + this->_contentType + "\r\n");
 			this->_response.append("Content-Length: " + itos(this->_content.size()) + "\r\n");
 			this->_response.append("Transfer-Encoding: identity\r\n");
 			this->_response.append("Connection: keep-alive\r\n");
 
-			/*if (this->_status / 100 == 2 || this->_status / 100 == 3){
+			/*if (this->_status / 100 == 2){
 				if (this->_request->getAutoindex() == false){
 					if (this->_request->getPath() == "/" && this->_request->getIndex().empty() == false){
 						std::string pathToIndex = buildPathTo(this->_request->getRootPath(), this->_request->getIndex(), "");
@@ -224,6 +226,8 @@ class httpResponse{
 				if ((testRedirection.first >= 301 && testRedirection.first <= 303) || testRedirection.first == 307){
 					//need to add header "Location: url" to the response
 					this->_redirectionHeader = testRedirection.second;
+					this->_status = testRedirection.first;
+					std::cout << "debug: " << this->_redirectionHeader << " | status: " << testRedirection.first << std::endl;
 				}
 				else if (testRedirection.first != 0){
 					this->_buildErrorPage(testRedirection.first, testRedirection.second);

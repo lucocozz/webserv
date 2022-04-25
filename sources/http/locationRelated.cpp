@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/15 00:58:14 by user42            #+#    #+#             */
-/*   Updated: 2022/04/23 16:10:21 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/25 18:46:12 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -159,7 +159,7 @@ std::pair<std::string, std::string>				retrieveLocationRoot(std::vector<Location
 	return (ret);
 }
 
-std::string		locationToRoot(std::string path, std::string rootLocation, std::string locationName){
+std::string										locationToRoot(std::string path, std::string rootLocation, std::string locationName){
 	size_t i = 0;
 	if (*(locationName.end() - 1) != '/')
 		locationName.append("/");
@@ -198,7 +198,7 @@ std::pair<bool, std::string>					retrieveLocationUpload(std::vector<LocationCont
 	return (ret);
 }
 
-std::string				retrieveUploadLocationName(std::vector<LocationContext> locations, std::string path){
+std::string										retrieveUploadLocationName(std::vector<LocationContext> locations, std::string path){
 	std::string ret;
 
 	std::pair<bool,LocationContext> isLocation = pathIsLocation(path, locations, "upload_location");
@@ -210,7 +210,7 @@ std::string				retrieveUploadLocationName(std::vector<LocationContext> locations
 	return (ret);
 }
 
-std::string				retrieveRootLocationName(std::vector<LocationContext> locations, std::string path){
+std::string										retrieveRootLocationName(std::vector<LocationContext> locations, std::string path){
 	std::string ret;
 
 	std::pair<bool,LocationContext> isLocation = pathIsLocation(path, locations, "root");
@@ -222,7 +222,23 @@ std::string				retrieveRootLocationName(std::vector<LocationContext> locations, 
 	return (ret);
 }
 
-std::pair<int, std::string>				retrieveLocationRedirection(std::vector<LocationContext> locations, std::string path){
+bool											doesStatusExist(int status){
+	if (status >= 100 && status <= 511){
+		if (status / 100 == 1 && status % 100 <= 3)
+			return (true);
+		else if (status / 100 == 2 && (status % 100 <= 8 || status % 100 == 26))
+			return (true);
+		else if (status / 100 == 3 && (status % 100 <= 8 || status % 100 == 10))
+			return (true);
+		else if (status / 100 == 4 && (status % 100 <= 18 || (status % 100 >= 21 && status % 100 <= 26) || (status % 100 >= 28 && status % 100 <= 31) || (status % 100 >= 49 && status % 100 <= 51) || status % 100 == 56))
+			return (true);
+		else if (status / 100 == 5 && status % 100 <= 11)
+			return (true);
+	}
+	return (false);
+}
+
+std::pair<int, std::string>						retrieveLocationRedirection(std::vector<LocationContext> locations, std::string path){
 	std::pair<int, std::string> ret;
 
 	std::pair<bool,LocationContext> isLocation = pathIsLocation(path, locations, "return");
@@ -232,7 +248,9 @@ std::pair<int, std::string>				retrieveLocationRedirection(std::vector<LocationC
 	if (redirection.empty() == false){
 		ret.first = atoi(redirection.at(0).c_str());
 		//need better check if status code is valid
-		if (ret.first >= 100 && ret.first <= 511 && ret.first % 100 <= 51){
+		if (doesStatusExist(ret.first) == true){
+			std::cout << "DEBUG le bug est apres ici" << std::endl;
+			std::cout << "DEBUG 1 | size = " << redirection.size() << std::endl;
 			if (redirection.size() > 2 && !((ret.first >= 301 && ret.first <= 303) || ret.first == 307)){
 				for (size_t i = 1; i < redirection.size(); i++){
 					ret.second.append(redirection.at(i));
@@ -240,8 +258,11 @@ std::pair<int, std::string>				retrieveLocationRedirection(std::vector<LocationC
 						ret.second.append(" ");
 				}
 			}
-			else
+			else if (redirection.size() == 2){
+				std::cout << "DEBUG2" << std::endl;
 				ret.second = redirection.at(1);
+			}
+			std::cout << "DEBUG le bug est avant ici" << std::endl;
 		}
 		else
 			ret.first = 0;
