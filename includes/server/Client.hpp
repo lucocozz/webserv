@@ -48,13 +48,29 @@ public:
 		return (*this);
 	}
 
-	Server	*getServerLinks(std::string hostName) const
+	const std::vector<Server*>	&getServerLinks() const {
+		return (this->_serverLinks);
+	}
+
+	Server	*fetchServerlink(std::string &data) const
 	{
 		if (this->_serverLinks.size() == 1)
 			return (this->_serverLinks.at(0));
+		std::string hostName("");
+		if (data.find("Host:") != std::string::npos){
+			std::string::iterator 	itb;
+			std::string::iterator	ite;
+
+			itb = data.begin() + data.find("Host:") + 6;
+			ite = itb;
+			while (*ite != '\n' && *ite != ':')
+				ite++;
+			hostName.append(itb, ite);
+		}
 		for (size_t i = 0; i < this->_serverLinks.size(); ++i)
 			if (this->_serverLinks.at(i)->context.directives.find("server_name")->second[0] == hostName)
 				return (this->_serverLinks.at(i));
 		return (this->_serverLinks.at(0));
 	}
 };
+ 

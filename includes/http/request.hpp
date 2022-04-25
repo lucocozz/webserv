@@ -113,7 +113,6 @@ class httpRequest{
 				this->_concatenedRequest.clear();
 				this->_contentLength = rawRequest.size();
 			}
-			//While the concatened request is smaller than the header content-length I keep concatenating || if the chunked bool is still true
 			if (this->_concatenedRequest.size() < this->_contentLength || this->_chunked == true)
 				this->_concatenedRequest.append(rawRequest);
 
@@ -141,7 +140,6 @@ class httpRequest{
 		}
 
 		void					clear(){
-			//this->_request.clear();
 			this->_serverName.clear();
 			this->_rootPath.clear();
 			this->_index.clear();

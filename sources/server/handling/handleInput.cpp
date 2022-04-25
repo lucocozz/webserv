@@ -14,14 +14,14 @@
 
 void	handleInput(Client &client, Epoll &epoll)
 {
+	std::cout << "on retntre dans epollin\n";
 	std::pair<std::string, int>					data;
-	std::string 								hostName("");
 	Server										*serverLink;
 	const std::pair<std::string, std::string> 	clientInfo(client.socket.getNameInfo(NI_NUMERICHOST), client.socket.getNameInfo());
 	
 	data = client.socket.recvData();
-	//std::cout << "client datas: |" << data.first << "|" << std::endl;
-	serverLink = client.getServerLinks(hostName);
+	std::cout << "client datas: |" << data.first << "|" << std::endl;
+	serverLink = client.fetchServerlink(data.first);
 	if (client.request.treatRequest(data.first, *serverLink) == true){
 		client.response.buildResponse(&client.request, *serverLink, clientInfo);
 

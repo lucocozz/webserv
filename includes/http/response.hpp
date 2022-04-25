@@ -115,7 +115,6 @@ class httpResponse{
 
 		void					clear(){
 			this->_request->clear();
-
 			this->_status = 200;
 			this->_statusMessages.clear();
 			this->_extensionTypes.clear();
