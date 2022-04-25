@@ -14,7 +14,6 @@
 
 void	handleInput(Client &client, Epoll &epoll)
 {
-	std::cout << "on retntre dans epollin\n";
 	std::pair<std::string, int>					data;
 	Server										*serverLink;
 	const std::pair<std::string, std::string> 	clientInfo(client.socket.getNameInfo(NI_NUMERICHOST), client.socket.getNameInfo());

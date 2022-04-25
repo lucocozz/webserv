@@ -17,7 +17,10 @@ void	handleOutput(Client &client, Epoll &epoll)
 	if (client.response.getResponse().size() > 0){
 		client.response.sendResponse(client.socket);
 		// exectuer ces lignes si le client a envoyer toutes ses données
-		client.socket.setEvents(client.socket.getEvents() & ~EPOLLOUT);
-		epoll.control(EPOLL_CTL_MOD, client.socket);
+		if (client.response.getResponse().size() == 0){
+			client.response.clear();
+			client.socket.setEvents(client.socket.getEvents() & ~EPOLLOUT);
+			epoll.control(EPOLL_CTL_MOD, client.socket);
+		}
 	}
 }
