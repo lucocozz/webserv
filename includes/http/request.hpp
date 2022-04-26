@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:46 by user42            #+#    #+#             */
-/*   Updated: 2022/04/25 14:27:01 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/26 16:12:19 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,27 +57,31 @@ class httpRequest{
 		}
 
 		httpRequest &operator=(httpRequest const &rhs){
+			this->_concatenedRequest = rhs.getConcatenedRequest();
+			this->_contentLength = rhs.getContentLenght();
+			this->_chunked = rhs.getChunked();
+
 			this->_serverName = rhs.getServerName();
 			this->_rootPath = rhs.getRootPath();
 			this->_index = rhs.getIndex();
 			this->_autoindex = rhs.getAutoindex();
+			this->_allowedMethod = rhs.getAllowedMethod();
 			this->_errorPage = rhs.getErrorPage();
 			this->_maxBodySize = rhs.getMaxBodySize();
-			this->_bodyMultipart = rhs.getBodyMultipart();
-			this->_boundarie = rhs.getBoundarie();
-			this->_bodySize = rhs.getBodySize();
 			this->_locations = rhs.getLocations();
+
+			this->_boundarie = rhs.getBoundarie();
+			this->_bodyMultipart = rhs.getBodyMultipart();
+			this->_body = rhs.getBody();
+			this->_bodySize = rhs.getBodySize();
 
 			this->_method = rhs.getMethod();
 			this->_path = rhs.getPath();
 			this->_protocol = rhs.getProtocol();
 			this->_headers = rhs.getHeaders();
-			this->_body = rhs.getBody();
+
 			this->_status = rhs.getStatus();
 
-			this->_chunked = rhs.getChunked();
-			this->_concatenedRequest = rhs.getConcatenedRequest();
-			this->_contentLength = rhs.getContentLenght();
 			return (*this);
 		}
 
@@ -140,6 +144,10 @@ class httpRequest{
 		}
 
 		void					clear(){
+			this->_concatenedRequest.clear();
+			this->_contentLength = 0;
+			this->_chunked = false;
+
 			this->_serverName.clear();
 			this->_rootPath.clear();
 			this->_index.clear();
@@ -147,66 +155,49 @@ class httpRequest{
 			this->_errorPage.second = false;
 			this->_maxBodySize = 0;
 			this->_locations.clear();
+
 			this->_boundarie.first = false;
 			this->_bodyMultipart.clear();
 			this->_body.clear();
 			this->_bodySize = 0;
-			this->_filename.clear();
+			
 			this->_method.clear();
 			this->_path.clear();
 			this->_protocol.clear();
 			this->_headers.clear();
+
 			this->_status = 200;
-			this->_chunked = false;
-			this->_contentLength = 0;
-			this->_concatenedRequest.clear();
 		}
 
 		/*
 			Getters :
 		*/
 
-		const std::string 													&getMethod() const{return (this->_method);}
-
-		const std::string 													&getPath() const{return (this->_path);}
-
-		void																setPath(std::string path){this->_path = path;}
-
-		const std::string 													&getProtocol() const{return (this->_protocol);}
-
-		const std::map<std::string, std::string>							&getHeaders() const{return (this->_headers);}
-
-		const std::string													&getBody() const{return (this->_body);}
-
-		const int															&getStatus() const{return (this->_status);}
+		const std::string													&getConcatenedRequest() const {return (this->_concatenedRequest);}
+		const size_t														&getContentLenght() const {return (this->_contentLength);}
+		const bool															&getChunked() const {return (this->_chunked);}
 
 		const std::string													&getServerName()	const{return (this->_serverName);}
-
 		const std::string													&getRootPath() const{return (this->_rootPath);}
-
 		const std::string													&getIndex() const{return (this->_index);}
-
 		const bool															&getAutoindex() const{return (this->_autoindex);}
-
 		const std::vector<std::string>										&getAllowedMethod() const{return (this->_allowedMethod);}
-
-		const size_t														&getMaxBodySize() const{return (this->_maxBodySize);}
-
 		const std::pair<std::map<std::string, std::string>, bool> 			&getErrorPage() const{return (this->_errorPage);}
-
-		const std::pair<bool, std::string>									&getBoundarie() const{return (this->_boundarie);}
-
-		const std::map<std::map<std::string, std::string>, std::string> 	&getBodyMultipart() const{return (this->_bodyMultipart);}
-
-		const size_t														&getBodySize() const{return (this->_bodySize);}
-
+		const size_t														&getMaxBodySize() const{return (this->_maxBodySize);}
 		const std::vector<LocationContext>									&getLocations() const{return (this->_locations);}
 
-		const std::string													&getConcatenedRequest() const {return (this->_concatenedRequest);}
+		const std::pair<bool, std::string>									&getBoundarie() const{return (this->_boundarie);}
+		const std::map<std::map<std::string, std::string>, std::string> 	&getBodyMultipart() const{return (this->_bodyMultipart);}
+		const std::string													&getBody() const{return (this->_body);}
+		const size_t														&getBodySize() const{return (this->_bodySize);}
 
-		const size_t														&getContentLenght() const {return (this->_contentLength);}
- 
-		const bool															&getChunked() const {return (this->_chunked);}
+		const std::string 													&getMethod() const{return (this->_method);}
+		const std::string 													&getPath() const{return (this->_path);}
+		void																setPath(std::string path){this->_path = path;}
+		const std::string 													&getProtocol() const{return (this->_protocol);}
+		const std::map<std::string, std::string>							&getHeaders() const{return (this->_headers);}
+
+		const int															&getStatus() const{return (this->_status);}
 
 	/*
 		Underluying functions :
@@ -248,6 +239,7 @@ class httpRequest{
 				this->_parseBody(rawRequest);
 			}
 			else{
+				std::cout << "DEBUG1" << std::endl;
 				this->_status = BAD_REQUEST;
 				return;
 			}
@@ -266,6 +258,7 @@ class httpRequest{
 				vecHeaders.erase(vecHeaders.begin());
 			}
 			else{
+				std::cout << "DEBUG2" << std::endl;
 				this->_status = BAD_REQUEST;
 				return;
 			}
@@ -284,6 +277,7 @@ class httpRequest{
 					mapHeaders.insert(pair);
 				}
 				else{
+					std::cout << "DEBUG3" << std::endl;
 					this->_status = BAD_REQUEST;
 					return;
 				}
@@ -411,8 +405,14 @@ class httpRequest{
 				}
 			}
 			//Need to check if bodySize > maxBodySize
+			if (this->_maxBodySize < this->_bodySize){
+				std::cout << "DEBUG4" << std::endl;
+				this->_status = BAD_REQUEST;
+				return;
+			}
 			//Check if the host is specified
 			if (this->findHeader("Host").empty() == true){
+				std::cout << "DEBUG5" << std::endl;
 				this->_status = BAD_REQUEST;
 				return;
 			}
@@ -444,9 +444,6 @@ class httpRequest{
 		size_t												_contentLength;
 		bool												_chunked;
 
-		//rawRequest
-		//std::vector<std::string> 							_request;
-
 		//Config
 		std::string											_serverName;
 		std::string											_rootPath;
@@ -462,7 +459,6 @@ class httpRequest{
 		std::map<std::map<std::string, std::string>, std::string> 	_bodyMultipart;
 		std::string											_body;
 		size_t												_bodySize;
-		std::string											_filename;
 
 		std::string 										_method;
 		std::string 										_path;

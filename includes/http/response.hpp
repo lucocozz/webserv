@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/04/25 16:10:11 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/26 15:32:32 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,12 +62,16 @@ class httpResponse{
 
 		httpResponse	operator=(httpResponse const &src){
 			this->_request = src.getRequest();
+
 			this->_status = src.getStatus();
 			this->_statusMessages = initStatusMessages();
 			this->_extensionTypes = initExtensionTypes();
 			this->_content = src.getContent();
 			this->_contentType = src.getContentType();
 			this->_rootToFile = src.getRootToFile();
+			this->_locationRootPath = src.getLocationRootPath();
+			this->_redirectionHeader = src.getRedirectionHeader();
+
 			this->_response = src.getResponse();
 			return (*this);
 		}
@@ -93,11 +97,24 @@ class httpResponse{
 				this->_rootToFile = buildPathTo(this->_request->getRootPath(), this->_request->getPath(), "");
 			}
 
-			if (this->_request->getMethod() == "POST" && isMethodAllowed(this->_request->getLocations(), oldPath, this->_request->getMethod(), this->_request->getAllowedMethod()) == true)
-				this->_uploadContent(request->getPath(), server, clientInfo, request->getHeaders(), oldPath);
-			else if (this->_request->getMethod() == "DELETE" && isMethodAllowed(this->_request->getLocations(), oldPath, this->_request->getMethod(), this->_request->getAllowedMethod()) == true)
-				this->_deleteContent(oldPath);
-			this->_retrieveContent(server, clientInfo, oldPath);
+			//Redirection
+			std::pair<int, std::string>	testRedirection = retrieveLocationRedirection(this->_request->getLocations(), oldPath);
+			if ((testRedirection.first >= 301 && testRedirection.first <= 303) || testRedirection.first == 307){
+				this->_redirectionHeader = testRedirection.second;
+				this->_status = testRedirection.first;
+				std::cout << "debug: " << this->_redirectionHeader << " | status: " << testRedirection.first << std::endl;
+			}
+			else if (testRedirection.first != 0){
+				this->_buildErrorPage(testRedirection.first, testRedirection.second);
+				return;
+			}
+			else{
+				if (this->_request->getMethod() == "POST" && isMethodAllowed(this->_request->getLocations(), oldPath, this->_request->getMethod(), this->_request->getAllowedMethod()) == true)
+					this->_uploadContent(request->getPath(), server, clientInfo, request->getHeaders(), oldPath);
+				else if (this->_request->getMethod() == "DELETE" && isMethodAllowed(this->_request->getLocations(), oldPath, this->_request->getMethod(), this->_request->getAllowedMethod()) == true)
+					this->_deleteContent(oldPath);
+				this->_retrieveContent(server, clientInfo, oldPath);
+			}
 
 			this->_buildStatusLine();
 			this->_buildHeaders();
@@ -115,12 +132,16 @@ class httpResponse{
 
 		void					clear(){
 			this->_request->clear();
+
 			this->_status = 200;
 			this->_statusMessages.clear();
 			this->_extensionTypes.clear();
 			this->_content.clear();
 			this->_contentType.clear();
 			this->_rootToFile.clear();
+			this->_locationRootPath.clear();
+			this->_redirectionHeader.clear();
+
 			this->_response.clear();
 		}
 
@@ -128,18 +149,15 @@ class httpResponse{
 			Getters :
 		*/
 
-		//httpRequest						getRequest() const{return (this->_request);}
 		httpRequest						*getRequest() const{return (this->_request);}
 
-		int								getStatus() const{return (this->_status);}
-
-		std::string						getStatusMessage() const{return ((*this->_statusMessages.find(this->_status)).second);}
-
-		std::string						getContent() const{return (this->_content);}
-
-		std::string						getContentType() const{return (this->_contentType);}
-
-		std::string						getRootToFile() const{return (this->_rootToFile);}
+		const int						&getStatus() const{return (this->_status);}
+		const std::string				&getStatusMessage() const{return ((*this->_statusMessages.find(this->_status)).second);}
+		const std::string				&getContent() const{return (this->_content);}
+		const std::string				&getContentType() const{return (this->_contentType);}
+		const std::string				&getRootToFile() const{return (this->_rootToFile);}
+		const std::string				&getLocationRootPath() const{return (this->_locationRootPath);}
+		const std::string				&getRedirectionHeader() const{return (this->_redirectionHeader);}
 
 		std::string						getResponse() const{return (this->_response);}
 
@@ -221,19 +239,6 @@ class httpResponse{
 
 		void	_retrieveContent(const Server &server, const std::pair<std::string, std::string> &clientInfo, std::string oldPath){
 			if (this->_request->getMethod() == "GET" && isMethodAllowed(this->_request->getLocations(), this->_request->getPath(), this->_request->getMethod(), this->_request->getAllowedMethod()) == true){
-				//Redirection
-				std::pair<int, std::string>	testRedirection = retrieveLocationRedirection(this->_request->getLocations(), oldPath);
-				if ((testRedirection.first >= 301 && testRedirection.first <= 303) || testRedirection.first == 307){
-					//need to add header "Location: url" to the response
-					this->_redirectionHeader = testRedirection.second;
-					this->_status = testRedirection.first;
-					std::cout << "debug: " << this->_redirectionHeader << " | status: " << testRedirection.first << std::endl;
-				}
-				else if (testRedirection.first != 0){
-					this->_buildErrorPage(testRedirection.first, testRedirection.second);
-					return;
-				}
-
 
 				std::pair<bool,LocationContext> locationResult = cgiChecker(this->_request->getPath(), server.context.locations);
 				if (locationResult.first == true)
@@ -372,6 +377,11 @@ class httpResponse{
 		*/
 
 		void	_uploadContent(const std::string &path, const Server &server, const std::pair<std::string, std::string> &clientInfo, const std::map<std::string, std::string> &headers, std::string &oldPath){
+			if (this->_status / 100 != 2){
+				this->_buildErrorPage(this->_status, "");
+				return;
+			}
+			
 			std::pair<bool,LocationContext> locationResult = 
 				cgiChecker(this->_request->getPath(), server.context.locations);
 			std::pair<bool, std::string> uploadLocation = retrieveLocationUpload(this->_request->getLocations(), oldPath);
@@ -400,7 +410,7 @@ class httpResponse{
 					oldPath = buildPathTo(oldPath, uploadLocation.second, "");
 					oldPath.replace(0, locationName.size(), this->_locationRootPath);
 				}
-				else
+				else if (locationName.empty() == false && locationName != this->_locationRootPath)
 					oldPath.replace(0, locationName.size(), this->_locationRootPath);
 				if (isPathValid(buildPathTo(this->_request->getRootPath(), oldPath, "")) == false){
 					this->_buildErrorPage(NOT_FOUND, "");
@@ -427,6 +437,7 @@ class httpResponse{
 					oldPath = buildPathTo(this->_locationRootPath, oldPath, "");
 				}
 				if (isPathValid(buildPathTo(this->_request->getRootPath(), oldPath, "")) == false){
+					//std::cout << "DEBUG NOT FOUND3" << std::endl;
 					this->_buildErrorPage(NOT_FOUND, "");
 					return;
 				}
@@ -459,6 +470,11 @@ class httpResponse{
 		*/
 
 		void	_deleteContent(std::string oldPath){
+			if (this->_status / 100 != 2){
+				this->_buildErrorPage(this->_status, "");
+				return;
+			}
+
 			if (this->_request->getPath() == "/")
 				this->_buildErrorPage(FORBIDDEN, "");
 			else if (isMethodAllowed(this->_request->getLocations(), oldPath, this->_request->getMethod(), this->_request->getAllowedMethod()) == true){
@@ -468,8 +484,10 @@ class httpResponse{
 					if (removeDir(_rootToFile.c_str()) == -1)
 						this->_buildErrorPage(FORBIDDEN, "");
 				}
-				else
+				else{
+					//std::cout << "DEBUG NOT FOUND4" << std::endl;
 					this->_buildErrorPage(NOT_FOUND, "");
+				}
 			}
 			else
 				this->_buildErrorPage(METHOD_NOT_ALLOWED, "");

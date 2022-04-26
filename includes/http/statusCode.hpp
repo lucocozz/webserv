@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:57 by user42            #+#    #+#             */
-/*   Updated: 2022/04/25 17:19:15 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/25 19:48:02 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,7 @@ enum STATUS_CODE{
 	SWITCHING_PROTOCOL = 101,
 	PROCESSING = 102,
 	EARLY_HINTS = 103,
+
 	//Success
 	OK = 200,
 	CREATED = 201,
@@ -36,6 +37,7 @@ enum STATUS_CODE{
 	ALREADY_STATUS = 208,
 	CONTENT_DIFFERENT = 210,
 	IM_USED = 226,
+
 	//Redirection
 	MULTIPLE_CHOICES = 300,
 	MOVED_PERMANENTLY = 301,
@@ -48,6 +50,7 @@ enum STATUS_CODE{
 	PERMANENT_REDIRECT = 308,
 	// /!\ CHECK IF REDIRECTION != LOCATION NAME OR SEND THIS ERROR
 	TOO_MANY_REDIRECTS = 310,
+	
 	//Error client
 	BAD_REQUEST = 400,
 	UNAUTHORIZED = 401,
@@ -67,22 +70,18 @@ enum STATUS_CODE{
 	REQUESTED_RANGE_INSATISFIABLE = 416,
 	EXCEPTATION_FAILED = 417,
 	IM_A_TEA_POT = 418,
-
 	BAD_MAPPING_MISDIRECTED_REQUEST = 421,
 	UNPROCESSABLE_ENTITY = 422,
 	LOCKED = 423,
 	METHOD_FAILURE = 424,
 	TOO_EARLY = 425,
 	UPGRADE_REQUIRED = 426,
-
 	PRECONDITION_REQUIRED = 428, 
 	TOO_MANY_REQUESTS = 429,
 	REQUEST_HEADER_FIELDS_TOO_LARGE = 431,
-
 	RETRY_WITH = 449, 
 	BLOCKED_BY_WINDOWS_PARENTAL_CONTROLS = 450,
 	UNAVAILABLE_FOR_LEGAL_REASONS = 451,
-
 	UNRECOVERABLE_ERROR = 456,
 	
 	//Error server

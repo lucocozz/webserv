@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/15 00:57:56 by user42            #+#    #+#             */
-/*   Updated: 2022/04/23 14:37:51 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/26 15:59:14 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,13 +71,22 @@ std::vector<std::string>								getConfigAllowedMethod(Server const &server){
 
 size_t													getConfigMaxBodySize(Server const &server){
 	try{
-		if (std::atoi((server.context.directives.at("client_max_body_size")[0]).c_str()) <= (2147483647))
-			return (std::atoi((server.context.directives.at("client_max_body_size")[0]).c_str()) * 1000);
+		std::string rawBodySize = server.context.directives.at("client_max_body_size")[0];
+		int size = atoi(rawBodySize.substr(0, rawBodySize.size() - 1).c_str());
+		char unit = *(rawBodySize.end() - 1);
+		size_t finalSize = 0;
+		if (unit == 'K')
+			finalSize = size * 1000;
+		else if (unit == 'M')
+			finalSize = size * 1000000;
+		else if (unit == 'G')
+			finalSize = size * 1000000000;
 		else
-			return (1 * 1000);
+			finalSize = 1 * 1000;
+		return (finalSize);
 	}
 	catch (std::exception const &e){
-		return (1 * 1000);
+		return (1 * 1000000);
 	}
 }
 
