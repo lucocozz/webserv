@@ -61,8 +61,10 @@ public:
         struct stat                     dummy;
 
         cMetaVar = this->_createCMetaVar();
-        for (size_t i = 0; cMetaVar[i]; i++){
-            std::cout << cMetaVar[i] << std::endl;
+        if (stat(_mapMetaVars.find("PATH_TRANSLATED=")->second.c_str(), &dummy) == -1){
+            this->_closeFds(fdToChild, fdToParent);
+            this->_freeMetaVar(cMetaVar);
+            return (std::make_pair("", 404));
         }
         if (pipe(fdToChild) < 0)
             throw pipeError();
@@ -70,21 +72,12 @@ public:
             throw pipeError();
         if ((pid = fork()) == -1)
             throw forkError();
-        if (stat(_mapMetaVars.find("PATH_TRANSLATED=")->second.c_str(), &dummy) == -1){
-            for (size_t i = 0; cMetaVar[i]; i++)
-                delete [] cMetaVar[i];
-            return (std::make_pair("", 404));
-        }
+
         if (pid == 0)
             this->_childProcess(fdToChild, fdToParent, cMetaVar);
-        
-        for (size_t i = 0; cMetaVar[i]; i++)
-            delete [] cMetaVar[i];
-        delete [] cMetaVar;
 
-        if (_mapMetaVars.find("REQUEST_METHOD=")->second.compare("POST") == 0){
+        if (_mapMetaVars.find("REQUEST_METHOD=")->second.compare("POST") == 0)
             write(fdToChild[1], _requestBody.c_str(),  _requestBody.size());
-        }
 
         close(fdToChild[0]);
         close(fdToChild[1]);
@@ -95,6 +88,7 @@ public:
 		if (cgiResponse.second == 200 || cgiResponse.second == 201)
             this->_getCgiOutputBody(cgiResponse.first);
         close(fdToParent[0]);
+        this->_freeMetaVar(cMetaVar);
         return (cgiResponse);
     }
     
@@ -408,8 +402,8 @@ private:
         close(fdToChild[0]);
 
         chdir(cgiLocationPath.c_str());
-        std::cerr << "currentdir |" << get_current_dir_name() << "| cgi binary: |" << args[0]  << "| cgi script name: |" << args[1] << "|" << std::endl;
         execve(args[0], args, cMetaVar);
+        
         exit(errno);
     }
 
@@ -437,7 +431,8 @@ private:
                 end++;
             }
             strStatus.append(begin, end);
-            return (atoi(strStatus.c_str()));
+            if (strStatus.size() == 3 && isdigit(strStatus[0]) && isdigit(strStatus[1]) && isdigit(strStatus[2]))
+                return (atoi(strStatus.c_str()));
         }
         return (status);
     }
@@ -498,6 +493,19 @@ private:
         location = this->_serverContext.directives.at("root")[0].append(url);
         _clearUrl(location);
         return (location);
+    }
+
+    void    _freeMetaVar(char **cMetaVar){
+        for (size_t i = 0; cMetaVar[i]; i++)
+            delete [] cMetaVar[i];
+        delete [] cMetaVar;
+    }
+
+    void    _closeFds(int fds1[2], int fds2[2]){
+        close(fds1[0]);
+        close(fds1[1]);
+        close(fds2[0]);
+        close(fds2[1]);
     }
 };
 
