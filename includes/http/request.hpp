@@ -92,8 +92,10 @@ class httpRequest{
 		*/
 
 		static size_t	getHeaderContentLenght(std::string &request){
-			//std::cout << "getheadercontentlength\n";
-			std::string::iterator 	itb = request.begin() + request.find("Content-Length:") + 16;
+			size_t					header = request.find("Content-Length:");
+			if (header == std::string::npos)
+				return (std::string::npos);
+			std::string::iterator 	itb = request.begin() + header + 16;
 			std::string::iterator 	ite = itb;
 			std::string				contentLengthStr("");
 
@@ -109,6 +111,10 @@ class httpRequest{
 					this->_chunked = true;
 				else
 					this->_contentLength = getHeaderContentLenght(rawRequest);
+				if (this->_contentLength == std::string::npos){
+					this->_status = 411;
+					return (true);
+				}
 			}
 			else if (rawRequest.find("GET") != std::string::npos)
 				this->_contentLength = rawRequest.size();
@@ -125,7 +131,6 @@ class httpRequest{
 				this->_check();
 				return (true);
 			}
-				
 			if (this->_concatenedRequest.size() >= this->_contentLength && this->_chunked == false){
 				this->_retrieveConfigInfo(server);
 				this->_parse(this->_concatenedRequest);

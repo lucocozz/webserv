@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:14:35 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/04/24 21:31:49 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/04/26 16:03:52 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,7 @@ static void	initServer(std::vector<Server> &serverList, Epoll &epoll)
 
 void	serverCore(std::vector<Server> &serverList)
 {
-	Epoll					epoll;
+	Epoll					epoll(20);
 	std::map<int, Client>	clientList;
 
 	initServer(serverList, epoll);

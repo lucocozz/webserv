@@ -126,8 +126,12 @@ class httpResponse{
 		}
 
 		void	sendResponse(EpollSocket socketEvent){
-			socketEvent.sendData(this->_response);
-			this->clear();
+			size_t 						header = 0;
+			header = socketEvent.sendData(this->_response);
+			std::string::iterator 	itb = this->_response.begin();
+			std::string::iterator 	ite = itb + header;
+			this->_response.erase(itb, ite);
+			//this->clear();
 		}
 
 		void					clear(){

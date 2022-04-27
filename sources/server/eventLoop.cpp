@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/09 16:50:53 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/04/19 21:27:12 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/04/26 16:28:50 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,13 +28,14 @@ static bool	isAServer(std::vector<Server> &serverList, EpollSocket &socketEvent)
 	return (false);
 }
 
+
 void	eventLoop(std::vector<Server> &serverList,
 	std::map<int, Client> &clientList, Epoll &epoll, int events)
 {
 	EpollSocket	socketEvent;
 
 	if (events == -1)
-		std::cout << "Internal error" << std::endl;
+		std::cout << "Error: epoll wait() failed" << std::endl;
 	else
 	{
 		for (int n = 0; n < events; ++n)
