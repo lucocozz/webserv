@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/16 22:47:17 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/04/27 18:42:02 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/04/27 22:32:23 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -106,9 +106,9 @@ public:
 			{
 				if (close(this->_listenSocket) == -1)
 					throw (std::runtime_error(strerror(errno)));
+				std::cout << "Socket closed" << std::endl;
 			}
 			this->_listenSocket = 0;
-			std::cout << "Socket closed" << std::endl;
 		}
 	}
 	
