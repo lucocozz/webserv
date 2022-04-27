@@ -82,8 +82,11 @@ public:
         close(fdToChild[0]);
         close(fdToChild[1]);
         cgiResponse.first = this->_getCgiOutput(fdToParent);
-        if ((childExitStatus = this->_waitChild(pid)) > 0)
+        if ((childExitStatus = this->_waitChild(pid)) > 0){
+            this->_closeFds(fdToChild, fdToParent);
+            this->_freeMetaVar(cMetaVar);
             throw execveError(childExitStatus);
+        }
         cgiResponse.second = this->_getCgiReturnStatus(cgiResponse.first);
 		if (cgiResponse.second == 200 || cgiResponse.second == 201)
             this->_getCgiOutputBody(cgiResponse.first);
@@ -402,6 +405,7 @@ private:
         close(fdToChild[0]);
 
         chdir(cgiLocationPath.c_str());
+        std::cerr << "current:dir : " << get_current_dir_name() << " binary: " << args[0] << " script " << args[1] << std::endl;
         execve(args[0], args, cMetaVar);
         
         exit(errno);
