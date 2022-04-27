@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/16 22:47:17 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/04/26 20:09:11 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/04/27 18:39:08 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -102,11 +102,14 @@ public:
 		this->freeAddrInfo();
 		if (this->_listenSocket != 0)
 		{
-			if (close(this->_listenSocket) == -1)
-				throw (std::runtime_error(strerror(errno)));
+			if (fcntl(this->_listenSocket, F_GETFD) != -1)
+			{
+				if (close(this->_listenSocket) == -1)
+					throw (std::runtime_error(strerror(errno)));
+			}
 			this->_listenSocket = 0;
+			std::cout << "Socket closed" << std::endl;
 		}
-		std::cout << "Socket closed" << std::endl;
 	}
 	
 	void	shutdownSocket(int how = SHUT_RDWR)
