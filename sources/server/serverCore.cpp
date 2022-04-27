@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:14:35 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/04/26 16:03:52 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/04/26 20:29:11 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,14 +38,27 @@ static void	initServer(std::vector<Server> &serverList, Epoll &epoll)
 	}
 }
 
+static void	closeClient(std::map<int, Client> &clientList)
+{
+	for (std::map<int, Client>::iterator it = clientList.begin(); it != clientList.end(); ++it)
+		it->second.socket.closeSocket();
+}
+
 void	serverCore(std::vector<Server> &serverList)
 {
 	Epoll					epoll(20);
 	std::map<int, Client>	clientList;
 
 	initServer(serverList, epoll);
-	while (g_running == true)
-		eventLoop(serverList, clientList, epoll, epoll.wait());
-	for (std::map<int, Client>::iterator it = clientList.begin(); it != clientList.end(); ++it)
-		it->second.socket.closeSocket();
+	try {
+		while (g_running == true)
+			eventLoop(serverList, clientList, epoll, epoll.wait());
+	}
+	catch (std::exception &e)
+	{
+		if (errno == EINTR)
+			closeClient(clientList);
+		else
+			std::cerr << "Error: " << e.what() << std::endl;
+	}
 }

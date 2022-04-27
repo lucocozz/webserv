@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/09 16:50:53 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/04/26 16:28:50 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/04/26 16:50:45 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,21 +34,16 @@ void	eventLoop(std::vector<Server> &serverList,
 {
 	EpollSocket	socketEvent;
 
-	if (events == -1)
-		std::cout << "Error: epoll wait() failed" << std::endl;
-	else
+	for (int n = 0; n < events; ++n)
 	{
-		for (int n = 0; n < events; ++n)
-		{
-			socketEvent = epoll.socketAt(n);
-			if (isAServer(serverList, socketEvent) == true)
-				handleConnection(serverList, clientList, socketEvent, epoll);
-			else if (socketEvent.getEvents() & (EPOLLERR | EPOLLRDHUP | EPOLLHUP))
-				handleDeconnection(clientList, socketEvent, epoll);
-			else if (socketEvent.getEvents() & EPOLLIN)
-				handleInput(clientList[socketEvent.listener()], epoll);
-			else if (socketEvent.getEvents() & EPOLLOUT)
-				handleOutput(clientList[socketEvent.listener()], epoll);
-		}
+		socketEvent = epoll.socketAt(n);
+		if (isAServer(serverList, socketEvent) == true)
+			handleConnection(serverList, clientList, socketEvent, epoll);
+		else if (socketEvent.getEvents() & (EPOLLERR | EPOLLRDHUP | EPOLLHUP))
+			handleDeconnection(clientList, socketEvent, epoll);
+		else if (socketEvent.getEvents() & EPOLLIN)
+			handleInput(clientList[socketEvent.listener()], epoll);
+		else if (socketEvent.getEvents() & EPOLLOUT)
+			handleOutput(clientList[socketEvent.listener()], epoll);
 	}
 }
