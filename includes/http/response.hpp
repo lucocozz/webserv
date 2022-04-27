@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/04/27 20:46:41 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/27 21:21:32 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -92,6 +92,13 @@ class httpResponse{
 			//Redirection
 			std::pair<int, std::string>	testRedirection = retrieveLocationRedirection(this->_request->getLocations(), oldPath);
 			if ((testRedirection.first >= 301 && testRedirection.first <= 303) || testRedirection.first == 307){
+				std::cout << "DEBUG path = " << this->_request->getPath() << std::endl;
+				std::cout << "DEBUG oldPath = " << oldPath << std::endl;
+				std::cout << "DEBUG redirectionHeader = " << testRedirection.second << std::endl;
+				if (oldPath == testRedirection.second){
+					this->_buildErrorPage(TOO_MANY_REDIRECTS, "");
+					return;
+				}
 				this->_redirectionHeader = testRedirection.second;
 				this->_status = testRedirection.first;
 			}
@@ -110,6 +117,9 @@ class httpResponse{
 			this->_buildStatusLine();
 			this->_buildHeaders();
 			this->_buildBody();
+
+			std::cout << "SERVER RESPONSE" << std::endl;
+			std::cout << _response << std::endl;
 		}
 
 		void	sendResponse(EpollSocket socketEvent){
