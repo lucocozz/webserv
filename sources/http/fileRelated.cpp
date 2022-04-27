@@ -6,14 +6,13 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/15 00:58:00 by user42            #+#    #+#             */
-/*   Updated: 2022/04/18 22:22:53 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/27 19:13:01 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "fileRelated.hpp"
-
-//#include "locationRelated.hpp"
 #include "stringRelated.hpp"
+
 #include <sstream>
 #include <iostream>
 #include <sys/stat.h>
@@ -80,23 +79,6 @@ std::string					buildFileSize(std::string path){\
 	struct stat sb;
 	lstat(path.c_str(), &sb);
 	std::string ret(itos(sb.st_size));
-
-	return (ret);
-}
-
-std::string					formatETag(std::string &path){
-	struct stat sb;
-	lstat(path.c_str(), &sb);
-	std::string ret;
-
-	ret.append("W/\"");
-	
-	int mTime = sb.st_mtime;
-	std::stringstream mTimeStream;
-	mTimeStream << std::hex << mTime;
-	ret.append(mTimeStream.str());
-	
-	ret.append("\"");
 
 	return (ret);
 }

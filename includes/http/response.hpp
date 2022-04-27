@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/04/27 18:55:20 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/27 18:57:20 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,14 +21,6 @@
 
 #include "request.hpp"
 #include "CGI.hpp"
-
-//#include "EpollSocket.hpp"
-//#include "statusCode.hpp"
-//#include "locationRelated.hpp"
-//#include "URLRelated.hpp"
-
-
-
 
 #include <fstream>
 
@@ -200,28 +192,6 @@ class httpResponse{
 			this->_response.append("Content-Length: " + itos(this->_content.size()) + "\r\n");
 			this->_response.append("Transfer-Encoding: identity\r\n");
 			this->_response.append("Connection: keep-alive\r\n");
-
-			/*if (this->_status / 100 == 2){
-				if (this->_request->getAutoindex() == false){
-					if (this->_request->getPath() == "/" && this->_request->getIndex().empty() == false){
-						std::string pathToIndex = buildPathTo(this->_request->getRootPath(), this->_request->getIndex(), "");
-						this->_response.append("Last-Modified: " + formatLastModified(pathToIndex) + "\r\n");
-						this->_response.append("Etag: " + formatETag(pathToIndex) + "\r\n");
-					}
-					else if (isPathDirectory(this->_rootToFile.c_str()) == false){
-						this->_response.append("Last-Modified: " + formatLastModified(this->_rootToFile) + "\r\n");
-						this->_response.append("Etag: " + formatETag(this->_rootToFile) + "\r\n");
-					}
-					else{
-						std::pair<std::string, std::string> indexLocation = retrieveLocationIndex(this->_request->getLocations(), this->_request->getRootPath(), this->_request->getPath());
-						if (indexLocation.first.empty() == false && isSameDirectory(indexLocation.second, this->_request->getPath()) == true){
-							std::string pathToLocationIndex = buildPathTo(this->_request->getRootPath(), indexLocation.first, "");
-							this->_response.append("Last-Modified: " + formatLastModified(pathToLocationIndex) + "\r\n");
-							this->_response.append("Etag: " + formatETag(pathToLocationIndex) + "\r\n");
-						}
-					}
-				}
-			}*/
 		}
 
 		void _buildBody(){
