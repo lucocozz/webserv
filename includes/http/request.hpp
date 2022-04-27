@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:46 by user42            #+#    #+#             */
-/*   Updated: 2022/04/27 15:38:19 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/27 17:13:37 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -418,7 +418,7 @@ class httpRequest{
 			}
 			//Need to check if bodySize > maxBodySize
 			if (this->_maxBodySize < this->_bodySize){
-				this->_status = BAD_REQUEST;
+				this->_status = PAYLOAD_TOO_LARGE;
 				return;
 			}
 			//Check if the host is specified

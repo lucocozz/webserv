@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/04/27 15:38:04 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/27 17:12:54 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -226,7 +226,8 @@ class httpResponse{
 
 		void _buildBody(){
 			this->_response.append("\r\n");
-			this->_response.append(this->_content + "\r\n");
+			this->_response.append(this->_content);
+			//this->_response.append(this->_content + "\r\n");
 		}
 
 		/*
@@ -242,17 +243,18 @@ class httpResponse{
 				std::pair<bool,LocationContext> locationResult = cgiChecker(this->_request->getPath(), server.context.locations);
 				if (locationResult.first == true)
 					this->_retrieveCGIContent(server, clientInfo, locationResult.second);
-				else if (this->_request->getPath() == "/"/* && _contentNeedRefresh() == true*/){
+				else if (this->_request->getPath() == "/"){
 					if (this->_request->getAutoindex() == true)
-						this->_buildLocationAutoIndex(this->_request->getRootPath(), this->_request->getPath(), oldPath);
+						this->_buildAutoIndexPage(this->_request->getRootPath(), this->_request->getPath(), oldPath);
 					else{
-						this->_retrieveFileContent(buildPathTo(this->_rootToFile, this->_request->getIndex(), ""));
-						this->_contentType = this->getMimeTypes(buildPathTo(this->_rootToFile, this->_request->getIndex(), "").c_str());
+						if (this->_request->getIndex() == "default_index.html")
+							this->_buildDefaultIndexPage();
+						else
+							this->_retrieveFileContent(buildPathTo(this->_rootToFile, this->_request->getIndex(), ""));
 					}
 				}
-				else/* if (_contentNeedRefresh() == true)*/{
-					std::pair<std::string, std::string> indexLocation;
-					indexLocation = retrieveLocationIndex(this->_request->getLocations(), this->_request->getRootPath(), oldPath);
+				else{
+					std::pair<std::string, std::string> indexLocation = retrieveLocationIndex(this->_request->getLocations(), this->_request->getRootPath(), oldPath);
 					if (isPathValid(this->_rootToFile) == false && retrieveLocationAutoIndex(this->_request->getLocations(), oldPath) == false && indexLocation.first.empty()){
 						this->_buildErrorPage(NOT_FOUND, "");
 						return;
@@ -261,12 +263,16 @@ class httpResponse{
 					if (retrieveLocationAutoIndex(this->_request->getLocations(), oldPath) == true){
 						if (locationRoot.first.empty() == true)
 							this->_request->setPath("/");
-						this->_buildLocationAutoIndex(this->_request->getRootPath(), this->_request->getPath(), oldPath);
+						this->_buildAutoIndexPage(this->_request->getRootPath(), this->_request->getPath(), oldPath);
 					}
-					else if (indexLocation.first.empty() == false && isSameDirectory(indexLocation.second, oldPath) == true)
-						this->_retrieveFileContent(buildPathTo(this->_request->getRootPath(), indexLocation.first, ""));
+					else if (indexLocation.first.empty() == false && isSameDirectory(indexLocation.second, oldPath) == true){
+						if (indexLocation.first == "default_index.html")
+							this->_buildDefaultIndexPage();
+						else
+							this->_retrieveFileContent(buildPathTo(this->_request->getRootPath(), indexLocation.first, ""));
+					}
 					else if (this->_request->getAutoindex() == true && isPathDirectory(this->_rootToFile) == true)
-						this->_buildLocationAutoIndex(this->_request->getRootPath(), this->_request->getPath(), oldPath);
+						this->_buildAutoIndexPage(this->_request->getRootPath(), this->_request->getPath(), oldPath);
 					else
 						this->_retrieveFileContent(this->_rootToFile);
 				}
@@ -316,25 +322,22 @@ class httpResponse{
 			this->_content.append(buff.str());
 		}
 
-		/*bool	_contentNeedRefresh(){
-			//Si le ETag de la ressource correspond au champs If-None-Match on renvoie 304 et pas de content (Prioritaire sur If-Modified-Since)
-			if (this->_request->findHeader("If-None-Match").empty() == false){
-				if (this->_request->findHeader("If-None-Match") == formatETag(this->_rootToFile)){
-					this->_status = NOT_MODIFIED;
-					return (false);
-				}
-			}
-			//Si la date de modification de la ressource correspond au champs If-Modified-Since on renvoie 304 et pas de content
-			if (this->_request->findHeader("If-Modified-Since").empty() == false){
-				if (this->_request->findHeader("If-Modified-Since") == formatLastModified(this->_rootToFile)){
-					this->_status = NOT_MODIFIED;
-					return (false);
-				}
-			}
-			return (true);
-		}*/
+		void			_buildDefaultIndexPage(){
+			this->_contentType = "text/html";
+			this->_content.append("<html>\r\n<head>\r\n");
+			this->_content.append("<title>Welcome to " + this->_request->getServerName() + "</title>\r\n");
+			this->_content.append("<style>\r\nbody {\r\nwidth: 35em;\r\nmargin: 0 auto;\r\nfont-family: Tahoma, sans-serif;\r\ntext-align: center;\r\n}\r\n</style>");
+			this->_content.append("</head>\r\n");
+			this->_content.append("<body>\r\n");
+			this->_content.append("<h1>Welcome to " + this->_request->getServerName() + "</h1>\r\n<hr>\r\n");
+			this->_content.append("<p>If you see this page, the web server is successfully installed and working. Further configuration is required.</p>");
+			this->_content.append("<p>Thank you for using our webserv</p>");
+			this->_content.append("<hr>\r\n");
+			this->_content.append("<p>Plus d'informations sur notre serveur web <a href=\"https://github.com/lucocozz/webserv\">ici</a></p>\r\n");
+			this->_content.append("</body>\r\n</html>\r\n");
+		}
 
-		void			_buildLocationAutoIndex(std::string rootPath, std::string path, std::string oldPath){
+		void			_buildAutoIndexPage(std::string rootPath, std::string path, std::string oldPath){
 			this->_contentType = "text/html";
 			this->_content.append("<html>\r\n<head>\r\n");
 			this->_content.append("<title>Index of " + buildPathTo(oldPath, "/", "") + "</title>\r\n</head>\r\n<body>\r\n");
@@ -354,26 +357,6 @@ class httpResponse{
 				}
 			}
 			this->_content.append("<hr>\r\n");
-			this->_content.append("<form enctype=\"multipart/form-data\" action=\"/php-cgi/upload.php\" method=\"post\">");
-  			this->_content.append("Envoyer ce fichier : <input name=\"userfile\" type=\"file\" />");
- 			this->_content.append("<input type=\"submit\" value=\"Envoyer le fichier\" />");
-			this->_content.append("</form>");
-			//POST form 1 input
-			this->_content.append("<hr>\r\n");
-			this->_content.append("Multipart Form POST 1 input : \r\n");
-			this->_content.append("<form enctype=\"multipart/form-data\" action=\"/uploads\" method=\"post\">");
-			this->_content.append("<input type=\"file\" name=\"monFichier\" />");
- 			this->_content.append("<button type =\"submit\">Envoyer</button>");
-			this->_content.append("</form>");
-			//POST form 2 input
-			this->_content.append("<hr>\r\n");
-			this->_content.append("Multipart Form POST 2 input : \r\n");
-			this->_content.append("<form enctype=\"multipart/form-data\" action=\"/uploads\" method=\"post\">");
-			this->_content.append("<input type=\"file\" name=\"monFichier1\" />");
-			this->_content.append("<input type=\"file\" name=\"monFichier2\" />");
- 			this->_content.append("<button type =\"submit\">Envoyer</button>");
-			this->_content.append("</form>");
-
 			this->_content.append("</body>\r\n</html>\r\n");
 		}
 

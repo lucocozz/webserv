@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:57 by user42            #+#    #+#             */
-/*   Updated: 2022/04/25 19:48:02 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/27 17:13:37 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,7 +64,7 @@ enum STATUS_CODE{
 	CONFLICT = 409,
 	GONE = 410,
 	LENGTH_REQUIRED = 411,
-	REQUEST_ENTITY_TOO_LARGE = 413,
+	PAYLOAD_TOO_LARGE = 413,
 	REQUEST_URL_TOO_LONG = 414,
 	UNSUPPORTED_MEDIA_TYPE = 415,
 	REQUESTED_RANGE_INSATISFIABLE = 416,
