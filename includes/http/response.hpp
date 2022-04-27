@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/04/27 21:21:32 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/28 00:11:03 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -92,11 +92,15 @@ class httpResponse{
 			//Redirection
 			std::pair<int, std::string>	testRedirection = retrieveLocationRedirection(this->_request->getLocations(), oldPath);
 			if ((testRedirection.first >= 301 && testRedirection.first <= 303) || testRedirection.first == 307){
-				std::cout << "DEBUG path = " << this->_request->getPath() << std::endl;
-				std::cout << "DEBUG oldPath = " << oldPath << std::endl;
-				std::cout << "DEBUG redirectionHeader = " << testRedirection.second << std::endl;
-				if (oldPath == testRedirection.second){
+				//std::cout << "DEBUG path = " << this->_request->getPath() << std::endl;
+				//std::cout << "DEBUG oldPath = " << oldPath << std::endl;
+				//std::cout << "DEBUG redirectionHeader = " << testRedirection.second << std::endl;
+				//std::cout << "DEBUG if = " << (oldPath == testRedirection.second) << std::endl;
+				if (oldPath == testRedirection.second && this->_request->findHeader("Location").empty() == false){
+					//std::cout << "DEBUG AVANT BUILD ERROR PAGE" << std::endl;
 					this->_buildErrorPage(TOO_MANY_REDIRECTS, "");
+					//std::cout << "DEBUG BODY APRES BUILD ERROR PAGE =" << std::endl;
+					std::cout << this->_content << std::endl;
 					return;
 				}
 				this->_redirectionHeader = testRedirection.second;
@@ -118,8 +122,8 @@ class httpResponse{
 			this->_buildHeaders();
 			this->_buildBody();
 
-			std::cout << "SERVER RESPONSE" << std::endl;
-			std::cout << _response << std::endl;
+			//std::cout << "SERVER RESPONSE" << std::endl;
+			//std::cout << _response << std::endl;
 		}
 
 		void	sendResponse(EpollSocket socketEvent){
@@ -240,7 +244,7 @@ class httpResponse{
 					}
 					std::pair<std::string, std::string> locationRoot = retrieveLocationRoot(this->_request->getLocations(), this->_request->getRootPath(), this->_request->getPath());
 					if (retrieveLocationAutoIndex(this->_request->getLocations(), oldPath) == true && isPathDirectory(this->_rootToFile) == true){
-						if (locationRoot.first.empty() == true)
+						if (locationRoot.first.empty() == true && isPathValid(this->_rootToFile) == false)
 							this->_request->setPath("/");
 						this->_buildAutoIndexPage(this->_request->getRootPath(), this->_request->getPath(), oldPath);
 					}
@@ -326,14 +330,12 @@ class httpResponse{
 			struct dirent *fileRead = NULL;
 			rep = opendir(buildPathTo(rootPath, path, "").c_str());
 			if (rep == NULL){
-				std::cout << "DEBUG internal 2" << std::endl;
 				this->_buildErrorPage(INTERNAL_SERVER_ERROR, "");
 				return ;
 			}
 			else{
 				this->_content.append(buildListingBlock(fileRead, rep, rootPath, path, this->_request->findHeader("Host")));
 				if (closedir(rep) == -1){
-					std::cout << "DEBUG internal 3" << std::endl;
 					this->_buildErrorPage(INTERNAL_SERVER_ERROR, "");
 					return;
 				}

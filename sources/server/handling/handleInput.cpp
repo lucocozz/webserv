@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/22 21:55:31 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/04/27 21:09:53 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/28 00:12:10 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,10 +21,10 @@ void	handleInput(Client &client, Epoll &epoll)
 	data = client.socket.recvData();
 	serverLink = client.fetchServerlink(data.first);
 	if (client.request.treatRequest(data.first, *serverLink) == true){
-		std::cout << "CLIENT REQUEST" << std::endl;
-		std::cout << data.first << std::endl;
-		client.response.buildResponse(&client.request, *serverLink, clientInfo);
+		//std::cout << "CLIENT REQUEST" << std::endl;
+		//std::cout << data.first << std::endl;
 
+		client.response.buildResponse(&client.request, *serverLink, clientInfo);
 		// executer ces lignes si le server doit envoyer une reponse au client
 		client.socket.setEvents(client.socket.getEvents() | EPOLLOUT);
 		epoll.control(EPOLL_CTL_MOD, client.socket);
