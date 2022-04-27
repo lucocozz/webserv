@@ -92,7 +92,7 @@ public:
         if ((childExitStatus = this->_waitChild(pid)) > 0)
             throw execveError(childExitStatus);
         cgiResponse.second = this->_getCgiReturnStatus(cgiResponse.first);
-        if (cgiResponse.second == 200)
+		if (cgiResponse.second == 200 || cgiResponse.second == 201)
             this->_getCgiOutputBody(cgiResponse.first);
         close(fdToParent[0]);
         return (cgiResponse);
@@ -427,6 +427,8 @@ private:
 
     int _getCgiReturnStatus(std::string &response){
         int status = 200;
+        if (_mapMetaVars.find("REQUEST_METHOD=")->second.compare("POST") == 0)
+            status = 201;
         if (response.find("Status:") != std::string::npos){
             std::string strStatus;
             std::string::iterator begin = response.begin() + (response.find("Status:") + 8);
