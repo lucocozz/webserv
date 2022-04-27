@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/04/27 15:28:30 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/27 15:38:04 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -91,12 +91,7 @@ class httpResponse{
 
 			std::pair<std::string, std::string> locationRoot = retrieveLocationRoot(this->_request->getLocations(), this->_request->getRootPath(), this->_request->getPath());
 			std::string oldPath = this->_request->getPath();
-			std::cout << "debug path = " << this->_request->getPath() << std::endl;
-			std::cout << "debug oldPath = " << oldPath << std::endl;
-			std::cout << "debug locationRoot.first = " << locationRoot.first << std::endl;
-			std::cout << "debug rootPath = " << this->_request->getRootPath() << std::endl;
 			if (locationRoot.first != this->_request->getRootPath()){
-			//if (locationRoot.first.empty() == false && locationRoot.first != this->_request->getRootPath()){
 				this->_locationRootPath = locationRoot.first;
 				this->_request->setPath(locationToRoot(this->_request->getPath(), locationRoot.first, locationRoot.second));
 				this->_rootToFile = buildPathTo(this->_request->getRootPath(), this->_request->getPath(), "");
@@ -256,43 +251,24 @@ class httpResponse{
 					}
 				}
 				else/* if (_contentNeedRefresh() == true)*/{
-					if (isPathValid(this->_rootToFile) == false && retrieveLocationAutoIndex(this->_request->getLocations(), oldPath) == false){
-						std::cout << "DEBUG 404" << std::endl;
+					std::pair<std::string, std::string> indexLocation;
+					indexLocation = retrieveLocationIndex(this->_request->getLocations(), this->_request->getRootPath(), oldPath);
+					if (isPathValid(this->_rootToFile) == false && retrieveLocationAutoIndex(this->_request->getLocations(), oldPath) == false && indexLocation.first.empty()){
 						this->_buildErrorPage(NOT_FOUND, "");
 						return;
 					}
-					//if (isPathValid(this->_rootToFile) == false){
-					//	this->_buildErrorPage(NOT_FOUND, "");
-					//	return;
-					//}
-					std::pair<std::string, std::string> indexLocation;
-					indexLocation = retrieveLocationIndex(this->_request->getLocations(), this->_request->getRootPath(), oldPath);
-					//if ((retrieveLocationAutoIndex(this->_request->getLocations(), oldPath) == true || this->_request->getAutoindex() == true) && isPathDirectory(this->_rootToFile) == true)
-					//	this->_buildLocationAutoIndex(this->_request->getRootPath(), this->_request->getPath(), oldPath);
-					std::cout << "DEBUG AUTOINDEX" << std::endl;
 					std::pair<std::string, std::string> locationRoot = retrieveLocationRoot(this->_request->getLocations(), this->_request->getRootPath(), this->_request->getPath());
-					std::cout << "locationRoot1 = " << locationRoot.first << " | locationRoot2 = " << locationRoot.second << std::endl;
-					std::cout << "rootPath = " << this->_request->getRootPath() << std::endl;
 					if (retrieveLocationAutoIndex(this->_request->getLocations(), oldPath) == true){
-						std::cout << "DEBUG 1" << std::endl;
 						if (locationRoot.first.empty() == true)
 							this->_request->setPath("/");
-						std::cout << "DEBUG path " << this->_request->getPath() << std::endl;
-						std::cout << "DEBUG oldPath " << oldPath << std::endl;
 						this->_buildLocationAutoIndex(this->_request->getRootPath(), this->_request->getPath(), oldPath);
 					}
-					else if (this->_request->getAutoindex() == true && isPathDirectory(this->_rootToFile) == true){
-						std::cout << "DEBUG 2" << std::endl;
-						this->_buildLocationAutoIndex(this->_request->getRootPath(), this->_request->getPath(), oldPath);
-					}
-					else if (indexLocation.first.empty() == false && isSameDirectory(indexLocation.second, oldPath) == true){
-						std::cout << "DEBUG 3" << std::endl;
+					else if (indexLocation.first.empty() == false && isSameDirectory(indexLocation.second, oldPath) == true)
 						this->_retrieveFileContent(buildPathTo(this->_request->getRootPath(), indexLocation.first, ""));
-					}
-					else{
-						std::cout << "DEBUG 4" << std::endl;
+					else if (this->_request->getAutoindex() == true && isPathDirectory(this->_rootToFile) == true)
+						this->_buildLocationAutoIndex(this->_request->getRootPath(), this->_request->getPath(), oldPath);
+					else
 						this->_retrieveFileContent(this->_rootToFile);
-					}
 				}
 			}
 			else if (this->_request->getMethod() == "GET" || isMethodAllowed(this->_request->getLocations(), oldPath, this->_request->getMethod(), this->_request->getAllowedMethod()) == false)
