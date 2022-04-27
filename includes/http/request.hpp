@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:46 by user42            #+#    #+#             */
-/*   Updated: 2022/04/27 13:39:49 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/27 14:51:39 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -107,14 +107,22 @@ class httpRequest{
 
 		bool								treatRequest(std::string &rawRequest, Server const &server){
 			if (rawRequest.find("POST") != std::string::npos){
-				if (rawRequest.find("Transfer-Encoding: chunked") != std::string::npos)
+				if (rawRequest.find("Transfer-Encoding: chunked") != std::string::npos){
 					this->_chunked = true;
-				else
-					this->_contentLength = getHeaderContentLenght(rawRequest);
-				if (this->_contentLength == std::string::npos){
-					this->_status = 411;
-					return (true);
+					this->_contentLength = 0;
 				}
+				else{
+					//DEBUG TEST
+					if (getHeaderContentLenght(rawRequest) == std::string::npos){
+						this->_status = 411;
+						return (true);
+					}
+					this->_contentLength = getHeaderContentLenght(rawRequest);
+				}
+				//if (this->_contentLength == std::string::npos){
+				//	this->_status = 411;
+				//	return (true);
+				//}
 			}
 			else if (rawRequest.find("GET") != std::string::npos)
 				this->_contentLength = rawRequest.size();
@@ -122,7 +130,8 @@ class httpRequest{
 				this->_concatenedRequest.clear();
 				this->_contentLength = rawRequest.size();
 			}
-			if (this->_concatenedRequest.size() < this->_contentLength || this->_chunked == true)
+			//if (this->_concatenedRequest.size() < this->_contentLength || this->_chunked == true)
+			if ((this->_concatenedRequest.size() < this->_contentLength && this->_chunked == false )|| this->_chunked == true)
 				this->_concatenedRequest.append(rawRequest);
 
 			if (this->_concatenedRequest.find("0\r\n\r\n", this->_concatenedRequest.size() - 5) != std::string::npos && this->_chunked == true){
@@ -132,8 +141,15 @@ class httpRequest{
 				return (true);
 			}
 			if (this->_concatenedRequest.size() >= this->_contentLength && this->_chunked == false){
+				//this->_retrieveConfigInfo(server);
+				//this->_parse(this->_concatenedRequest);
+				//this->_check();
+				//DEBUG test
 				this->_retrieveConfigInfo(server);
-				this->_parse(this->_concatenedRequest);
+				if (_concatenedRequest.empty() == true)
+					this->_parse(rawRequest);
+				else
+					this->_parse(this->_concatenedRequest);
 				this->_check();
 				return (true);
 			}
@@ -325,12 +341,17 @@ class httpRequest{
 				}
 				(void)contentLength;
 			}
-
 			//If multipart
 			if (this->_boundarie.first == true){
 				std::string rawBody;
-				if (this->_chunked == false)
+				if (this->_chunked == false){
+					//DEBUG TEST
+					if (this->_contentLength == 0){
+						this->_status = BAD_REQUEST;
+						return;
+					}
 					rawBody = rawRequest.substr(rawRequest.find("\r\n\r\n") + 4);
+				}
 				else
 					rawBody = unchunkedBody;
 				std::vector<std::string> separedMultipart = split(rawBody, this->_boundarie.second + "\r\n");

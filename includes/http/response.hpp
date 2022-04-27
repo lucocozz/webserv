@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/04/27 13:39:49 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/27 14:30:18 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -102,7 +102,6 @@ class httpResponse{
 			if ((testRedirection.first >= 301 && testRedirection.first <= 303) || testRedirection.first == 307){
 				this->_redirectionHeader = testRedirection.second;
 				this->_status = testRedirection.first;
-				std::cout << "debug: " << this->_redirectionHeader << " | status: " << testRedirection.first << std::endl;
 			}
 			else if (testRedirection.first != 0){
 				this->_buildErrorPage(testRedirection.first, testRedirection.second);
@@ -126,12 +125,8 @@ class httpResponse{
 		}
 
 		void	sendResponse(EpollSocket socketEvent){
-			size_t 						header = 0;
-			header = socketEvent.sendData(this->_response);
-			std::string::iterator 	itb = this->_response.begin();
-			std::string::iterator 	ite = itb + header;
-			this->_response.erase(itb, ite);
-			//this->clear();
+			socketEvent.sendData(this->_response);
+			this->clear();
 		}
 
 		void					clear(){
