@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/15 00:58:14 by user42            #+#    #+#             */
-/*   Updated: 2022/04/25 18:46:12 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/27 13:39:49 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -249,8 +249,6 @@ std::pair<int, std::string>						retrieveLocationRedirection(std::vector<Locatio
 		ret.first = atoi(redirection.at(0).c_str());
 		//need better check if status code is valid
 		if (doesStatusExist(ret.first) == true){
-			std::cout << "DEBUG le bug est apres ici" << std::endl;
-			std::cout << "DEBUG 1 | size = " << redirection.size() << std::endl;
 			if (redirection.size() > 2 && !((ret.first >= 301 && ret.first <= 303) || ret.first == 307)){
 				for (size_t i = 1; i < redirection.size(); i++){
 					ret.second.append(redirection.at(i));
@@ -259,10 +257,8 @@ std::pair<int, std::string>						retrieveLocationRedirection(std::vector<Locatio
 				}
 			}
 			else if (redirection.size() == 2){
-				std::cout << "DEBUG2" << std::endl;
 				ret.second = redirection.at(1);
 			}
-			std::cout << "DEBUG le bug est avant ici" << std::endl;
 		}
 		else
 			ret.first = 0;

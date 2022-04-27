@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:46 by user42            #+#    #+#             */
-/*   Updated: 2022/04/26 16:12:19 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/27 13:39:49 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -104,7 +104,6 @@ class httpRequest{
 		}
 
 		bool								treatRequest(std::string &rawRequest, Server const &server){
-			//std::cout << "DEBUG treatRequest - chunked = " << _chunked << std::endl;
 			if (rawRequest.find("POST") != std::string::npos){
 				if (rawRequest.find("Transfer-Encoding: chunked") != std::string::npos)
 					this->_chunked = true;
@@ -239,7 +238,6 @@ class httpRequest{
 				this->_parseBody(rawRequest);
 			}
 			else{
-				std::cout << "DEBUG1" << std::endl;
 				this->_status = BAD_REQUEST;
 				return;
 			}
@@ -258,7 +256,6 @@ class httpRequest{
 				vecHeaders.erase(vecHeaders.begin());
 			}
 			else{
-				std::cout << "DEBUG2" << std::endl;
 				this->_status = BAD_REQUEST;
 				return;
 			}
@@ -277,7 +274,6 @@ class httpRequest{
 					mapHeaders.insert(pair);
 				}
 				else{
-					std::cout << "DEBUG3" << std::endl;
 					this->_status = BAD_REQUEST;
 					return;
 				}
@@ -406,13 +402,11 @@ class httpRequest{
 			}
 			//Need to check if bodySize > maxBodySize
 			if (this->_maxBodySize < this->_bodySize){
-				std::cout << "DEBUG4" << std::endl;
 				this->_status = BAD_REQUEST;
 				return;
 			}
 			//Check if the host is specified
 			if (this->findHeader("Host").empty() == true){
-				std::cout << "DEBUG5" << std::endl;
 				this->_status = BAD_REQUEST;
 				return;
 			}

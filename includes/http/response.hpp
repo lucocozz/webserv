@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/04/26 15:32:32 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/27 13:39:49 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -437,7 +437,6 @@ class httpResponse{
 					oldPath = buildPathTo(this->_locationRootPath, oldPath, "");
 				}
 				if (isPathValid(buildPathTo(this->_request->getRootPath(), oldPath, "")) == false){
-					//std::cout << "DEBUG NOT FOUND3" << std::endl;
 					this->_buildErrorPage(NOT_FOUND, "");
 					return;
 				}
@@ -485,7 +484,6 @@ class httpResponse{
 						this->_buildErrorPage(FORBIDDEN, "");
 				}
 				else{
-					//std::cout << "DEBUG NOT FOUND4" << std::endl;
 					this->_buildErrorPage(NOT_FOUND, "");
 				}
 			}
