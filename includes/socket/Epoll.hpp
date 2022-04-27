@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/16 22:47:38 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/03/22 19:25:34 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/04/26 16:51:37 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,7 +66,7 @@ public:
 		int	nfds;
 
 		nfds = epoll_wait(this->_epollFd, this->_eventList, this->_maxEvents, timeout);
-		if (nfds == -1 && errno != EINTR)
+		if (nfds == -1)
 			throw (std::runtime_error(strerror(errno)));
 		return (nfds);
 	}

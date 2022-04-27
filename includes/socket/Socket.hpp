@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Socket.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
+/*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/16 22:47:17 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/04/24 19:01:49 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/26 20:09:11 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -99,14 +99,14 @@ public:
 	
 	void	closeSocket(void)
 	{
-		std::cout << "Closing socket" << std::endl;
+		this->freeAddrInfo();
 		if (this->_listenSocket != 0)
 		{
 			if (close(this->_listenSocket) == -1)
 				throw (std::runtime_error(strerror(errno)));
 			this->_listenSocket = 0;
 		}
-		this->freeAddrInfo();
+		std::cout << "Socket closed" << std::endl;
 	}
 	
 	void	shutdownSocket(int how = SHUT_RDWR)
@@ -164,24 +164,24 @@ public:
 
 	std::pair<std::string, int>	recvData(int flags = 0)
 	{
-		int							queueSize = 0;
 		std::pair<std::string, int> dataPair;
 		char						*buffer;
+		int							queueSize = 0;
 		int							bytesReceived = 0;
 		
-		if ((ioctl(this->_listenSocket, SIOCINQ, &queueSize) == -1))
+		if (ioctl(this->_listenSocket, SIOCINQ, &queueSize) == -1)
 			queueSize = 2048;
-		buffer = new char[queueSize];
-
+		buffer = new char[queueSize + 1];
 		std::cout << "Reading data..." << std::endl;
 		bytesReceived = recv(this->_listenSocket, buffer, queueSize, flags);
-		if (bytesReceived < 0){
-			delete buffer;
+		if (bytesReceived < 0)
+		{
+			delete[] buffer;
 			throw (std::runtime_error(strerror(errno)));
 		}
 		std::cout << "Received " << bytesReceived << " bytes." << std::endl;
 		dataPair = std::make_pair(std::string().append(buffer, bytesReceived), bytesReceived);
-		delete [] buffer;
+		delete[] buffer;
 		return (dataPair);
 	}
 
