@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/04/27 18:57:20 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/27 20:46:41 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -110,15 +110,14 @@ class httpResponse{
 			this->_buildStatusLine();
 			this->_buildHeaders();
 			this->_buildBody();
-
-			//DEBUG OUTPUT
-			std::cout << std::endl << "SERVER RESPONSE :" << std::endl;
-			std::cout << this->_response << std::endl;
 		}
 
 		void	sendResponse(EpollSocket socketEvent){
-			socketEvent.sendData(this->_response);
-			this->clear();
+			size_t 						header = 0;
+			header = socketEvent.sendData(this->_response);
+			std::string::iterator 	itb = this->_response.begin();
+			std::string::iterator 	ite = itb + header;
+			this->_response.erase(itb, ite);
 		}
 
 		void					clear(){
@@ -270,7 +269,7 @@ class httpResponse{
 			catch(const std::exception &e){
 				std::string exception(e.what());
 				if (exception.find("No such file or directory") != std::string::npos){
-					this->_status = NOT_FOUND;
+					this->_status = INTERNAL_SERVER_ERROR;
 					return;
 				}
 				std::cout << "DEBUG internal 1" << std::endl;
@@ -360,9 +359,14 @@ class httpResponse{
 					this->_status = cgiResponse.second;
 				}
 				catch(const std::exception &e){
-					this->_status = 500;
-					std::cerr << "Cgi failed: " << e.what() << std::endl;
+				std::string exception(e.what());
+				if (exception.find("No such file or directory") != std::string::npos){
+					this->_status = INTERNAL_SERVER_ERROR;
+					return;
 				}
+				this->_status = INTERNAL_SERVER_ERROR;
+				std::cerr << "Cgi failed: " << exception << std::endl;
+			}
 			}
 			//MULTIPART
 			else if (this->_request->getBoundarie().first == true){

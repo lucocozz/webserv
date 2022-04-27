@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/21 19:48:40 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/04/27 16:49:27 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/04/27 18:06:11 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,9 +28,8 @@ int	main(void)
 		Config				config;
 		std::vector<Server>	serverList;
 
-
+		config.parse(std::string(WEBSERV_PATH) + CONFIG_FILE_NAME);
 		try {
-			config.parse(std::string(WEBSERV_PATH) + CONFIG_FILE_NAME);
 			serverList = createServers(config);
 			serverCore(serverList);
 		}
@@ -38,9 +37,10 @@ int	main(void)
 			std::cerr << "Error: " << e.what() << std::endl;
 		}
 		closeServers(serverList);
-	} catch (std::exception &e) {
+		return (0);
+	}
+	catch (std::exception &e) {
 		std::cerr << e.what() << std::endl;
 		return (1);
 	}
-	return (0);
 }
