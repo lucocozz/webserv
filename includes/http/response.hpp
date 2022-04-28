@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/04/28 02:56:00 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/28 13:19:02 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -247,7 +247,7 @@ class httpResponse{
 						else
 							this->_retrieveFileContent(buildPathTo(this->_request->getRootPath(), indexLocation.first, ""));
 					}
-					else if (this->_request->getAutoindex() == true || pathIsLocation(this->_request->getPath(), this->_request->getLocations(), "autoindex").first == true)
+					else if (isPathDirectory(this->_rootToFile) == true && (this->_request->getAutoindex() == true || pathIsLocation(this->_request->getPath(), this->_request->getLocations(), "autoindex").first == true))
 						this->_buildAutoIndexPage(this->_request->getRootPath(), this->_request->getPath(), oldPath);
 					else
 						this->_retrieveFileContent(this->_rootToFile);
