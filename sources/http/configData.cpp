@@ -6,13 +6,13 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/15 00:57:56 by user42            #+#    #+#             */
-/*   Updated: 2022/04/26 15:59:14 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/28 01:50:47 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "configData.hpp"
-
 #include "locationRelated.hpp"
+#include "stringRelated.hpp"
 
 std::string												getConfigServerName(Server const &server){
 	try{
@@ -98,15 +98,12 @@ std::pair<std::map<std::string, std::string>, bool>		getConfigErrorPage(Server c
 		std::string path;
 		std::map<std::string, std::string> map;
 		for (size_t i = 0; i < rawErrorPages.size(); i++){
-			if (i % 2 == 0)
-				status = rawErrorPages.at(i);
-			else{
-				if (status.find_first_not_of("0123456789x") == std::string::npos){
-					path = rawErrorPages.at(i);
+			std::vector<std::string> vec = split(rawErrorPages.at(i), ":");
+			if (vec.size() == 2){
+				status = vec.at(0);
+				path = vec.at(1);
+				if (status.find_first_not_of("0123456789x") == std::string::npos)
 					map.insert(std::make_pair(status, path));
-				}
-				status.clear();
-				path.clear();
 			}
 		}
 		ret.first.insert(map.begin(), map.end());

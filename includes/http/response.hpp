@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/04/28 00:11:03 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/28 02:56:00 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -89,18 +89,10 @@ class httpResponse{
 				this->_rootToFile = buildPathTo(this->_request->getRootPath(), this->_request->getPath(), "");
 			}
 
-			//Redirection
 			std::pair<int, std::string>	testRedirection = retrieveLocationRedirection(this->_request->getLocations(), oldPath);
 			if ((testRedirection.first >= 301 && testRedirection.first <= 303) || testRedirection.first == 307){
-				//std::cout << "DEBUG path = " << this->_request->getPath() << std::endl;
-				//std::cout << "DEBUG oldPath = " << oldPath << std::endl;
-				//std::cout << "DEBUG redirectionHeader = " << testRedirection.second << std::endl;
-				//std::cout << "DEBUG if = " << (oldPath == testRedirection.second) << std::endl;
 				if (oldPath == testRedirection.second && this->_request->findHeader("Location").empty() == false){
-					//std::cout << "DEBUG AVANT BUILD ERROR PAGE" << std::endl;
 					this->_buildErrorPage(TOO_MANY_REDIRECTS, "");
-					//std::cout << "DEBUG BODY APRES BUILD ERROR PAGE =" << std::endl;
-					std::cout << this->_content << std::endl;
 					return;
 				}
 				this->_redirectionHeader = testRedirection.second;
@@ -197,9 +189,8 @@ class httpResponse{
 		void _buildHeaders(){
 			this->_response.append("Server: " + this->_request->getServerName() + "\r\n");
 			this->_response.append("Date: " + buildDate() + "\r\n");
-			if (this->_status / 100 == 3 && this->_redirectionHeader.empty() == false){
+			if (this->_status / 100 == 3 && this->_status != 310 && this->_redirectionHeader.empty() == false)
 				this->_response.append("Location: " + this->_redirectionHeader + "\r\n");
-			}
 			if (this->_contentType.empty() == false)
 				this->_response.append("Content-Type: " + this->_contentType + "\r\n");
 			this->_response.append("Content-Length: " + itos(this->_content.size()) + "\r\n");
@@ -210,7 +201,6 @@ class httpResponse{
 		void _buildBody(){
 			this->_response.append("\r\n");
 			this->_response.append(this->_content);
-			//this->_response.append(this->_content + "\r\n");
 		}
 
 		/*
@@ -243,10 +233,13 @@ class httpResponse{
 						return;
 					}
 					std::pair<std::string, std::string> locationRoot = retrieveLocationRoot(this->_request->getLocations(), this->_request->getRootPath(), this->_request->getPath());
-					if (retrieveLocationAutoIndex(this->_request->getLocations(), oldPath) == true && isPathDirectory(this->_rootToFile) == true){
-						if (locationRoot.first.empty() == true && isPathValid(this->_rootToFile) == false)
-							this->_request->setPath("/");
-						this->_buildAutoIndexPage(this->_request->getRootPath(), this->_request->getPath(), oldPath);
+					if (retrieveLocationAutoIndex(this->_request->getLocations(), oldPath) == true){
+						if (isPathValid(this->_rootToFile) == true && isPathDirectory(this->_rootToFile) == false)
+							this->_retrieveFileContent(this->_rootToFile);
+						else if (locationRoot.first.empty() == true && isPathValid(this->_rootToFile) == false)
+							this->_buildAutoIndexPage(this->_request->getRootPath(), "/", oldPath);
+						else
+							this->_buildAutoIndexPage(this->_request->getRootPath(), this->_request->getPath(), oldPath);
 					}
 					else if (indexLocation.first.empty() == false && isSameDirectory(indexLocation.second, oldPath) == true){
 						if (indexLocation.first == "default_index.html")
@@ -254,7 +247,7 @@ class httpResponse{
 						else
 							this->_retrieveFileContent(buildPathTo(this->_request->getRootPath(), indexLocation.first, ""));
 					}
-					else if (this->_request->getAutoindex() == true)
+					else if (this->_request->getAutoindex() == true || pathIsLocation(this->_request->getPath(), this->_request->getLocations(), "autoindex").first == true)
 						this->_buildAutoIndexPage(this->_request->getRootPath(), this->_request->getPath(), oldPath);
 					else
 						this->_retrieveFileContent(this->_rootToFile);
@@ -286,7 +279,6 @@ class httpResponse{
 					this->_status = INTERNAL_SERVER_ERROR;
 					return;
 				}
-				std::cout << "DEBUG internal 1" << std::endl;
 				this->_status = INTERNAL_SERVER_ERROR;
 				std::cerr << "Cgi failed: " << exception << std::endl;
 			}
@@ -482,12 +474,13 @@ class httpResponse{
 			this->_content.clear();
 			this->_status = status;
 			if (this->_request->getErrorPage().second == true && customMessage.empty() == true){
-				std::map<std::string, std::string>::const_iterator it = this->_request->getErrorPage().first.begin();
-				for (; it != this->_request->getErrorPage().first.end(); it++){
+				std::map<std::string, std::string> errorPages = this->_request->getErrorPage().first;
+				std::map<std::string, std::string>::iterator it = errorPages.begin();
+				for (; it != errorPages.end(); it++){
 					if (match(itos(status).c_str(), (*it).first.c_str(), 'x') == 1)
 						break;
 				}
-				if (it == this->_request->getErrorPage().first.end()){
+				if (it == errorPages.end()){
 					this->_buildDefaultErrorPage(customMessage);
 					return;
 				}
@@ -505,7 +498,9 @@ class httpResponse{
 				title = itos(this->_status) + " " + customMessage;
 			this->_contentType = "text/html";
 			this->_content.clear();
-			this->_content.append("<html>\n<head><title>" + title + "</title></head>\n");
+			this->_content.append("<html>\n<head><title>" + title + "</title>");
+			this->_content.append("<style>\r\nbody {\r\nwidth: 35em;\r\nmargin: 0 auto;\r\nfont-family: Tahoma, sans-serif;\r\ntext-align: center;\r\n}\r\n</style>");
+			this->_content.append("</head>\n");
 			this->_content.append("<body>\n<center><h1>" + title + "</h1></center>\n");
 			this->_content.append("<hr><center>42webserv/0.0.1</center>\n");
 			this->_content.append("</body>\n</html>");
