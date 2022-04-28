@@ -102,16 +102,20 @@ public:
 		this->freeAddrInfo();
 		if (this->_listenSocket != 0)
 		{
-			if (fcntl(this->_listenSocket, F_GETFD) != -1)
+			if (this->isOpen() != -1)
 			{
 				if (close(this->_listenSocket) == -1)
 					throw (std::runtime_error(strerror(errno)));
-				std::cout << "Socket closed" << std::endl;
 			}
 			this->_listenSocket = 0;
 		}
 	}
 	
+	int		isOpen(void)
+	{
+		return (fcntl(this->_listenSocket, F_GETFD));
+	}
+
 	void	shutdownSocket(int how = SHUT_RDWR)
 	{
 		if (this->_listenSocket != 0)
@@ -190,12 +194,14 @@ public:
 
 	int	sendData(std::string data, int flags = 0)
 	{
-		int	bytesSent;
+		int	bytesSent = 0;
 
 		std::cout << "Sending data..." << std::endl;
 		bytesSent = send(this->_listenSocket, data.c_str(), data.length(), flags);
-		if (bytesSent < 0)
+		if (bytesSent < 0){
+			std::cerr << "Debug connection reset by peer\n";
 			throw (std::runtime_error(strerror(errno)));
+		}
 		std::cout << "Sent " << bytesSent << " of " << data.length() << " bytes." << std::endl << std::endl;
 		return (bytesSent);
 	}
