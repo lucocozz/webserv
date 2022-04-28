@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/04/28 13:19:02 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/28 13:28:47 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -114,8 +114,8 @@ class httpResponse{
 			this->_buildHeaders();
 			this->_buildBody();
 
-			//std::cout << "SERVER RESPONSE" << std::endl;
-			//std::cout << _response << std::endl;
+			std::cout << "SERVER RESPONSE" << std::endl;
+			std::cout << _response << std::endl;
 		}
 
 		void	sendResponse(EpollSocket socketEvent){
