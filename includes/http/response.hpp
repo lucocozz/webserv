@@ -364,10 +364,6 @@ class httpResponse{
 				}
 				catch(const std::exception &e){
 				std::string exception(e.what());
-				if (exception.find("No such file or directory") != std::string::npos){
-					this->_status = INTERNAL_SERVER_ERROR;
-					return;
-				}
 				this->_status = INTERNAL_SERVER_ERROR;
 				std::cerr << "Cgi failed: " << exception << std::endl;
 			}

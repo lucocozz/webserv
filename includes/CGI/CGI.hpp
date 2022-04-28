@@ -405,7 +405,6 @@ private:
         close(fdToChild[0]);
 
         chdir(cgiLocationPath.c_str());
-        std::cerr << "current:dir : " << get_current_dir_name() << " binary: " << args[0] << " script " << args[1] << std::endl;
         execve(args[0], args, cMetaVar);
         
         exit(errno);

@@ -3,15 +3,17 @@ import cgi, os
 import cgitb; cgitb.enable()
 form = cgi.FieldStorage()
 # Get filename here.
-fileitem = form['filename']
+fileitem = form['userfile']
+#upload location
+uploadlocation = '/tmp/www/tests/toto/'
 # Test if the file was uploaded
 if fileitem.filename:
    # strip leading path from file name to avoid
    # directory traversal attacks
    fn = os.path.basename(fileitem.filename)
    print("fn: ", fn)
-   open('/var/www/html/python-cgi/upload/' + fn, 'wb').write(fileitem.file.read())
-   message = 'The file "' + fn + '" was uploaded successfully'
+   open(uploadlocation + fn, 'wb').write(fileitem.file.read())
+   message = 'The file "' + fn + '" was uploaded successfully at '
  
 else:
    message = 'No file was uploaded'

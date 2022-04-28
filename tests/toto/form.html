@@ -9,11 +9,19 @@
     <script src='main.js'></script>
 </head>
 <body>
+    <h4>php-cgi form</h4>
     <hr>
         <form enctype="multipart/form-data" action="/php-cgi/upload.php" method="post">
         <input name="userfile" type="file" />
         <input type="submit" value="Envoyer le fichier" />
         </form>
+    <h4>Python CGI form</h4>
+    <hr>
+        <form enctype="multipart/form-data" action="/upload.py" method="post">
+        <input name="userfile" type="file" />
+        <input type="submit" value="Envoyer le fichier" />
+        </form>
+    <h4>upload forms</h4>
     <hr>
         <form enctype="multipart/form-data" action="/uploads" method="post">
         <input type="file" name="monFichier" />
