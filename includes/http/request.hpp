@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:46 by user42            #+#    #+#             */
-/*   Updated: 2022/04/27 17:13:37 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/28 17:10:55 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -337,7 +337,7 @@ class httpRequest{
 				if (this->_chunked == false){
 					//DEBUG TEST
 					if (this->_contentLength == 0){
-						this->_status = BAD_REQUEST;
+						this->_status = FORBIDDEN;
 						return;
 					}
 					rawBody = rawRequest.substr(rawRequest.find("\r\n\r\n") + 4);

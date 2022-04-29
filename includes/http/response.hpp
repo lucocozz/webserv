@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/04/28 13:34:30 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/29 00:27:10 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -91,8 +91,12 @@ class httpResponse{
 
 			std::pair<int, std::string>	testRedirection = retrieveLocationRedirection(this->_request->getLocations(), oldPath);
 			if ((testRedirection.first >= 301 && testRedirection.first <= 303) || testRedirection.first == 307){
-				if (oldPath == testRedirection.second && this->_request->findHeader("Location").empty() == false){
-					this->_buildErrorPage(TOO_MANY_REDIRECTS, "");
+				if (oldPath == testRedirection.second || buildUrlTo(this->_request->findHeader("Host"), oldPath, "") == testRedirection.second){
+					this->_status = TOO_MANY_REDIRECTS;
+					this->_buildStatusLine();
+					this->_buildHeaders();
+					this->_response.append("\r\n");
+					this->_buildErrorPage(this->_status, "");
 					return;
 				}
 				this->_redirectionHeader = testRedirection.second;
