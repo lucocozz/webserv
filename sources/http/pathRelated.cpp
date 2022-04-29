@@ -6,16 +6,14 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/15 00:58:32 by user42            #+#    #+#             */
-/*   Updated: 2022/04/19 22:01:53 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/29 17:56:58 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "pathRelated.hpp"
 
-//#include "stringRelated.hpp"
 #include <sys/stat.h>
 #include <sys/types.h>
-//#include <unistd.h>
 #include <dirent.h>
 #include <cstdio>
 

@@ -6,13 +6,15 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/15 00:57:56 by user42            #+#    #+#             */
-/*   Updated: 2022/04/28 01:50:47 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/29 18:04:29 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "configData.hpp"
 #include "locationRelated.hpp"
 #include "stringRelated.hpp"
+#include "pathRelated.hpp"
+#include "statusCode.hpp"
 
 std::string												getConfigServerName(Server const &server){
 	try{
@@ -90,7 +92,7 @@ size_t													getConfigMaxBodySize(Server const &server){
 	}
 }
 
-std::pair<std::map<std::string, std::string>, bool>		getConfigErrorPage(Server const &server){
+std::pair<std::map<std::string, std::string>, bool>		getConfigErrorPage(Server const &server, std::string rootPath){
 	std::pair<std::map<std::string, std::string>, bool> ret;
 	try{
 		std::vector<std::string> rawErrorPages = server.context.directives.at("error_page");
@@ -102,7 +104,7 @@ std::pair<std::map<std::string, std::string>, bool>		getConfigErrorPage(Server c
 			if (vec.size() == 2){
 				status = vec.at(0);
 				path = vec.at(1);
-				if (status.find_first_not_of("0123456789x") == std::string::npos)
+				if (status.find_first_not_of("0123456789x") == std::string::npos && isPathValid(buildPathTo(rootPath, path, "")))
 					map.insert(std::make_pair(status, path));
 			}
 		}

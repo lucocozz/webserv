@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:57 by user42            #+#    #+#             */
-/*   Updated: 2022/04/27 17:13:37 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/29 18:04:37 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,7 +48,6 @@ enum STATUS_CODE{
 	SWITCH_PROXY = 306,
 	TEMPORARY_REDIRECT = 307,
 	PERMANENT_REDIRECT = 308,
-	// /!\ CHECK IF REDIRECTION != LOCATION NAME OR SEND THIS ERROR
 	TOO_MANY_REDIRECTS = 310,
 	
 	//Error client
@@ -99,6 +98,6 @@ enum STATUS_CODE{
 	NETWORK_AUTHENTICATION_REQUIRED = 511
 };
 
-std::map<int, std::string>	initStatusMessages();
+std::map<int, std::string>		initStatusMessages();
 
 #endif

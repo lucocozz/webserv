@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:46 by user42            #+#    #+#             */
-/*   Updated: 2022/04/28 17:10:55 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/29 17:57:42 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -227,7 +227,7 @@ class httpRequest{
 			this->_autoindex = getConfigAutoIndex(server);
 			this->_allowedMethod = getConfigAllowedMethod(server);
 			this->_maxBodySize = getConfigMaxBodySize(server);
-			this->_errorPage = getConfigErrorPage(server);
+			this->_errorPage = getConfigErrorPage(server, this->_rootPath);
 			this->_locations = getConfigLocations(server);
 		}
 
