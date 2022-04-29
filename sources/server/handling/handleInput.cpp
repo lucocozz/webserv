@@ -21,11 +21,7 @@ void	handleInput(Client &client, Epoll &epoll)
 	data = client.socket.recvData();
 	serverLink = client.fetchServerlink(data.first);
 	if (client.request.treatRequest(data.first, *serverLink) == true){
-		//std::cout << "CLIENT REQUEST" << std::endl;
-		//std::cout << data.first << std::endl;
-
 		client.response.buildResponse(&client.request, *serverLink, clientInfo);
-		std::cout << "debug apres buildReponse" << std::endl;
 		// executer ces lignes si le server doit envoyer une reponse au client
 		client.socket.setEvents(client.socket.getEvents() | EPOLLOUT);
 		epoll.control(EPOLL_CTL_MOD, client.socket);
