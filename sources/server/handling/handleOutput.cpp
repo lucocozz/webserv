@@ -16,12 +16,21 @@ void	handleOutput(Client &client, Epoll &epoll)
 {
 	if (client.response.getResponse().size() > 0)
 	{
-		client.response.sendResponse(client.socket);
-		if (client.response.getResponse().size() == 0)
+		try 
 		{
-			client.response.clear();
-			client.socket.setEvents(client.socket.getEvents() & ~EPOLLOUT);
+			client.response.sendResponse(client.socket);
+			if (client.response.getResponse().size() == 0)
+			{
+				client.response.clear();
+				client.socket.setEvents(client.socket.getEvents() & ~EPOLLOUT);
+				epoll.control(EPOLL_CTL_MOD, client.socket);
+			}
+		}
+		catch(std::exception &e)
+		{
+			client.socket.setEvents(client.socket.getEvents() | EPOLLERR);
 			epoll.control(EPOLL_CTL_MOD, client.socket);
+			std::cerr << "HandleOutput: " << e.what() << std::endl;
 		}
 	}
 }

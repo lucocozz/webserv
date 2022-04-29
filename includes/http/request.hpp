@@ -41,7 +41,7 @@ class httpRequest{
 			-	Assignement operator
 		*/
 
-		httpRequest(){
+		httpRequest(): _concatenedRequest() {
 			this->_status = OK;
 			this->_chunked = false;
 			return;
@@ -154,7 +154,7 @@ class httpRequest{
 		}
 
 		void					clear(){
-			this->_concatenedRequest.clear();
+			this->_concatenedRequest = std::string();
 			this->_contentLength = 0;
 			this->_chunked = false;
 
