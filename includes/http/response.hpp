@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/04/29 00:27:10 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/29 02:25:31 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -304,7 +304,7 @@ class httpResponse{
 
 		void			_buildDefaultIndexPage(){
 			this->_contentType = "text/html";
-			this->_content.append("<html>\r\n<head>\r\n");
+			this->_content.append("<!DOCTYPE html>\r\n<html>\r\n<head>\r\n<meta charset='utf-8'>\r\n");
 			this->_content.append("<title>Welcome to " + this->_request->getServerName() + "</title>\r\n");
 			this->_content.append("<style>\r\nbody {\r\nwidth: 35em;\r\nmargin: 0 auto;\r\nfont-family: Tahoma, sans-serif;\r\ntext-align: center;\r\n}\r\n</style>");
 			this->_content.append("</head>\r\n");
@@ -319,7 +319,7 @@ class httpResponse{
 
 		void			_buildAutoIndexPage(std::string rootPath, std::string path, std::string oldPath){
 			this->_contentType = "text/html";
-			this->_content.append("<html>\r\n<head>\r\n");
+			this->_content.append("<!DOCTYPE html><html>\r\n<head>\r\n<meta charset='utf-8'>\r\n");
 			this->_content.append("<title>Index of " + buildPathTo(oldPath, "/", "") + "</title>\r\n</head>\r\n<body>\r\n");
 			this->_content.append("<h1>Index of " + buildPathTo(oldPath, "/", "") + "</h1>\r\n<hr>\r\n");
 			DIR *rep = NULL;
@@ -498,7 +498,7 @@ class httpResponse{
 				title = itos(this->_status) + " " + customMessage;
 			this->_contentType = "text/html";
 			this->_content.clear();
-			this->_content.append("<html>\n<head><title>" + title + "</title>");
+			this->_content.append("<!DOCTYPE html>\r\n<html>\n<head><meta charset='utf-8'>\r\n<title>" + title + "</title>");
 			this->_content.append("<style>\r\nbody {\r\nwidth: 35em;\r\nmargin: 0 auto;\r\nfont-family: Tahoma, sans-serif;\r\ntext-align: center;\r\n}\r\n</style>");
 			this->_content.append("</head>\n");
 			this->_content.append("<body>\n<center><h1>" + title + "</h1></center>\n");
