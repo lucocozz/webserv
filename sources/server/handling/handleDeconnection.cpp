@@ -18,7 +18,16 @@
 void	handleDeconnection(std::map<int, Client> &clientList, EpollSocket &socketEvent, Epoll &epoll)
 {
 	epoll.control(EPOLL_CTL_DEL, socketEvent);
-	clientList[socketEvent.listener()].response.clear();
+	if (socketEvent.getEvents() & EPOLLRDHUP){
+		try{
+			socketEvent.shutdownSocket(SHUT_WR);
+		}
+		catch (std::exception &e)
+		{
+			clientList[socketEvent.listener()].response.clear();
+			std::cerr << "Error during shutdownSocket: " << e.what() << std::endl;
+		}
+	}
 	socketEvent.closeSocket();
 	clientList.erase(socketEvent.listener());
 }

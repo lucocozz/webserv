@@ -117,7 +117,7 @@ class httpRequest{
 						this->_status = 411;
 						return (true);
 					}
-					this->_contentLength += getHeaderContentLenght(rawRequest);
+					this->_contentLength = getHeaderContentLenght(rawRequest);
 				}
 			}
 			else if (rawRequest.find("GET /") != std::string::npos)

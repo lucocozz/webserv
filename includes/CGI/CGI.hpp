@@ -62,9 +62,12 @@ public:
 
         cMetaVar = this->_createCMetaVar();
         if (stat(_mapMetaVars.find("PATH_TRANSLATED=")->second.c_str(), &dummy) == -1){
-            this->_closeFds(fdToChild, fdToParent);
             this->_freeMetaVar(cMetaVar);
             return (std::make_pair("", 404));
+        }
+        if (stat(_locationContext.directives.find("cgi_binary")->second[0].c_str(), &dummy) == -1){
+            this->_freeMetaVar(cMetaVar);
+            return (std::make_pair("", 500));
         }
         if (pipe(fdToChild) < 0)
             throw pipeError();
@@ -90,7 +93,6 @@ public:
         cgiResponse.second = this->_getCgiReturnStatus(cgiResponse.first);
 		if (cgiResponse.second == 200 || cgiResponse.second == 201)
             this->_getCgiOutputBody(cgiResponse.first);
-        close(fdToParent[0]);
         this->_freeMetaVar(cMetaVar);
         return (cgiResponse);
     }
@@ -416,7 +418,7 @@ private:
 
         exitStatus = 0;
         exitCode = 0;
-        waitpid(pid, &exitStatus, 0);
+        waitpid(pid, &exitStatus, WUNTRACED);
         if (WIFEXITED(exitStatus))
             exitCode = WEXITSTATUS(exitStatus);
         return (exitCode);
@@ -454,6 +456,7 @@ private:
             nbRead = read(fdToParent[0], readBuffer, 1024);
         }
         cgiOutput += readBuffer;
+        close(fdToParent[0]);
         return (cgiOutput);
     }
 
@@ -512,7 +515,5 @@ private:
     }
 };
 
-
-
-
 #endif
+

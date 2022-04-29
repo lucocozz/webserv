@@ -18,7 +18,14 @@ void	handleInput(Client &client, Epoll &epoll)
 	Server										*serverLink;
 	const std::pair<std::string, std::string> 	clientInfo(client.socket.getNameInfo(NI_NUMERICHOST), client.socket.getNameInfo());
 	
-	data = client.socket.recvData();
+	try
+	{
+		data = client.socket.recvData();
+	}
+	catch (std::exception &e)
+	{
+		std::cerr << "recvData error: " << e.what() << std::endl;
+	}
 	serverLink = client.fetchServerlink(data.first);
 	std::cout << "CLIENT REQUEST" << std::endl;
 	std::cout << data.first << std::endl;
