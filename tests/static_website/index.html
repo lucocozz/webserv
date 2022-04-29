@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset='utf-8'>
+		<title>Welcome to staticWebsite</title>
+		<style>
+			body {
+				background-color: rgb(139, 139, 139);
+				width: 35em;
+				margin: 0 auto;
+				font-family: Tahoma, sans-serif;
+				text-align: center;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>Welcome to our simple static website !</h1>
+		<hr>
+		<img>
+		<h3>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</h3>
+		<img src="Cat-PNG-Clipart.png" width="300" height="200">
+		<p>Integer tincidunt lectus non tempus tempus. Sed consequat mi id lectus commodo, quis pulvinar lorem fringilla. Sed nulla tellus, pharetra eget lobortis sed, facilisis nec tellus. Quisque arcu mi, ullamcorper vitae turpis vitae, egestas dictum elit. Quisque vehicula, velit sed volutpat tristique, ex est elementum quam, ac posuere turpis odio eu justo. Donec pretium mollis ante, vitae tempor massa venenatis vel. Donec id condimentum ante. Nam venenatis nibh enim. Etiam ut vehicula ex. Donec ullamcorper posuere ultricies. Nulla in tortor elit. Quisque vitae turpis dolor. </p>
+		<hr>
+		<h4>You want to upload something ?</h4>
+		<form enctype="multipart/form-data" action="/uploads" method="post">
+			<input type="file" name="monFichier" />
+			<button type ="submit">Envoyer</button>
+		</form>
+		<hr>
+		<h4>You want to see what you uploaded ?</h4>
+		<p><a href="/uploads">Click here !</a></p>
+	</body>
+</html>
