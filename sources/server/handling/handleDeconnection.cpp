@@ -6,7 +6,7 @@
 /*   By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/22 21:59:57 by lucocozz          #+#    #+#             */
-/*   Updated: 2022/04/29 23:06:01 by lucocozz         ###   ########.fr       */
+/*   Updated: 2022/04/26 18:11:45 by lucocozz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,16 +18,15 @@
 void	handleDeconnection(std::map<int, Client> &clientList, EpollSocket &socketEvent, Epoll &epoll)
 {
 	epoll.control(EPOLL_CTL_DEL, socketEvent);
-	try
-	{
-		if (socketEvent.getEvents() & EPOLLRDHUP)
+	if (socketEvent.getEvents() & EPOLLRDHUP){
+		try{
 			socketEvent.shutdownSocket(SHUT_WR);
-		else
+		}
+		catch (std::exception &e)
+		{
 			clientList[socketEvent.listener()].response.clear();
-	}
-	catch (std::exception &e)
-	{
-		std::cerr << "Error: " << e.what() << std::endl;
+			std::cerr << "Error during shutdownSocket: " << e.what() << std::endl;
+		}
 	}
 	socketEvent.closeSocket();
 	clientList.erase(socketEvent.listener());

@@ -185,7 +185,7 @@ public:
 
 		std::cout << "Reading data..." << std::endl;
 		bytesReceived = recv(this->_listenSocket, buffer, queueSize, flags);
-		if (bytesReceived < 0){
+		if (bytesReceived <= 0){
 			delete buffer;
 			throw (std::runtime_error(strerror(errno)));
 		}
