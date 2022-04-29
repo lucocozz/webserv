@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/04/29 12:59:39 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/30 00:54:03 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,6 +63,7 @@ class httpResponse{
 			this->_rootToFile = src.getRootToFile();
 			this->_locationRootPath = src.getLocationRootPath();
 			this->_redirectionHeader = src.getRedirectionHeader();
+			this->_allowedLocation = src.getAllowedLocation();
 
 			this->_response = src.getResponse();
 			return (*this);
@@ -103,9 +104,11 @@ class httpResponse{
 				return;
 			}
 			else{
-				if (this->_request->getMethod() == "POST" && isMethodAllowed(this->_request->getLocations(), oldPath, this->_request->getMethod(), this->_request->getAllowedMethod()) == true)
+				//if (this->_request->getMethod() == "POST" && isMethodAllowed(this->_request->getLocations(), oldPath, this->_request->getMethod(), this->_request->getAllowedMethod()) == true)
+				if (this->_request->getMethod() == "POST" && this->_isMethodAllowed(this->_request->getLocations(), oldPath, this->_request->getMethod(), this->_request->getAllowedMethod()) == true)
 					this->_uploadContent(request->getPath(), server, clientInfo, request->getHeaders(), oldPath);
-				else if (this->_request->getMethod() == "DELETE" && isMethodAllowed(this->_request->getLocations(), oldPath, this->_request->getMethod(), this->_request->getAllowedMethod()) == true)
+				//else if (this->_request->getMethod() == "DELETE" && isMethodAllowed(this->_request->getLocations(), oldPath, this->_request->getMethod(), this->_request->getAllowedMethod()) == true)
+				else if (this->_request->getMethod() == "DELETE" && this->_isMethodAllowed(this->_request->getLocations(), oldPath, this->_request->getMethod(), this->_request->getAllowedMethod()) == true)
 					this->_deleteContent(oldPath);
 				this->_retrieveContent(server, clientInfo, oldPath);
 			}
@@ -114,6 +117,7 @@ class httpResponse{
 			this->_buildHeaders();
 			this->_buildBody();
 
+			std::cout << "SERVER RESPONSE STATUS - " << _status << std::endl;
 			//std::cout << "SERVER RESPONSE" << std::endl;
 			//std::cout << _response << std::endl;
 		}
@@ -137,6 +141,7 @@ class httpResponse{
 			this->_rootToFile.clear();
 			this->_locationRootPath.clear();
 			this->_redirectionHeader.clear();
+			this->_allowedLocation.clear();
 
 			this->_response.clear();
 		}
@@ -154,6 +159,7 @@ class httpResponse{
 		const std::string				&getRootToFile() const{return (this->_rootToFile);}
 		const std::string				&getLocationRootPath() const{return (this->_locationRootPath);}
 		const std::string				&getRedirectionHeader() const{return (this->_redirectionHeader);}
+		const std::vector<std::string>	&getAllowedLocation() const{return (this->_allowedLocation);}
 
 		std::string						getResponse() const{return (this->_response);}
 
@@ -193,6 +199,18 @@ class httpResponse{
 				this->_response.append("Location: " + this->_redirectionHeader + "\r\n");
 			if (this->_contentType.empty() == false)
 				this->_response.append("Content-Type: " + this->_contentType + "\r\n");
+			if (this->_status == METHOD_NOT_ALLOWED){
+				this->_response.append("Allow:");
+				if (this->_allowedLocation.empty() == true){
+					for (size_t i = 0; i < this->_request->getAllowedMethod().size(); i++)
+						this->_response.append(" " + this->_request->getAllowedMethod().at(i));
+				}
+				else{
+					for (size_t i = 0; i < this->_allowedLocation.size(); i++)
+						this->_response.append(" " + this->_allowedLocation.at(i));
+				}
+				this->_response.append("\r\n");
+			}
 			this->_response.append("Content-Length: " + itos(this->_content.size()) + "\r\n");
 			this->_response.append("Transfer-Encoding: identity\r\n");
 			this->_response.append("Connection: keep-alive\r\n");
@@ -211,8 +229,8 @@ class httpResponse{
 		*/
 
 		void	_retrieveContent(const Server &server, const std::pair<std::string, std::string> &clientInfo, std::string oldPath){
-			if (this->_request->getMethod() == "GET" && isMethodAllowed(this->_request->getLocations(), this->_request->getPath(), this->_request->getMethod(), this->_request->getAllowedMethod()) == true){
-
+			//if (this->_request->getMethod() == "GET" && isMethodAllowed(this->_request->getLocations(), this->_request->getPath(), this->_request->getMethod(), this->_request->getAllowedMethod()) == true){
+			if (this->_request->getMethod() == "GET" && this->_isMethodAllowed(this->_request->getLocations(), this->_request->getPath(), this->_request->getMethod(), this->_request->getAllowedMethod()) == true){
 				std::pair<bool,LocationContext> locationResult = cgiChecker(this->_request->getPath(), server.context.locations);
 				if (locationResult.first == true)
 					this->_retrieveCGIContent(server, clientInfo, locationResult.second);
@@ -253,8 +271,10 @@ class httpResponse{
 						this->_retrieveFileContent(this->_rootToFile);
 				}
 			}
-			else if (this->_request->getMethod() == "GET" || isMethodAllowed(this->_request->getLocations(), oldPath, this->_request->getMethod(), this->_request->getAllowedMethod()) == false)
+			//else if (/*this->_request->getMethod() == "GET" || */isMethodAllowed(this->_request->getLocations(), oldPath, this->_request->getMethod(), this->_request->getAllowedMethod()) == false){
+			else if (/*this->_request->getMethod() == "GET" || */this->_isMethodAllowed(this->_request->getLocations(), oldPath, this->_request->getMethod(), this->_request->getAllowedMethod()) == false){
 				this->_status = METHOD_NOT_ALLOWED;
+			}
 			if (this->_status / 100 == 4 || this->_status / 100 == 5){
 				this->_contentType = "text/html";
 				this->_buildErrorPage(this->_status, "");
@@ -345,10 +365,19 @@ class httpResponse{
 				this->_buildErrorPage(this->_status, "");
 				return;
 			}
-			
+
 			std::pair<bool,LocationContext> locationResult = 
 				cgiChecker(this->_request->getPath(), server.context.locations);
 			std::pair<bool, std::string> uploadLocation = retrieveLocationUpload(this->_request->getLocations(), oldPath);
+
+			bool filenameBool = false;
+			std::string contentDispo = this->_request->findHeader("Content-Disposition");
+			if (contentDispo.empty() == false){
+				if (contentDispo.find("filename=\"") != std::string::npos)
+					filenameBool = true;
+				else
+					filenameBool = false;
+			}
 
 			if (locationResult.first == true){
 				try{
@@ -363,10 +392,10 @@ class httpResponse{
 					this->_status = cgiResponse.second;
 				}
 				catch(const std::exception &e){
-				std::string exception(e.what());
-				this->_status = INTERNAL_SERVER_ERROR;
-				std::cerr << "Cgi failed: " << exception << std::endl;
-			}
+					std::string exception(e.what());
+					this->_status = INTERNAL_SERVER_ERROR;
+					std::cerr << "Cgi failed: " << exception << std::endl;
+				}
 			}
 			//MULTIPART
 			else if (this->_request->getBoundarie().first == true){
@@ -387,7 +416,7 @@ class httpResponse{
 				this->_status = CREATED;
 			}
 			//CONTENT DISPOSITION
-			else if (path != "/" && (*this->_request->getHeaders().find("Content-Disposition")).second.find("filename=") != std::string::npos){
+			else if (filenameBool == true){
 				std::string contentDisposition = (*this->_request->getHeaders().find("Content-Disposition")).second;
 				std::string filename = contentDisposition.substr(contentDisposition.find("filename=\"") + 10);
 				filename.erase(filename.end() - 1);
@@ -410,7 +439,7 @@ class httpResponse{
 				this->_status = CREATED;
 			}
 			else
-				this->_status = FORBIDDEN;
+				this->_status = UNPROCESSABLE_ENTITY;
 			return;
 		}
 
@@ -430,6 +459,31 @@ class httpResponse{
 		}
 
 		/*
+
+		*/
+
+		bool						_isMethodAllowed(std::vector<LocationContext> locations, std::string path, std::string method, std::vector<std::string> allowedRoot){
+			std::pair<bool,LocationContext> isLocation = pathIsLocation(path, locations, "allowed_method");
+			if (isLocation.first == false && allowedRoot.empty() == false){
+				for (size_t i = 0; i < allowedRoot.size(); i++){
+					if (method == allowedRoot.at(i))
+						return (true);
+				}
+				return (false);
+			}
+			else if (isLocation.first == false)
+				return (true);
+
+			std::vector<std::string> allowedMethods = retrieveDirectiveArgs(isLocation.second, "allowed_method");
+			for (size_t i = 0; i < allowedMethods.size(); i++){
+				if (method == allowedMethods.at(i))
+					return (true);
+			}
+			this->_allowedLocation = allowedMethods;
+			return (false);
+		}
+
+		/*
 			Delete a ressource :
 		*/
 
@@ -441,7 +495,7 @@ class httpResponse{
 
 			if (this->_request->getPath() == "/")
 				this->_buildErrorPage(FORBIDDEN, "");
-			else if (isMethodAllowed(this->_request->getLocations(), oldPath, this->_request->getMethod(), this->_request->getAllowedMethod()) == true){
+			else if (this->_isMethodAllowed(this->_request->getLocations(), oldPath, this->_request->getMethod(), this->_request->getAllowedMethod()) == true){
 				if (isPathValid(_rootToFile) && isPathDirectory(_rootToFile) == false)
 					remove(_rootToFile.c_str());
 				else if (isPathValid(_rootToFile) && isPathDirectory(_rootToFile) == true){
@@ -454,7 +508,6 @@ class httpResponse{
 			}
 			else
 				this->_buildErrorPage(METHOD_NOT_ALLOWED, "");
-			return;
 		}
 
 		/*
@@ -516,6 +569,7 @@ class httpResponse{
 		std::string							_rootToFile;
 		std::string							_locationRootPath;
 		std::string							_redirectionHeader;
+		std::vector<std::string>			_allowedLocation;
 		std::string							_response;
 };//end of class httpResponse
 
