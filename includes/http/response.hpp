@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/04/30 00:54:03 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/30 01:16:48 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -104,10 +104,8 @@ class httpResponse{
 				return;
 			}
 			else{
-				//if (this->_request->getMethod() == "POST" && isMethodAllowed(this->_request->getLocations(), oldPath, this->_request->getMethod(), this->_request->getAllowedMethod()) == true)
 				if (this->_request->getMethod() == "POST" && this->_isMethodAllowed(this->_request->getLocations(), oldPath, this->_request->getMethod(), this->_request->getAllowedMethod()) == true)
 					this->_uploadContent(request->getPath(), server, clientInfo, request->getHeaders(), oldPath);
-				//else if (this->_request->getMethod() == "DELETE" && isMethodAllowed(this->_request->getLocations(), oldPath, this->_request->getMethod(), this->_request->getAllowedMethod()) == true)
 				else if (this->_request->getMethod() == "DELETE" && this->_isMethodAllowed(this->_request->getLocations(), oldPath, this->_request->getMethod(), this->_request->getAllowedMethod()) == true)
 					this->_deleteContent(oldPath);
 				this->_retrieveContent(server, clientInfo, oldPath);
@@ -229,7 +227,6 @@ class httpResponse{
 		*/
 
 		void	_retrieveContent(const Server &server, const std::pair<std::string, std::string> &clientInfo, std::string oldPath){
-			//if (this->_request->getMethod() == "GET" && isMethodAllowed(this->_request->getLocations(), this->_request->getPath(), this->_request->getMethod(), this->_request->getAllowedMethod()) == true){
 			if (this->_request->getMethod() == "GET" && this->_isMethodAllowed(this->_request->getLocations(), this->_request->getPath(), this->_request->getMethod(), this->_request->getAllowedMethod()) == true){
 				std::pair<bool,LocationContext> locationResult = cgiChecker(this->_request->getPath(), server.context.locations);
 				if (locationResult.first == true)
@@ -271,8 +268,7 @@ class httpResponse{
 						this->_retrieveFileContent(this->_rootToFile);
 				}
 			}
-			//else if (/*this->_request->getMethod() == "GET" || */isMethodAllowed(this->_request->getLocations(), oldPath, this->_request->getMethod(), this->_request->getAllowedMethod()) == false){
-			else if (/*this->_request->getMethod() == "GET" || */this->_isMethodAllowed(this->_request->getLocations(), oldPath, this->_request->getMethod(), this->_request->getAllowedMethod()) == false){
+			else if (this->_isMethodAllowed(this->_request->getLocations(), oldPath, this->_request->getMethod(), this->_request->getAllowedMethod()) == false){
 				this->_status = METHOD_NOT_ALLOWED;
 			}
 			if (this->_status / 100 == 4 || this->_status / 100 == 5){
@@ -413,7 +409,6 @@ class httpResponse{
 
 				for (std::map<std::map<std::string, std::string>, std::string>::const_iterator it = this->_request->getBodyMultipart().begin(); it != this->_request->getBodyMultipart().end(); it++)
 					_uploadFileContent(oldPath, (*(*it).first.find("filename")).second, (*it).second);
-				this->_status = CREATED;
 			}
 			//CONTENT DISPOSITION
 			else if (filenameBool == true){
@@ -434,9 +429,7 @@ class httpResponse{
 					this->_buildErrorPage(NOT_FOUND, "");
 					return;
 				}
-
 				_uploadFileContent(oldPath, filename, this->_request->getBody());
-				this->_status = CREATED;
 			}
 			else
 				this->_status = UNPROCESSABLE_ENTITY;
@@ -446,6 +439,10 @@ class httpResponse{
 		void			_uploadFileContent(std::string const &oldPath, std::string const &filename, std::string const &body){
 			std::string pathToFile;
 			pathToFile = buildPathTo(this->_request->getRootPath(), oldPath, filename);
+			if (isPathValid(pathToFile) == false)
+				this->_status = CREATED;
+			else
+				this->_status = OK;
 			if (this->getMimeTypes(pathToFile.c_str()).find("text/") != std::string::npos){
 				std::ofstream outdata(pathToFile.c_str());
 				outdata << body;
@@ -502,9 +499,8 @@ class httpResponse{
 					if (removeDir(_rootToFile.c_str()) == -1)
 						this->_buildErrorPage(FORBIDDEN, "");
 				}
-				else{
+				else
 					this->_buildErrorPage(NOT_FOUND, "");
-				}
 			}
 			else
 				this->_buildErrorPage(METHOD_NOT_ALLOWED, "");
