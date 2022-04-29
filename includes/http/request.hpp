@@ -106,7 +106,7 @@ class httpRequest{
 		}
 
 		bool								treatRequest(std::string &rawRequest, Server const &server){
-			if (rawRequest.find("POST") != std::string::npos){
+			if (rawRequest.find("POST /") != std::string::npos){
 				if (rawRequest.find("Transfer-Encoding: chunked") != std::string::npos){
 					this->_chunked = true;
 					this->_contentLength = 0;
@@ -116,12 +116,13 @@ class httpRequest{
 						this->_status = 411;
 						return (true);
 					}
-					this->_contentLength = getHeaderContentLenght(rawRequest);
+					this->_contentLength += getHeaderContentLenght(rawRequest);
 				}
 			}
-			else if (rawRequest.find("GET") != std::string::npos)
+			else if (rawRequest.find("GET /") != std::string::npos){
 				this->_contentLength = rawRequest.size();
-			else if (rawRequest.find("DELETE") != std::string::npos){
+			}
+			else if (rawRequest.find("DELETE /") != std::string::npos){
 				this->_concatenedRequest.clear();
 				this->_contentLength = rawRequest.size();
 			}
