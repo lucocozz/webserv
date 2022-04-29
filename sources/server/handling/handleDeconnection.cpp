@@ -27,7 +27,7 @@ void	handleDeconnection(std::map<int, Client> &clientList, EpollSocket &socketEv
 	}
 	catch (std::exception &e)
 	{
-		std::cerr << e.what() << std::endl;
+		std::cerr << "Error: " << e.what() << std::endl;
 	}
 	socketEvent.closeSocket();
 	clientList.erase(socketEvent.listener());
