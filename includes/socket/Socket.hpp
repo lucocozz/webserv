@@ -201,7 +201,7 @@ public:
 
 		std::cout << "Sending data..." << std::endl;
 		bytesSent = send(this->_listenSocket, data.c_str(), data.length(), flags);
-		if (bytesSent < 0){
+		if (bytesSent <= 0){
 			std::cerr << "Debug connection reset by peer\n";
 			throw (std::runtime_error(strerror(errno)));
 		}

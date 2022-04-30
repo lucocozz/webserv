@@ -23,6 +23,8 @@ void	handleInput(Client &client, Epoll &epoll)
 	}
 	catch (std::exception &e)
 	{
+		client.socket.setEvents(client.socket.getEvents() | EPOLLERR);
+		epoll.control(EPOLL_CTL_MOD, client.socket);
 		std::cerr << "recvData error: " << e.what() << std::endl;
 	}
 	if (client.linkedServer == NULL)
