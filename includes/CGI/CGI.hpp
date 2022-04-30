@@ -62,9 +62,6 @@ public:
         struct stat                     dummy;
 
         cMetaVar = this->_createCMetaVar();
-        for (int i = 0; cMetaVar[i]; i++){
-            std::cerr << cMetaVar[i] << std::endl;
-        }
         if (stat(_mapMetaVars.find("PATH_TRANSLATED=")->second.c_str(), &dummy) == -1){
             this->_freeMetaVar(cMetaVar);
             return (std::make_pair("", 404));

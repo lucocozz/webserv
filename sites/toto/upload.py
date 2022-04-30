@@ -5,7 +5,7 @@ form = cgi.FieldStorage()
 # Get filename here.
 fileitem = form['userfile']
 #upload location
-uploadlocation = '/tmp/www/tests/toto/'
+uploadlocation = '/tmp/www/sites/toto/'
 # Test if the file was uploaded
 if fileitem.filename:
    # strip leading path from file name to avoid
@@ -13,7 +13,7 @@ if fileitem.filename:
    fn = os.path.basename(fileitem.filename)
    print("fn: ", fn)
    open(uploadlocation + fn, 'wb').write(fileitem.file.read())
-   message = 'The file "' + fn + '" was uploaded successfully at '
+   message = 'The file "' + fn + '" was uploaded successfully at ' + uploadlocation
  
 else:
    message = 'No file was uploaded'
