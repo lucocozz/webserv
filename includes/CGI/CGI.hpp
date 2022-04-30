@@ -14,6 +14,7 @@
 #include "Epoll.hpp"
 #include "Socket.hpp"
 #include "EpollSocket.hpp"
+#include "stringRelated.hpp"
 
 #include "URLDecoder.hpp"
 
@@ -61,6 +62,9 @@ public:
         struct stat                     dummy;
 
         cMetaVar = this->_createCMetaVar();
+        for (int i = 0; cMetaVar[i]; i++){
+            std::cerr << cMetaVar[i] << std::endl;
+        }
         if (stat(_mapMetaVars.find("PATH_TRANSLATED=")->second.c_str(), &dummy) == -1){
             this->_freeMetaVar(cMetaVar);
             return (std::make_pair("", 404));
@@ -86,7 +90,6 @@ public:
         close(fdToChild[1]);
         cgiResponse.first = this->_getCgiOutput(fdToParent);
         if ((childExitStatus = this->_waitChild(pid)) > 0){
-            this->_closeFds(fdToChild, fdToParent);
             this->_freeMetaVar(cMetaVar);
             throw execveError(childExitStatus);
         }
@@ -322,7 +325,7 @@ private:
 
     void _setContentLength(){
         std::string varName("CONTENT_LENGTH=");
-        std::string contentLength("");
+        std::string contentLength(itos(this->_requestBody.size()));
 
         if (_mapMetaVars.count("HTTP_CONTENT_LENGTH=") == 1)
             contentLength = this->_mapMetaVars.find("HTTP_CONTENT_LENGTH=")->second;
@@ -448,6 +451,7 @@ private:
         std::string cgiOutput;
 
         close(fdToParent[1]);
+        //fcntl(fdToParent[0], F_SETFL, O_NONBLOCK);
 		bzero(readBuffer, 1024 + 1);
         nbRead = read(fdToParent[0], readBuffer, 1024);
         while (nbRead > 0){
