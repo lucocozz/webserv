@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/04/30 01:16:48 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/30 04:09:23 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -114,10 +114,6 @@ class httpResponse{
 			this->_buildStatusLine();
 			this->_buildHeaders();
 			this->_buildBody();
-
-			std::cout << "SERVER RESPONSE STATUS - " << _status << std::endl;
-			//std::cout << "SERVER RESPONSE" << std::endl;
-			//std::cout << _response << std::endl;
 		}
 
 		void	sendResponse(EpollSocket socketEvent){

@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:46 by user42            #+#    #+#             */
-/*   Updated: 2022/04/29 23:47:18 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/30 04:09:23 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -127,11 +127,10 @@ class httpRequest{
 				this->_contentLength = rawRequest.size();
 			}
 
-			if ((this->_concatenedRequest.size() < this->_contentLength && this->_chunked == false )|| this->_chunked == true){
+			if ((this->_concatenedRequest.size() < this->_contentLength && this->_chunked == false )|| this->_chunked == true)
 				this->_concatenedRequest.append(rawRequest);
-			}
 
-			if (this->_concatenedRequest.find("0\r\n\r\n", this->_concatenedRequest.size() - 5) != std::string::npos && this->_chunked == true){
+			if (this->_concatenedRequest.find("0\r\n\r\n") != std::string::npos && this->_chunked == true){
 				this->_retrieveConfigInfo(server);
 				this->_parse(this->_concatenedRequest);
 				this->_check();
@@ -219,48 +218,6 @@ class httpRequest{
 	private:
 
 		/*
-			Check the request during the treatment :
-			-	Check the encoding
-			-	Check if the request is totally received
-		*/
-
-		/*bool								_checkEncodingHeaders(std::string rawRequest){
-			if (rawRequest.find("Transfer-Encoding: chunked") != std::string::npos){
-				this->_chunked = true;
-				this->_contentLength = 0;
-			}
-			else{
-				std::cout << "DEBUG JE SUIS LA" << std::endl;
-				if (getHeaderContentLenght(rawRequest) == std::string::npos){
-					std::cout << "debug1" << std::endl;
-					this->_status = 411;
-					return (true);
-				}
-				this->_contentLength += getHeaderContentLenght(rawRequest);
-			}
-			return (false);
-		}
-
-		bool								_isRequestComplete(std::string &rawRequest, Server const &server){
-			if (this->_concatenedRequest.find("0\r\n\r\n", this->_concatenedRequest.size() - 5) != std::string::npos && this->_chunked == true){
-				this->_retrieveConfigInfo(server);
-				this->_parse(this->_concatenedRequest);
-				this->_check();
-				return (true);
-			}
-			if (this->_concatenedRequest.size() >= this->_contentLength && this->_chunked == false){
-				this->_retrieveConfigInfo(server);
-				if (_concatenedRequest.empty() == true)
-					this->_parse(rawRequest);
-				else
-					this->_parse(this->_concatenedRequest);
-				this->_check();
-				return (true);
-			}
-			return (false);
-		}*/
-
-		/*
 			Get config info :
 			-	Retrieve the needed config info
 		*/
@@ -343,9 +300,6 @@ class httpRequest{
 			std::string unchunkedBody;
 			if (this->_chunked == true){
 				std::string rawBody = rawRequest.substr(rawRequest.find("\r\n\r\n") + 4);
-				//DEBUG OUTPUT
-				std::cout << "RAW REQUEST = " << std::endl;
-				std::cout << rawBody << std::endl << std::endl;
 				size_t contentLength = 0;
 				bool chunkReading = false;
 				size_t chunkSize = 0;
@@ -355,14 +309,13 @@ class httpRequest{
 					if (chunkReading == false && *it != '\r')
 						hexSize.push_back(*it);
 					else if (chunkReading == false && *it == '\r'){
-						it += 2;
+						it++;
 						std::stringstream ss;
 						ss << std::hex << hexSize;
 						ss >> chunkMaxSize;
 						chunkReading = true;
-						if (chunkMaxSize == 0){
+						if (chunkMaxSize == 0)
 							break;
-						}
 					}
 					else if (chunkReading == true){
 						unchunkedBody.push_back(*it);
@@ -376,12 +329,8 @@ class httpRequest{
 						chunkMaxSize = 0;
 					}
 				}
-				//DEBUG OUTPUT
-				std::cout << "UNCHUNKED REQUEST = " << std::endl;
-				std::cout << unchunkedBody << std::endl << std::endl;
 			}
 			
-
 			if (this->_boundarie.first == true){
 				std::string rawBody;
 				if (this->_chunked == false){
@@ -445,43 +394,9 @@ class httpRequest{
 				if (this->_chunked == false)
 					this->_body.append(rawRequest.substr(rawRequest.find("\r\n\r\n") + 4));
 				else
-					this->_body.append(unchunkedBody.substr(unchunkedBody.find("\r\n\r\n") + 4));
+					this->_body.append(unchunkedBody/*.substr(unchunkedBody.find("\r\n\r\n") + 4)*/);
 				//this->_body.append(rawRequest.substr(rawRequest.find("\r\n\r\n") + 4));
 				this->_bodySize = this->_body.size();
-			}
-		}
-
-		void						_unchunkBody(std::string &rawRequest, std::string &unchunkedBody){
-			std::string rawBody = rawRequest.substr(rawRequest.find("\r\n\r\n") + 4);
-			size_t contentLength = 0;
-			bool chunkReading = false;
-			size_t chunkSize = 0;
-			size_t chunkMaxSize = 0;
-			std::string hexSize;
-			for (std::string::iterator it = rawBody.begin(); it != rawBody.end(); it++){
-				if (chunkReading == false && *it != '\r')
-					hexSize.push_back(*it);
-				else if (chunkReading == false && *it == '\r'){
-					it += 2;
-					std::stringstream ss;
-					ss << std::hex << hexSize;
-					ss >> chunkMaxSize;
-					chunkReading = true;
-					if (chunkMaxSize == 0){
-						break;
-					}
-				}
-				else if (chunkReading == true){
-					unchunkedBody.push_back(*it);
-					contentLength++;
-					chunkSize++;
-				}
-				if (chunkSize == chunkMaxSize && chunkMaxSize != 0 && chunkSize != 0){
-					chunkReading = false;
-					hexSize.clear();
-					chunkSize = 0;
-					chunkMaxSize = 0;
-				}
 			}
 		}
 
