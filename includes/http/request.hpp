@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:46 by user42            #+#    #+#             */
-/*   Updated: 2022/04/30 14:18:21 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/30 17:40:28 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,7 +57,7 @@ class httpRequest{
 			return;
 		}
 
-		httpRequest &operator=(httpRequest const &rhs){
+		httpRequest 								&operator=(httpRequest const &rhs){
 			this->_concatenedRequest = rhs.getConcatenedRequest();
 			this->_contentLength = rhs.getContentLenght();
 			this->_chunked = rhs.getChunked();
@@ -92,7 +92,7 @@ class httpRequest{
 			- Return the specified header if found
 		*/
 
-		bool								treatRequest(std::string &rawRequest, Server const &server){
+		bool										treatRequest(std::string &rawRequest, Server const &server){
 			if (rawRequest.find("POST /") != std::string::npos){
 				if (this->_checkEncoding(rawRequest) == true)
 					return (true);
@@ -112,14 +112,14 @@ class httpRequest{
 			return (false);
 		}
 
-		std::string							findHeader(std::string key){
+		std::string									findHeader(std::string key){
 			std::map<std::string, std::string>::iterator it = this->_headers.find(key);
 			if (it == this->_headers.end())
 				return (std::string());
 			return ((*it).second);
 		}
 
-		void					clear(){
+		void										clear(){
 			this->_concatenedRequest = std::string();
 			this->_contentLength = 0;
 			this->_chunked = false;
@@ -188,7 +188,7 @@ class httpRequest{
 			-	Check if the request is completly retrieved
 		*/
 
-		bool			_checkEncoding(std::string &rawRequest){
+		bool										_checkEncoding(std::string &rawRequest){
 			if (rawRequest.find("Transfer-Encoding: chunked") != std::string::npos){
 				this->_chunked = true;
 				this->_contentLength = 0;
@@ -203,7 +203,7 @@ class httpRequest{
 			return (false);
 		}
 
-		static size_t	_getHeaderContentLenght(std::string &request){
+		static size_t								_getHeaderContentLenght(std::string &request){
 			size_t					header = request.find("Content-Length:");
 			if (header == std::string::npos)
 				return (std::string::npos);
@@ -217,7 +217,7 @@ class httpRequest{
 			return (atoi(contentLengthStr.c_str()));
 		}
 
-		bool			_isRequestComplete(std::string &rawRequest, Server const &server){
+		bool										_isRequestComplete(std::string &rawRequest, Server const &server){
 			if (this->_concatenedRequest.find("0\r\n\r\n") != std::string::npos && this->_chunked == true){
 				this->_retrieveConfigInfo(server);
 				this->_parse(this->_concatenedRequest);
@@ -242,7 +242,7 @@ class httpRequest{
 			-	Retrieve the needed config info
 		*/
 
-		void	_retrieveConfigInfo(Server const &server){
+		void										_retrieveConfigInfo(Server const &server){
 			this->_serverName = getConfigServerName(server);
 			this->_rootPath = getConfigRootPath(server);
 			this->_index = getConfigIndex(server, _rootPath);
@@ -262,7 +262,7 @@ class httpRequest{
 				-	Parse the multipart request
 		*/
 
-		void	_parse(std::string const &rawRequest){
+		void										_parse(std::string const &rawRequest){
 			std::string rawHeaders;
 			rawHeaders.append(rawRequest.substr(0, rawRequest.find("\r\n\r\n")));
 			std::vector<std::string> vecHeaders = split(rawHeaders, "\r\n");
@@ -278,7 +278,7 @@ class httpRequest{
 			}
 		}
 
-		void	_parseRequestLine(std::vector<std::string> &vecHeaders){
+		void										_parseRequestLine(std::vector<std::string> &vecHeaders){
 			std::vector<std::string> requestLine = split(vecHeaders.at(0), " ");
 			if (requestLine.size() == 3){
 				this->_method = requestLine.at(0);
@@ -296,7 +296,7 @@ class httpRequest{
 			}
 		}
 
-		void	_parseHeaders(std::vector<std::string> &vecHeaders){
+		void										_parseHeaders(std::vector<std::string> &vecHeaders){
 			std::map<std::string, std::string>				mapHeaders;
 			for (size_t i = 0; i < vecHeaders.size(); i++){
 				std::vector<std::string> res = split(vecHeaders.at(i), ": ");
@@ -317,7 +317,7 @@ class httpRequest{
 			this->_headers = mapHeaders; 
 		}
 
-		void		_parseBody(std::string rawRequest){
+		void										_parseBody(std::string rawRequest){
 			std::string unchunkedBody;
 			if (this->_chunked == true)
 				unchunkedBody = unchunkBody(rawRequest);
@@ -345,7 +345,7 @@ class httpRequest{
 			}
 		}
 
-		void					_retrieveMapMultipart(std::string rawBody){
+		void										_retrieveMapMultipart(std::string rawBody){
 			std::vector<std::string> separedMultipart = split(rawBody, this->_boundarie.second + "\r\n");
 			for (std::vector<std::string>::iterator it = separedMultipart.begin(); it != separedMultipart.end(); it++){
 				if ((*it).empty() == true){
@@ -397,7 +397,7 @@ class httpRequest{
 			Checking :
 		*/
 
-		void	_check(){
+		void										_check(){
 			if (this->_status / 100 == 4 || this->_status / 100 == 5)
 				return;
 			this->_checkRequestLine();
@@ -419,7 +419,7 @@ class httpRequest{
 			}
 		}
 
-		void	_checkRequestLine(){
+		void										_checkRequestLine(){
 			if (this->_method != "GET" && this->_method != "POST" && this->_method != "DELETE"){
 				this->_status = NOT_IMPLEMENTED;
 				return;

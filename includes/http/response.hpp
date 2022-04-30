@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/04/30 17:22:57 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/30 17:38:36 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,7 +52,7 @@ class httpResponse{
 			return;
 		}
 
-		httpResponse	operator=(httpResponse const &src){
+		httpResponse											operator=(httpResponse const &src){
 			this->_request = src.getRequest();
 
 			this->_status = src.getStatus();
@@ -75,7 +75,7 @@ class httpResponse{
 			- Send the response to the client
 		*/
 
-		void	buildResponse(httpRequest *request, Server const &server, const std::pair<std::string, std::string> &clientInfo){
+		void													buildResponse(httpRequest *request, Server const &server, const std::pair<std::string, std::string> &clientInfo){
 			this->_statusMessages = initStatusMessages();
 			this->_extensionTypes = initExtensionTypes();
 			this->_request = request;
@@ -106,7 +106,7 @@ class httpResponse{
 			this->_buildBody();
 		}
 
-		void	sendResponse(EpollSocket socketEvent){
+		void													sendResponse(EpollSocket socketEvent){
 			size_t 						header = 0;
 			header = socketEvent.sendData(this->_response);
 			std::string::iterator 	itb = this->_response.begin();
@@ -134,20 +134,20 @@ class httpResponse{
 			Getters :
 		*/
 
-		httpRequest						*getRequest() const{return (this->_request);}
+		httpRequest												*getRequest() const{return (this->_request);}
 
-		const int						&getStatus() const{return (this->_status);}
-		const std::string				&getStatusMessage() const{return ((*this->_statusMessages.find(this->_status)).second);}
-		const std::string				&getContent() const{return (this->_content);}
-		const std::string				&getContentType() const{return (this->_contentType);}
-		const std::string				&getRootToFile() const{return (this->_rootToFile);}
-		const std::string				&getLocationRootPath() const{return (this->_locationRootPath);}
-		const std::string				&getRedirectionHeader() const{return (this->_redirectionHeader);}
-		const std::vector<std::string>	&getAllowedLocation() const{return (this->_allowedLocation);}
+		const int												&getStatus() const{return (this->_status);}
+		const std::string										&getStatusMessage() const{return ((*this->_statusMessages.find(this->_status)).second);}
+		const std::string										&getContent() const{return (this->_content);}
+		const std::string										&getContentType() const{return (this->_contentType);}
+		const std::string										&getRootToFile() const{return (this->_rootToFile);}
+		const std::string										&getLocationRootPath() const{return (this->_locationRootPath);}
+		const std::string										&getRedirectionHeader() const{return (this->_redirectionHeader);}
+		const std::vector<std::string>							&getAllowedLocation() const{return (this->_allowedLocation);}
 
-		std::string						getResponse() const{return (this->_response);}
+		std::string												getResponse() const{return (this->_response);}
 
-		std::string						getMimeTypes(char const *path) const{
+		std::string												getMimeTypes(char const *path) const{
 			std::string tmp(path);
 			if (tmp.rfind(".") == std::string::npos)
 				return ("text/html");
@@ -169,7 +169,7 @@ class httpResponse{
 			-	Check if method is allowed & execute method
 		*/
 
-		void		_treatLocationRoot(){
+		void													_treatLocationRoot(){
 			std::pair<std::string, std::string> locationRoot = retrieveLocationRoot(this->_request->getLocations(), this->_request->getRootPath(), this->_request->getPath());
 			if (locationRoot.first != this->_request->getRootPath()){
 				this->_locationRootPath = locationRoot.first;
@@ -178,7 +178,7 @@ class httpResponse{
 			}
 		}
 
-		void	_treatMethods(Server const &server, const std::pair<std::string, std::string> &clientInfo, std::string oldPath){
+		void													_treatMethods(Server const &server, const std::pair<std::string, std::string> &clientInfo, std::string oldPath){
 			if (this->_request->getMethod() == "POST" && this->_isMethodAllowed(this->_request->getLocations(), oldPath, this->_request->getMethod(), this->_request->getAllowedMethod()) == true)
 				this->_uploadContent(this->_request->getPath(), server, clientInfo, this->_request->getHeaders(), oldPath);
 			else if (this->_request->getMethod() == "DELETE" && this->_isMethodAllowed(this->_request->getLocations(), oldPath, this->_request->getMethod(), this->_request->getAllowedMethod()) == true)
@@ -193,13 +193,13 @@ class httpResponse{
 			-	Build the body (An empty line and the body i retrieved if there is one)
 		*/
 
-		void _buildStatusLine(){
+		void 													_buildStatusLine(){
 			this->_response.append("HTTP/1.1 ");
 			this->_response.append(itos(this->_status) + " ");
 			this->_response.append(this->getStatusMessage() + "\r\n");
 		}
 
-		void _buildHeaders(){
+		void 													_buildHeaders(){
 			this->_response.append("Server: " + this->_request->getServerName() + "\r\n");
 			this->_response.append("Date: " + buildDate() + "\r\n");
 			if (this->_status / 100 == 3 && this->_status != 310 && this->_redirectionHeader.empty() == false)
@@ -223,7 +223,7 @@ class httpResponse{
 			this->_response.append("Connection: keep-alive\r\n");
 		}
 
-		void _buildBody(){
+		void 													_buildBody(){
 			this->_response.append("\r\n");
 			this->_response.append(this->_content);
 		}
@@ -231,57 +231,27 @@ class httpResponse{
 		/*
 			Retrieve a ressource :
 			- Retrieve the content
-				-	Retrieve CGI content
-				-	Retrieve file content
-				-	Build default index page
-				-	Build autoindex page
+				-	Treat CGI content
+				-	Treat root content
+				-	Treat file content
+					-	Retrieve file content
+					-	Build default index page
+					-	Build autoindex page
 		*/
 
-		void	_retrieveContent(const Server &server, const std::pair<std::string, std::string> &clientInfo, std::string oldPath){
+		void													_retrieveContent(const Server &server, const std::pair<std::string, std::string> &clientInfo, std::string oldPath){
 			if (this->_request->getMethod() == "GET" && this->_isMethodAllowed(this->_request->getLocations(), this->_request->getPath(), this->_request->getMethod(), this->_request->getAllowedMethod()) == true){
 				std::pair<bool,LocationContext> locationResult = cgiChecker(this->_request->getPath(), server.context.locations);
 				if (locationResult.first == true)
-					this->_retrieveCGIContent(server, clientInfo, locationResult.second);
-				else if (this->_request->getPath() == "/"){
-					//std::cout << "DEBUG index = " << this->_request->getIndex() << std::endl;
-					if (this->_request->getAutoindex() == true)
-						this->_buildAutoIndexPage(this->_request->getRootPath(), this->_request->getPath(), oldPath);
-					else{
-						if (this->_request->getIndex() == "default_index.html")
-							this->_buildDefaultIndexPage();
-						else
-							this->_retrieveFileContent(buildPathTo(this->_rootToFile, this->_request->getIndex(), ""));
-					}
-				}
+					this->_treatGetCGIContent(server, clientInfo, locationResult.second);
+				else if (this->_request->getPath() == "/")
+					this->_treatRootContent(oldPath);
 				else{
-					std::pair<std::string, std::string> indexLocation = retrieveLocationIndex(this->_request->getLocations(), this->_request->getRootPath(), oldPath);
-					if (isPathValid(this->_rootToFile) == false && retrieveLocationAutoIndex(this->_request->getLocations(), oldPath) == false && indexLocation.first.empty()){
-						this->_buildErrorPage(NOT_FOUND, "");
+					this->_treatFileContent(oldPath);
+					if (this->_status / 100 != 2){
+						this->_buildErrorPage(this->_status, "");
 						return;
 					}
-					std::pair<std::string, std::string> locationRoot = retrieveLocationRoot(this->_request->getLocations(), this->_request->getRootPath(), this->_request->getPath());
-					if (retrieveLocationAutoIndex(this->_request->getLocations(), oldPath) == true){
-						if (isPathValid(this->_rootToFile) == true && isPathDirectory(this->_rootToFile) == false)
-							this->_retrieveFileContent(this->_rootToFile);
-						else if (locationRoot.first.empty() == true && isPathValid(this->_rootToFile) == false)
-							this->_buildAutoIndexPage(this->_request->getRootPath(), "/", oldPath);
-						else if (isPathValid(this->_rootToFile) == true)
-							this->_buildAutoIndexPage(this->_request->getRootPath(), this->_request->getPath(), oldPath);
-						else{
-							this->_buildErrorPage(NOT_FOUND, "");
-							return;
-						}
-					}
-					else if (indexLocation.first.empty() == false && isSameDirectory(indexLocation.second, oldPath) == true){
-						if (indexLocation.first == "default_index.html")
-							this->_buildDefaultIndexPage();
-						else
-							this->_retrieveFileContent(buildPathTo(this->_request->getRootPath(), indexLocation.first, ""));
-					}
-					else if (isPathDirectory(this->_rootToFile) == true && (this->_request->getAutoindex() == true || pathIsLocation(this->_request->getPath(), this->_request->getLocations(), "autoindex").first == true))
-						this->_buildAutoIndexPage(this->_request->getRootPath(), this->_request->getPath(), oldPath);
-					else
-						this->_retrieveFileContent(this->_rootToFile);
 				}
 			}
 			else if (this->_isMethodAllowed(this->_request->getLocations(), oldPath, this->_request->getMethod(), this->_request->getAllowedMethod()) == false){
@@ -294,7 +264,19 @@ class httpResponse{
 			}
 		}
 
-		void			_retrieveCGIContent(Server const &server, const std::pair<std::string, std::string> &clientInfo, LocationContext context){
+		void													_treatRootContent(std::string oldPath){
+			//std::cout << "DEBUG index = " << this->_request->getIndex() << std::endl;
+			if (this->_request->getAutoindex() == true)
+				this->_buildAutoIndexPage(this->_request->getRootPath(), this->_request->getPath(), oldPath);
+			else{
+				if (this->_request->getIndex() == "default_index.html")
+					this->_buildDefaultIndexPage();
+				else
+					this->_retrieveFileContent(buildPathTo(this->_rootToFile, this->_request->getIndex(), ""));
+			}
+		}
+
+		void													_treatGetCGIContent(Server const &server, const std::pair<std::string, std::string> &clientInfo, LocationContext context){
 			try{
 				std::pair<std::string, int> cgiResponse;
 				std::pair<ServerContext, LocationContext > serverLocation = 
@@ -316,7 +298,38 @@ class httpResponse{
 			}
 		}
 
-		void			_retrieveFileContent(std::string pathToIndex){
+		void													_treatFileContent(std::string oldPath){
+			std::pair<std::string, std::string> indexLocation = retrieveLocationIndex(this->_request->getLocations(), this->_request->getRootPath(), oldPath);
+			if (isPathValid(this->_rootToFile) == false && retrieveLocationAutoIndex(this->_request->getLocations(), oldPath) == false && indexLocation.first.empty()){
+				this->_buildErrorPage(NOT_FOUND, "");
+				return;
+			}
+			std::pair<std::string, std::string> locationRoot = retrieveLocationRoot(this->_request->getLocations(), this->_request->getRootPath(), this->_request->getPath());
+			if (retrieveLocationAutoIndex(this->_request->getLocations(), oldPath) == true){
+				if (isPathValid(this->_rootToFile) == true && isPathDirectory(this->_rootToFile) == false)
+					this->_retrieveFileContent(this->_rootToFile);
+				else if (locationRoot.first.empty() == true && isPathValid(this->_rootToFile) == false)
+					this->_buildAutoIndexPage(this->_request->getRootPath(), "/", oldPath);
+				else if (isPathValid(this->_rootToFile) == true)
+					this->_buildAutoIndexPage(this->_request->getRootPath(), this->_request->getPath(), oldPath);
+				else{
+					this->_buildErrorPage(NOT_FOUND, "");
+					return;
+				}
+			}
+			else if (indexLocation.first.empty() == false && isSameDirectory(indexLocation.second, oldPath) == true){
+				if (indexLocation.first == "default_index.html")
+					this->_buildDefaultIndexPage();
+				else
+					this->_retrieveFileContent(buildPathTo(this->_request->getRootPath(), indexLocation.first, ""));
+			}
+			else if (isPathDirectory(this->_rootToFile) == true && (this->_request->getAutoindex() == true || pathIsLocation(this->_request->getPath(), this->_request->getLocations(), "autoindex").first == true))
+				this->_buildAutoIndexPage(this->_request->getRootPath(), this->_request->getPath(), oldPath);
+			else
+				this->_retrieveFileContent(this->_rootToFile);
+		}
+
+		void													_retrieveFileContent(std::string pathToIndex){
 			this->_contentType = this->getMimeTypes(pathToIndex.c_str());
 			std::stringstream buff;
 			if (this->_contentType.find("text/") != std::string::npos){
@@ -330,7 +343,7 @@ class httpResponse{
 			this->_content.append(buff.str());
 		}
 
-		void			_buildDefaultIndexPage(){
+		void													_buildDefaultIndexPage(){
 			this->_contentType = "text/html";
 			this->_content.append("<!DOCTYPE html>\r\n<html>\r\n<head>\r\n<meta charset='utf-8'>\r\n");
 			this->_content.append("<title>Welcome to " + this->_request->getServerName() + "</title>\r\n");
@@ -345,7 +358,7 @@ class httpResponse{
 			this->_content.append("</body>\r\n</html>\r\n");
 		}
 
-		void			_buildAutoIndexPage(std::string rootPath, std::string path, std::string oldPath){
+		void													_buildAutoIndexPage(std::string rootPath, std::string path, std::string oldPath){
 			this->_contentType = "text/html";
 			this->_content.append("<!DOCTYPE html><html>\r\n<head>\r\n<meta charset='utf-8'>\r\n");
 			this->_content.append("<title>Index of " + buildPathTo(oldPath, "/", "") + "</title>\r\n</head>\r\n<body>\r\n");
@@ -378,7 +391,7 @@ class httpResponse{
 					-	Upload file content
 		*/
 
-		void	_uploadContent(const std::string &path, const Server &server, const std::pair<std::string, std::string> &clientInfo, const std::map<std::string, std::string> &headers, std::string &oldPath){
+		void													_uploadContent(const std::string &path, const Server &server, const std::pair<std::string, std::string> &clientInfo, const std::map<std::string, std::string> &headers, std::string &oldPath){
 			if (this->_status / 100 != 2){
 				this->_buildErrorPage(this->_status, "");
 				return;
@@ -389,7 +402,7 @@ class httpResponse{
 			bool filenameBool = this->_doesFilenameExist();
 
 			if (locationResult.first == true)
-				this->_uploadCGIContent(path, server, clientInfo, headers, locationResult);
+				this->_treatUploadCGIContent(path, server, clientInfo, headers, locationResult);
 			else if (this->_request->getBoundarie().first == true)
 				this->_treatMultipart(oldPath, uploadLocation);
 			else if (filenameBool == true){
@@ -404,7 +417,7 @@ class httpResponse{
 			return;
 		}
 
-		bool			_doesFilenameExist(){
+		bool													_doesFilenameExist(){
 			bool filenameBool = false;
 			std::string contentDispo = this->_request->findHeader("Content-Disposition");
 			if (contentDispo.empty() == false){
@@ -416,7 +429,7 @@ class httpResponse{
 			return (filenameBool);
 		}
 
-		void			_uploadCGIContent(const std::string &path, const Server &server, const std::pair<std::string, std::string> &clientInfo, const std::map<std::string, std::string> &headers, std::pair<bool,LocationContext> locationResult){
+		void													_treatUploadCGIContent(const std::string &path, const Server &server, const std::pair<std::string, std::string> &clientInfo, const std::map<std::string, std::string> &headers, std::pair<bool,LocationContext> locationResult){
 			try{
 					std::pair<std::string, int> cgiResponse;
 					std::pair<ServerContext, LocationContext > serverLocation = 
@@ -435,7 +448,7 @@ class httpResponse{
 				}
 		}
 
-		void			_treatMultipart(std::string oldPath, std::pair<bool, std::string> uploadLocation){
+		void													_treatMultipart(std::string oldPath, std::pair<bool, std::string> uploadLocation){
 			std::string locationName = retrieveUploadLocationName(this->_request->getLocations(), oldPath);
 			if (uploadLocation.first == true){
 				oldPath = buildPathTo(oldPath, uploadLocation.second, "");
@@ -451,7 +464,7 @@ class httpResponse{
 				_uploadFileContent(oldPath, (*(*it).first.find("filename")).second, (*it).second);
 		}
 
-		void			_treatFilename(std::string oldPath, std::pair<bool, std::string> uploadLocation){
+		void													_treatFilename(std::string oldPath, std::pair<bool, std::string> uploadLocation){
 			std::string contentDisposition = (*this->_request->getHeaders().find("Content-Disposition")).second;
 			std::string filename = contentDisposition.substr(contentDisposition.find("filename=\"") + 10);
 			filename.erase(filename.end() - 1);
@@ -475,7 +488,7 @@ class httpResponse{
 			_uploadFileContent(oldPath, filename, this->_request->getBody());
 		}
 
-		void			_uploadFileContent(std::string const &oldPath, std::string const &filename, std::string const &body){
+		void													_uploadFileContent(std::string const &oldPath, std::string const &filename, std::string const &body){
 			std::string pathToFile;
 			pathToFile = buildPathTo(this->_request->getRootPath(), oldPath, filename);
 			if (isPathValid(pathToFile) == false)
@@ -495,10 +508,10 @@ class httpResponse{
 		}
 
 		/*
-
+		-	Check if method is allowed
 		*/
 
-		bool						_isMethodAllowed(std::vector<LocationContext> locations, std::string path, std::string method, std::vector<std::string> allowedRoot){
+		bool													_isMethodAllowed(std::vector<LocationContext> locations, std::string path, std::string method, std::vector<std::string> allowedRoot){
 			std::pair<bool,LocationContext> isLocation = pathIsLocation(path, locations, "allowed_method");
 			if (isLocation.first == false && allowedRoot.empty() == false){
 				for (size_t i = 0; i < allowedRoot.size(); i++){
@@ -523,7 +536,7 @@ class httpResponse{
 			Delete a ressource :
 		*/
 
-		void	_deleteContent(std::string oldPath){
+		void													_deleteContent(std::string oldPath){
 			if (this->_status / 100 != 2){
 				this->_buildErrorPage(this->_status, "");
 				return;
@@ -551,7 +564,7 @@ class httpResponse{
 			- Build a default error page (generated)
 		*/
 
-		void					_buildErrorPage(int status, std::string customMessage){
+		void													_buildErrorPage(int status, std::string customMessage){
 			(void)customMessage;
 			std::string ret;
 
@@ -574,7 +587,7 @@ class httpResponse{
 			this->_buildDefaultErrorPage(customMessage);
 		}
 
-		void					_buildDefaultErrorPage(std::string customMessage){
+		void													_buildDefaultErrorPage(std::string customMessage){
 			std::string title;
 			if (customMessage.empty() == true)
 				title = itos(this->_status) + " " + this->getStatusMessage();
