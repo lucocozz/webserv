@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/04/30 14:59:38 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/30 16:07:11 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -228,6 +228,7 @@ class httpResponse{
 				if (locationResult.first == true)
 					this->_retrieveCGIContent(server, clientInfo, locationResult.second);
 				else if (this->_request->getPath() == "/"){
+					//std::cout << "DEBUG index = " << this->_request->getIndex() << std::endl;
 					if (this->_request->getAutoindex() == true)
 						this->_buildAutoIndexPage(this->_request->getRootPath(), this->_request->getPath(), oldPath);
 					else{
