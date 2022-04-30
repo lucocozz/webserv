@@ -13,7 +13,7 @@ if fileitem.filename:
    fn = os.path.basename(fileitem.filename)
    print("fn: ", fn)
    open(uploadlocation + fn, 'wb').write(fileitem.file.read())
-   message = 'The file "' + fn + '" was uploaded successfully at '
+   message = 'The file "' + fn + '" was uploaded successfully at ' + uploadlocation
  
 else:
    message = 'No file was uploaded'
