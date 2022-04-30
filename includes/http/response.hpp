@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/04/30 16:24:18 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/30 17:22:57 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -231,8 +231,10 @@ class httpResponse{
 		/*
 			Retrieve a ressource :
 			- Retrieve the content
-			- Identify if the client need to refresh the content (ETag / Last-Modified)
-			- Build the autoindex page
+				-	Retrieve CGI content
+				-	Retrieve file content
+				-	Build default index page
+				-	Build autoindex page
 		*/
 
 		void	_retrieveContent(const Server &server, const std::pair<std::string, std::string> &clientInfo, std::string oldPath){
@@ -368,6 +370,12 @@ class httpResponse{
 
 		/*
 			Upload a ressource :
+			-	Upload content
+				-	Check if the request got a filename
+				-	Treat CGI uploads
+				-	Treat Multipart uploads
+				-	Treat Filenames uploads
+					-	Upload file content
 		*/
 
 		void	_uploadContent(const std::string &path, const Server &server, const std::pair<std::string, std::string> &clientInfo, const std::map<std::string, std::string> &headers, std::string &oldPath){
@@ -375,11 +383,28 @@ class httpResponse{
 				this->_buildErrorPage(this->_status, "");
 				return;
 			}
-
 			std::pair<bool,LocationContext> locationResult = 
 				cgiChecker(this->_request->getPath(), server.context.locations);
 			std::pair<bool, std::string> uploadLocation = retrieveLocationUpload(this->_request->getLocations(), oldPath);
+			bool filenameBool = this->_doesFilenameExist();
 
+			if (locationResult.first == true)
+				this->_uploadCGIContent(path, server, clientInfo, headers, locationResult);
+			else if (this->_request->getBoundarie().first == true)
+				this->_treatMultipart(oldPath, uploadLocation);
+			else if (filenameBool == true){
+				this->_treatFilename(oldPath, uploadLocation);
+				if (this->_status / 100 != 2){
+					this->_buildErrorPage(this->_status, "");
+					return;
+				}
+			}
+			else
+				this->_status = FORBIDDEN;
+			return;
+		}
+
+		bool			_doesFilenameExist(){
 			bool filenameBool = false;
 			std::string contentDispo = this->_request->findHeader("Content-Disposition");
 			if (contentDispo.empty() == false){
@@ -388,9 +413,11 @@ class httpResponse{
 				else
 					filenameBool = false;
 			}
+			return (filenameBool);
+		}
 
-			if (locationResult.first == true){
-				try{
+		void			_uploadCGIContent(const std::string &path, const Server &server, const std::pair<std::string, std::string> &clientInfo, const std::map<std::string, std::string> &headers, std::pair<bool,LocationContext> locationResult){
+			try{
 					std::pair<std::string, int> cgiResponse;
 					std::pair<ServerContext, LocationContext > serverLocation = 
 						std::make_pair(server.context, locationResult.second);
@@ -406,48 +433,46 @@ class httpResponse{
 					this->_status = INTERNAL_SERVER_ERROR;
 					std::cerr << "Cgi failed: " << exception << std::endl;
 				}
-			}
-			//MULTIPART
-			else if (this->_request->getBoundarie().first == true){
-				std::string locationName = retrieveUploadLocationName(this->_request->getLocations(), oldPath);
-				if (uploadLocation.first == true){
-					oldPath = buildPathTo(oldPath, uploadLocation.second, "");
-					oldPath.replace(0, locationName.size(), this->_locationRootPath);
-				}
-				else if (locationName.empty() == false && locationName != this->_locationRootPath)
-					oldPath.replace(0, locationName.size(), this->_locationRootPath);
-				if (isPathValid(buildPathTo(this->_request->getRootPath(), oldPath, "")) == false){
-					this->_buildErrorPage(NOT_FOUND, "");
-					return;
-				}
+		}
 
-				for (std::map<std::map<std::string, std::string>, std::string>::const_iterator it = this->_request->getBodyMultipart().begin(); it != this->_request->getBodyMultipart().end(); it++)
-					_uploadFileContent(oldPath, (*(*it).first.find("filename")).second, (*it).second);
+		void			_treatMultipart(std::string oldPath, std::pair<bool, std::string> uploadLocation){
+			std::string locationName = retrieveUploadLocationName(this->_request->getLocations(), oldPath);
+			if (uploadLocation.first == true){
+				oldPath = buildPathTo(oldPath, uploadLocation.second, "");
+				oldPath.replace(0, locationName.size(), this->_locationRootPath);
 			}
-			//CONTENT DISPOSITION
-			else if (filenameBool == true){
-				std::string contentDisposition = (*this->_request->getHeaders().find("Content-Disposition")).second;
-				std::string filename = contentDisposition.substr(contentDisposition.find("filename=\"") + 10);
-				filename.erase(filename.end() - 1);
+			else if (locationName.empty() == false && locationName != this->_locationRootPath)
+				oldPath.replace(0, locationName.size(), this->_locationRootPath);
+			if (isPathValid(buildPathTo(this->_request->getRootPath(), oldPath, "")) == false){
+				this->_buildErrorPage(NOT_FOUND, "");
+				return;
+			}
+			for (std::map<std::map<std::string, std::string>, std::string>::const_iterator it = this->_request->getBodyMultipart().begin(); it != this->_request->getBodyMultipart().end(); it++)
+				_uploadFileContent(oldPath, (*(*it).first.find("filename")).second, (*it).second);
+		}
 
-				std::string locationName = retrieveUploadLocationName(this->_request->getLocations(), oldPath);
-				if (uploadLocation.first == true){
-					oldPath.insert(oldPath.find(locationName) + locationName.size(), uploadLocation.second);
-					oldPath.replace(0, locationName.size(), this->_locationRootPath);
-				}
-				else{
-					oldPath.erase(0, locationName.size());
-					oldPath = buildPathTo(this->_locationRootPath, oldPath, "");
-				}
-				if (isPathValid(buildPathTo(this->_request->getRootPath(), oldPath, "")) == false){
-					this->_buildErrorPage(NOT_FOUND, "");
-					return;
-				}
-				_uploadFileContent(oldPath, filename, this->_request->getBody());
+		void			_treatFilename(std::string oldPath, std::pair<bool, std::string> uploadLocation){
+			std::string contentDisposition = (*this->_request->getHeaders().find("Content-Disposition")).second;
+			std::string filename = contentDisposition.substr(contentDisposition.find("filename=\"") + 10);
+			filename.erase(filename.end() - 1);
+			if (filename.empty() == true){
+				this->_buildErrorPage(FORBIDDEN, "");
+				return;
 			}
-			else
-				this->_status = UNPROCESSABLE_ENTITY;
-			return;
+			std::string locationName = retrieveUploadLocationName(this->_request->getLocations(), oldPath);
+			if (uploadLocation.first == true){
+				oldPath.insert(oldPath.find(locationName) + locationName.size(), uploadLocation.second);
+				oldPath.replace(0, locationName.size(), this->_locationRootPath);
+			}
+			else{
+				oldPath.erase(0, locationName.size());
+				oldPath = buildPathTo(this->_locationRootPath, oldPath, "");
+			}
+			if (isPathValid(buildPathTo(this->_request->getRootPath(), oldPath, "")) == false){
+				this->_buildErrorPage(NOT_FOUND, "");
+				return;
+			}
+			_uploadFileContent(oldPath, filename, this->_request->getBody());
 		}
 
 		void			_uploadFileContent(std::string const &oldPath, std::string const &filename, std::string const &body){

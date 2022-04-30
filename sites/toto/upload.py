@@ -5,7 +5,7 @@ form = cgi.FieldStorage()
 # Get filename here.
 fileitem = form['userfile']
 #upload location
-uploadlocation = '/tmp/www/tests/toto/'
+uploadlocation = '/tmp/www/sites/toto/'
 # Test if the file was uploaded
 if fileitem.filename:
    # strip leading path from file name to avoid

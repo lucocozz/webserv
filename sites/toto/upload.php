@@ -1,5 +1,5 @@
 <?php
-$uploaddir = '/tmp/www/tests/toto';
+$uploaddir = '/tmp/www/sites/toto';
 $uploadfile = $uploaddir . basename($_FILES['userfile']['name']);
 
 echo '<pre>';
