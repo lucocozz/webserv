@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:46 by user42            #+#    #+#             */
-/*   Updated: 2022/04/30 13:33:56 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/30 14:18:21 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -92,33 +92,10 @@ class httpRequest{
 			- Return the specified header if found
 		*/
 
-		static size_t	getHeaderContentLenght(std::string &request){
-			size_t					header = request.find("Content-Length:");
-			if (header == std::string::npos)
-				return (std::string::npos);
-			std::string::iterator 	itb = request.begin() + header + 16;
-			std::string::iterator 	ite = itb;
-			std::string				contentLengthStr("");
-
-			while (isdigit(*ite))
-				ite++;
-			contentLengthStr.append(itb, ite);
-			return (atoi(contentLengthStr.c_str()));
-		}
-
 		bool								treatRequest(std::string &rawRequest, Server const &server){
 			if (rawRequest.find("POST /") != std::string::npos){
-				if (rawRequest.find("Transfer-Encoding: chunked") != std::string::npos){
-					this->_chunked = true;
-					this->_contentLength = 0;
-				}
-				else{
-					if (getHeaderContentLenght(rawRequest) == std::string::npos){
-						this->_status = 411;
-						return (true);
-					}
-					this->_contentLength = getHeaderContentLenght(rawRequest);
-				}
+				if (this->_checkEncoding(rawRequest) == true)
+					return (true);
 			}
 			else if (rawRequest.find("GET /") != std::string::npos)
 				this->_contentLength = rawRequest.size();
@@ -130,21 +107,8 @@ class httpRequest{
 			if ((this->_concatenedRequest.size() < this->_contentLength && this->_chunked == false )|| this->_chunked == true)
 				this->_concatenedRequest.append(rawRequest);
 
-			if (this->_concatenedRequest.find("0\r\n\r\n") != std::string::npos && this->_chunked == true){
-				this->_retrieveConfigInfo(server);
-				this->_parse(this->_concatenedRequest);
-				this->_check();
+			if (this->_isRequestComplete(rawRequest, server) == true)
 				return (true);
-			}
-			if (this->_concatenedRequest.size() >= this->_contentLength && this->_chunked == false){
-				this->_retrieveConfigInfo(server);
-				if (_concatenedRequest.empty() == true)
-					this->_parse(rawRequest);
-				else
-					this->_parse(this->_concatenedRequest);
-				this->_check();
-				return (true);
-			}
 			return (false);
 		}
 
@@ -218,6 +182,62 @@ class httpRequest{
 	private:
 
 		/*
+			TreatRequest utils :
+			-	Check the encoding
+			-	Retrieve the headers lenght
+			-	Check if the request is completly retrieved
+		*/
+
+		bool			_checkEncoding(std::string &rawRequest){
+			if (rawRequest.find("Transfer-Encoding: chunked") != std::string::npos){
+				this->_chunked = true;
+				this->_contentLength = 0;
+			}
+			else{
+				if (this->_getHeaderContentLenght(rawRequest) == std::string::npos){
+					this->_status = 411;
+					return (true);
+				}
+				this->_contentLength = this->_getHeaderContentLenght(rawRequest);
+			}
+			return (false);
+		}
+
+		static size_t	_getHeaderContentLenght(std::string &request){
+			size_t					header = request.find("Content-Length:");
+			if (header == std::string::npos)
+				return (std::string::npos);
+			std::string::iterator 	itb = request.begin() + header + 16;
+			std::string::iterator 	ite = itb;
+			std::string				contentLengthStr("");
+
+			while (isdigit(*ite))
+				ite++;
+			contentLengthStr.append(itb, ite);
+			return (atoi(contentLengthStr.c_str()));
+		}
+
+		bool			_isRequestComplete(std::string &rawRequest, Server const &server){
+			if (this->_concatenedRequest.find("0\r\n\r\n") != std::string::npos && this->_chunked == true){
+				this->_retrieveConfigInfo(server);
+				this->_parse(this->_concatenedRequest);
+				this->_check();
+				return (true);
+			}
+			if (this->_concatenedRequest.size() >= this->_contentLength && this->_chunked == false){
+				this->_retrieveConfigInfo(server);
+				if (_concatenedRequest.empty() == true)
+					this->_parse(rawRequest);
+				else
+					this->_parse(this->_concatenedRequest);
+				this->_check();
+				return (true);
+			}
+			return (false);
+		}
+
+
+		/*
 			Get config info :
 			-	Retrieve the needed config info
 		*/
@@ -239,6 +259,7 @@ class httpRequest{
 			-	Parse the request line part
 			-	Parse the headers
 			-	Parse the body
+				-	Parse the multipart request
 		*/
 
 		void	_parse(std::string const &rawRequest){
@@ -298,40 +319,8 @@ class httpRequest{
 
 		void		_parseBody(std::string rawRequest){
 			std::string unchunkedBody;
-			if (this->_chunked == true){
-				std::string rawBody = rawRequest.substr(rawRequest.find("\r\n\r\n") + 4);
-				size_t contentLength = 0;
-				bool chunkReading = false;
-				int chunkSize = 0;
-				int chunkMaxSize = -1;
-				std::string hexSize;
-				for (std::string::iterator it = rawBody.begin(); it != rawBody.end(); it++){
-					if (chunkReading == false && *it != '\r'){
-						hexSize.push_back(*it);
-					}
-					else if (chunkReading == false && *it == '\r' && hexSize.empty() == false){
-						it++;
-						std::stringstream ss;
-						ss << std::hex << hexSize;
-						ss >> chunkMaxSize;
-						chunkReading = true;
-						if (chunkMaxSize == 0)
-							break;
-					}
-					else if (chunkReading == true){
-						unchunkedBody.push_back(*it);
-						contentLength++;
-						chunkSize++;
-					}
-					if (chunkSize == chunkMaxSize && chunkMaxSize != -1){
-						chunkReading = false;
-						hexSize.clear();
-						chunkSize = 0;
-						chunkMaxSize = -1;
-					}
-				}
-			}
-			
+			if (this->_chunked == true)
+				unchunkedBody = unchunkBody(rawRequest);
 			if (this->_boundarie.first == true){
 				std::string rawBody;
 				if (this->_chunked == false){
@@ -343,53 +332,7 @@ class httpRequest{
 				}
 				else
 					rawBody = unchunkedBody;
-				std::vector<std::string> separedMultipart = split(rawBody, this->_boundarie.second + "\r\n");
-
-				for (std::vector<std::string>::iterator it = separedMultipart.begin(); it != separedMultipart.end(); it++){
-					if ((*it).empty() == true){
-						separedMultipart.erase(it);
-						it = separedMultipart.begin();
-					}
-				}
-
-				for (size_t i = 0; i < separedMultipart.size(); i++){
-					std::pair<std::map<std::string,std::string>, std::string>	pair;
-					std::vector<std::string> tmpVec = split(separedMultipart.at(i).substr(0, separedMultipart.at(i).find("\r\n\r\n")), "\r\n");
-					for (std::vector<std::string>::iterator itt = tmpVec.begin(); itt != tmpVec.end(); itt++){
-						if ((*itt).find("; ") != std::string::npos){
-							std::vector<std::string> splitedHeader = split(*itt, "; ");
-							for (size_t x = 0; x < splitedHeader.size(); x++){
-								if (splitedHeader.at(x).find(": ") != std::string::npos){
-									std::vector<std::string> keyValue = split(splitedHeader.at(x), ": ");
-									pair.first.insert(std::make_pair(keyValue.at(0), keyValue.at(1)));
-								}
-								else if (splitedHeader.at(x).find("=\"") != std::string::npos){
-									std::vector<std::string> keyValue = split(splitedHeader.at(x), "=\"");
-									pair.first.insert(std::make_pair(keyValue.at(0), keyValue.at(1).substr(0, keyValue.at(1).find("\""))));
-								}
-							}
-						}
-						else{
-							if ((*itt).find(": ") != std::string::npos){
-								std::vector<std::string> keyValue = split((*itt), ": ");
-								pair.first.insert(std::make_pair(keyValue.at(0), keyValue.at(1)));
-							}
-							else if ((*itt).find("=\"") != std::string::npos){
-								std::vector<std::string> keyValue = split((*itt), "=\"");
-								pair.first.insert(std::make_pair(keyValue.at(0), keyValue.at(1).substr(0, keyValue.at(1).find("\""))));
-							}
-						}
-					}
-					if (separedMultipart.at(i).find(_boundarie.second + "--") != std::string::npos){
-						pair.second = separedMultipart.at(i).substr(separedMultipart.at(i).find("\r\n\r\n") + 4);
-						pair.second = pair.second.substr(0, pair.second.find(_boundarie.second + "--"));
-					}
-					else
-						pair.second = separedMultipart.at(i).substr(separedMultipart.at(i).find("\r\n\r\n") + 4);
-					if (pair.second.rfind("\r\n") != std::string::npos && pair.second.rfind("\r\n") == pair.second.size() - 2)
-						pair.second.erase(pair.second.rfind("\r\n"));
-					this->_bodyMultipart.insert(pair);
-				}
+				this->_retrieveMapMultipart(rawBody);
 				this->_body.append(rawBody);
 				this->_bodySize = this->_body.size();
 			}
@@ -402,6 +345,54 @@ class httpRequest{
 			}
 		}
 
+		void					_retrieveMapMultipart(std::string rawBody){
+			std::vector<std::string> separedMultipart = split(rawBody, this->_boundarie.second + "\r\n");
+			for (std::vector<std::string>::iterator it = separedMultipart.begin(); it != separedMultipart.end(); it++){
+				if ((*it).empty() == true){
+					separedMultipart.erase(it);
+					it = separedMultipart.begin();
+				}
+			}
+			for (size_t i = 0; i < separedMultipart.size(); i++){
+				std::pair<std::map<std::string,std::string>, std::string>	pair;
+				std::vector<std::string> tmpVec = split(separedMultipart.at(i).substr(0, separedMultipart.at(i).find("\r\n\r\n")), "\r\n");
+				for (std::vector<std::string>::iterator itt = tmpVec.begin(); itt != tmpVec.end(); itt++){
+					if ((*itt).find("; ") != std::string::npos){
+						std::vector<std::string> splitedHeader = split(*itt, "; ");
+						for (size_t x = 0; x < splitedHeader.size(); x++){
+							if (splitedHeader.at(x).find(": ") != std::string::npos){
+								std::vector<std::string> keyValue = split(splitedHeader.at(x), ": ");
+								pair.first.insert(std::make_pair(keyValue.at(0), keyValue.at(1)));
+							}
+							else if (splitedHeader.at(x).find("=\"") != std::string::npos){
+								std::vector<std::string> keyValue = split(splitedHeader.at(x), "=\"");
+								pair.first.insert(std::make_pair(keyValue.at(0), keyValue.at(1).substr(0, keyValue.at(1).find("\""))));
+							}
+						}
+					}
+					else{
+						if ((*itt).find(": ") != std::string::npos){
+							std::vector<std::string> keyValue = split((*itt), ": ");
+							pair.first.insert(std::make_pair(keyValue.at(0), keyValue.at(1)));
+						}
+						else if ((*itt).find("=\"") != std::string::npos){
+							std::vector<std::string> keyValue = split((*itt), "=\"");
+							pair.first.insert(std::make_pair(keyValue.at(0), keyValue.at(1).substr(0, keyValue.at(1).find("\""))));
+						}
+					}
+				}
+				if (separedMultipart.at(i).find(_boundarie.second + "--") != std::string::npos){
+					pair.second = separedMultipart.at(i).substr(separedMultipart.at(i).find("\r\n\r\n") + 4);
+					pair.second = pair.second.substr(0, pair.second.find(_boundarie.second + "--"));
+				}
+				else
+					pair.second = separedMultipart.at(i).substr(separedMultipart.at(i).find("\r\n\r\n") + 4);
+				if (pair.second.rfind("\r\n") != std::string::npos && pair.second.rfind("\r\n") == pair.second.size() - 2)
+					pair.second.erase(pair.second.rfind("\r\n"));
+				this->_bodyMultipart.insert(pair);
+			}
+		}
+
 		/*
 			Checking :
 		*/
@@ -410,8 +401,6 @@ class httpRequest{
 			if (this->_status / 100 == 4 || this->_status / 100 == 5)
 				return;
 			this->_checkRequestLine();
-
-			//Check if there is a multipart without "filename";
 			if (this->_boundarie.first == true){
 				for (std::map<std::map<std::string, std::string>, std::string>::const_iterator it = this->_bodyMultipart.begin(); it != this->_bodyMultipart.end(); it++){
 					if ((*it).first.find("filename") == (*it).first.end()){
@@ -420,12 +409,10 @@ class httpRequest{
 					}
 				}
 			}
-			//Need to check if bodySize > maxBodySize
 			if (this->_maxBodySize < this->_bodySize){
 				this->_status = PAYLOAD_TOO_LARGE;
 				return;
 			}
-			//Check if the host is specified
 			if (this->findHeader("Host").empty() == true){
 				this->_status = BAD_REQUEST;
 				return;

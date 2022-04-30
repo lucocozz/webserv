@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/15 00:58:00 by user42            #+#    #+#             */
-/*   Updated: 2022/04/27 19:13:01 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/30 14:02:08 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -81,6 +81,42 @@ std::string					buildFileSize(std::string path){\
 	std::string ret(itos(sb.st_size));
 
 	return (ret);
+}
+
+std::string							unchunkBody(std::string rawRequest){
+	std::string unchunkedBody;
+	std::string rawBody = rawRequest.substr(rawRequest.find("\r\n\r\n") + 4);
+	size_t contentLength = 0;
+	bool chunkReading = false;
+	int chunkSize = 0;
+	int chunkMaxSize = -1;
+	std::string hexSize;
+	for (std::string::iterator it = rawBody.begin(); it != rawBody.end(); it++){
+		if (chunkReading == false && *it != '\r'){
+			hexSize.push_back(*it);
+		}
+		else if (chunkReading == false && *it == '\r' && hexSize.empty() == false){
+			it++;
+			std::stringstream ss;
+			ss << std::hex << hexSize;
+			ss >> chunkMaxSize;
+			chunkReading = true;
+			if (chunkMaxSize == 0)
+				break;
+		}
+		else if (chunkReading == true){
+			unchunkedBody.push_back(*it);
+			contentLength++;
+			chunkSize++;
+		}
+		if (chunkSize == chunkMaxSize && chunkMaxSize != -1){
+			chunkReading = false;
+			hexSize.clear();
+			chunkSize = 0;
+			chunkMaxSize = -1;
+		}
+	}
+	return (unchunkedBody);
 }
 
 std::map<std::string, std::string>	initExtensionTypes(){

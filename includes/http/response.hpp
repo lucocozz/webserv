@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/04/30 12:59:30 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/30 14:59:38 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -249,8 +249,12 @@ class httpResponse{
 							this->_retrieveFileContent(this->_rootToFile);
 						else if (locationRoot.first.empty() == true && isPathValid(this->_rootToFile) == false)
 							this->_buildAutoIndexPage(this->_request->getRootPath(), "/", oldPath);
-						else
+						else if (isPathValid(this->_rootToFile) == true)
 							this->_buildAutoIndexPage(this->_request->getRootPath(), this->_request->getPath(), oldPath);
+						else{
+							this->_buildErrorPage(NOT_FOUND, "");
+							return;
+						}
 					}
 					else if (indexLocation.first.empty() == false && isSameDirectory(indexLocation.second, oldPath) == true){
 						if (indexLocation.first == "default_index.html")
