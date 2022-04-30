@@ -6,7 +6,7 @@
 #    By: lucocozz <lucocozz@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2022/01/21 19:56:36 by lucocozz          #+#    #+#              #
-#    Updated: 2022/04/24 21:23:50 by lucocozz         ###   ########.fr        #
+#    Updated: 2022/04/30 16:03:24 by lucocozz         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -49,18 +49,20 @@ SOURCE_DIR := sources
 DEP := $(SRC:%.cpp=$(BUILD_DIR)/%.d)
 OBJ := $(DEP:.d=.o)
 
-$(NAME): $(OBJ)
-	$(CXX) $(CXXFLAGS) $^ -o $@
-
 vpath %.cpp ./ $(shell find $(SOURCE_DIR) -type d)
 
+
+
 all: $(NAME) config
+
+$(NAME): $(OBJ)
+	$(CXX) $(CXXFLAGS) $^ -o $@
 
 config:
 	mkdir -p $(WEBSERV_PATH)
 	mkdir -p $(DEFAULT_ROOT)
 	cp -r config/* $(WEBSERV_PATH)
-	cp -r tests $(DEFAULT_ROOT)
+	cp -r sites $(DEFAULT_ROOT)
 
 clean:
 	rm -rf $(BUILD_DIR)
@@ -79,3 +81,5 @@ $(BUILD_DIR)/%.o: %.cpp | $(BUILD_DIR)
 	$(CXX) $(DEFINES) $(CXXFLAGS) $(INCLUDES_DIR:%=-I %) -c $< -o $@
 
 .PHONY: all clean fclean re test config
+
+-include $(DEP)
