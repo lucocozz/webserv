@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:46 by user42            #+#    #+#             */
-/*   Updated: 2022/04/30 04:09:23 by user42           ###   ########.fr       */
+/*   Updated: 2022/04/30 13:26:54 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -302,13 +302,14 @@ class httpRequest{
 				std::string rawBody = rawRequest.substr(rawRequest.find("\r\n\r\n") + 4);
 				size_t contentLength = 0;
 				bool chunkReading = false;
-				size_t chunkSize = 0;
-				size_t chunkMaxSize = 0;
+				int chunkSize = 0;
+				int chunkMaxSize = -1;
 				std::string hexSize;
 				for (std::string::iterator it = rawBody.begin(); it != rawBody.end(); it++){
-					if (chunkReading == false && *it != '\r')
+					if (chunkReading == false && *it != '\r'){
 						hexSize.push_back(*it);
-					else if (chunkReading == false && *it == '\r'){
+					}
+					else if (chunkReading == false && *it == '\r' && hexSize.empty() == false){
 						it++;
 						std::stringstream ss;
 						ss << std::hex << hexSize;
@@ -322,11 +323,11 @@ class httpRequest{
 						contentLength++;
 						chunkSize++;
 					}
-					if (chunkSize == chunkMaxSize && chunkMaxSize != 0 && chunkSize != 0){
+					if (chunkSize == chunkMaxSize && chunkMaxSize != -1){
 						chunkReading = false;
 						hexSize.clear();
 						chunkSize = 0;
-						chunkMaxSize = 0;
+						chunkMaxSize = -1;
 					}
 				}
 			}
@@ -385,6 +386,8 @@ class httpRequest{
 					}
 					else
 						pair.second = separedMultipart.at(i).substr(separedMultipart.at(i).find("\r\n\r\n") + 4);
+					if (pair.second.rfind("\r\n") != std::string::npos && pair.second.rfind("\r\n") == pair.second.size() - 2)
+						pair.second.erase(pair.second.rfind("\r\n"));
 					this->_bodyMultipart.insert(pair);
 				}
 				this->_body.append(rawBody);
@@ -394,8 +397,7 @@ class httpRequest{
 				if (this->_chunked == false)
 					this->_body.append(rawRequest.substr(rawRequest.find("\r\n\r\n") + 4));
 				else
-					this->_body.append(unchunkedBody/*.substr(unchunkedBody.find("\r\n\r\n") + 4)*/);
-				//this->_body.append(rawRequest.substr(rawRequest.find("\r\n\r\n") + 4));
+					this->_body.append(unchunkedBody);
 				this->_bodySize = this->_body.size();
 			}
 		}
