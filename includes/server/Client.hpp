@@ -25,11 +25,12 @@ public:
 	EpollSocket		socket;
 	httpRequest 	request;
 	httpResponse	response;
+	Server			*linkedServer;
 
-	Client(void) {}
+	Client(void): linkedServer(NULL) {}
 
 	Client(EpollSocket &socket, std::vector<Server*> serverLinks):
-		_serverLinks(serverLinks), socket(socket) {}
+		_serverLinks(serverLinks), socket(socket), linkedServer(NULL) {}
 
 	~Client() {}
 
@@ -42,6 +43,7 @@ public:
 	{
 		if (this != &rhs)
 		{
+			this->linkedServer = rhs.linkedServer;
 			this->socket = rhs.socket;
 			this->_serverLinks = rhs._serverLinks;
 		}
@@ -52,10 +54,12 @@ public:
 		return (this->_serverLinks);
 	}
 
-	Server	*fetchServerlink(std::string &data) const
+	void	fetchServerlink(std::string &data)
 	{
-		if (this->_serverLinks.size() == 1)
-			return (this->_serverLinks.at(0));
+		if (this->_serverLinks.size() == 1){
+			this->linkedServer = this->_serverLinks.at(0);
+			return ;
+		}
 		std::string hostName("");
 		if (data.find("Host:") != std::string::npos){
 			std::string::iterator 	itb;
@@ -68,9 +72,11 @@ public:
 			hostName.append(itb, ite);
 		}
 		for (size_t i = 0; i < this->_serverLinks.size(); ++i)
-			if (this->_serverLinks.at(i)->context.directives.find("server_name")->second[0] == hostName)
-				return (this->_serverLinks.at(i));
-		return (this->_serverLinks.at(0));
+			if (this->_serverLinks.at(i)->context.directives.find("server_name")->second[0] == hostName){
+				this->linkedServer = this->_serverLinks.at(i);
+				return ;
+			}
+		this->linkedServer = this->_serverLinks.at(0);
 	}
 };
 

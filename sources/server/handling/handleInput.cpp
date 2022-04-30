@@ -15,7 +15,6 @@
 void	handleInput(Client &client, Epoll &epoll)
 {
 	std::pair<std::string, int>					data;
-	Server										*serverLink;
 	const std::pair<std::string, std::string> 	clientInfo(client.socket.getNameInfo(NI_NUMERICHOST), client.socket.getNameInfo());
 	
 	try
@@ -26,11 +25,10 @@ void	handleInput(Client &client, Epoll &epoll)
 	{
 		std::cerr << "recvData error: " << e.what() << std::endl;
 	}
-	serverLink = client.fetchServerlink(data.first);
-	//std::cout << "CLIENT REQUEST" << std::endl;
-	//std::cout << data.first << std::endl;
-	if (client.request.treatRequest(data.first, *serverLink) == true){
-		client.response.buildResponse(&client.request, *serverLink, clientInfo);
+	if (client.linkedServer == NULL)
+		client.fetchServerlink(data.first);
+	if (client.request.treatRequest(data.first, *client.linkedServer) == true){
+		client.response.buildResponse(&client.request, *client.linkedServer, clientInfo);
 		// executer ces lignes si le server doit envoyer une reponse au client
 		client.socket.setEvents(client.socket.getEvents() | EPOLLOUT);
 		epoll.control(EPOLL_CTL_MOD, client.socket);
