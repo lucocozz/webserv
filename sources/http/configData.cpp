@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/15 00:57:56 by user42            #+#    #+#             */
-/*   Updated: 2022/04/30 16:06:27 by user42           ###   ########.fr       */
+/*   Updated: 2022/05/01 04:33:51 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,7 +42,8 @@ std::string 											getConfigIndex(Server const &server, std::string _rootPat
 		return (checkIndex(_rootPath, index));
 	}
 	catch (std::exception const &e){
-		return ("default_index.html");
+		//return ("default_index.html");
+		return ("");
 	}
 }
 
