@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:46 by user42            #+#    #+#             */
-/*   Updated: 2022/05/01 15:19:00 by user42           ###   ########.fr       */
+/*   Updated: 2022/05/01 15:34:47 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,8 +44,8 @@ class httpRequest{
 		httpRequest(): _concatenedRequest() {
 			this->_status = OK;
 			this->_chunked = false;
-			this->_indexBool = true;
-			this->_contentLength = 0;
+			this->_indexBool = false;
+			this->_contentLength = 32;
 			return;
 		}
 

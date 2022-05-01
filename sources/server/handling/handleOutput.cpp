@@ -11,8 +11,9 @@
 /* ************************************************************************** */
 
 #include "Client.hpp"
+#include "serverCore.hpp"
 
-void	handleOutput(Client &client, Epoll &epoll)
+void	handleOutput(std::map<int, Client> &clientList, EpollSocket &socketEvent, Client &client, Epoll &epoll)
 {
 	if (client.response.getResponse().size() > 0)
 	{
@@ -28,9 +29,9 @@ void	handleOutput(Client &client, Epoll &epoll)
 		}
 		catch(std::exception &e)
 		{
-			client.socket.setEvents(client.socket.getEvents() | EPOLLERR);
-			epoll.control(EPOLL_CTL_MOD, client.socket);
 			std::cerr << "HandleOutput: " << e.what() << std::endl;
+			handleDeconnection(clientList, socketEvent, epoll);
+			return ;
 		}
 	}
 }

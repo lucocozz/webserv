@@ -26,8 +26,8 @@ void				closeServers(std::vector<Server> &serverList);
 void				handleConnection(std::vector<Server> &serverList,
 						std::map<int, Client> &clientList, EpollSocket &socketEvent, Epoll &epoll);
 void				handleDeconnection(std::map<int, Client> &clientList, EpollSocket &socketEvent, Epoll &epoll);
-void				handleInput(Client &client, Epoll &epoll);
-void				handleOutput(Client &client, Epoll &epoll);
+void				handleInput(std::map<int, Client> &clientList, EpollSocket &socketEvent, Client &client, Epoll &epoll);
+void				handleOutput(std::map<int, Client> &clientList, EpollSocket &socketEvent, Client &client, Epoll &epoll);
 void				serverCore(std::vector<Server> &serverList);
 void				eventLoop(std::vector<Server> &serverList, std::map<int, Client> &clientList,
 						Epoll &epoll, int events);
