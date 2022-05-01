@@ -44,7 +44,7 @@ class httpRequest{
 		httpRequest(): _concatenedRequest() {
 			this->_status = OK;
 			this->_chunked = false;
-			this->_contentLength = 0;
+			this->_contentLength = 32;
 			return;
 		}
 
