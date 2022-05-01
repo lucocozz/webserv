@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/05/01 19:08:21 by user42           ###   ########.fr       */
+/*   Updated: 2022/05/02 00:42:31 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -265,7 +265,7 @@ class httpResponse{
 		}
 
 		void													_treatRootContent(std::string oldPath){
-			if (this->_request->getAutoindex() == true && this->_request->getIndexBool() == false)
+			if (this->_request->getAutoindex() == true && this->_request->getIndexBool() == false && isPathValid(buildPathTo(this->_rootToFile, "index.html", "")) == false)
 				this->_buildAutoIndexPage(this->_request->getRootPath(), this->_request->getPath(), oldPath);
 			else{
 				if (this->_request->getIndex() == "default_index.html")
