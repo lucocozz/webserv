@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/04/30 17:38:36 by user42           ###   ########.fr       */
+/*   Updated: 2022/05/01 04:13:37 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -265,8 +265,7 @@ class httpResponse{
 		}
 
 		void													_treatRootContent(std::string oldPath){
-			//std::cout << "DEBUG index = " << this->_request->getIndex() << std::endl;
-			if (this->_request->getAutoindex() == true)
+			if (this->_request->getAutoindex() == true && this->_request->getIndex().empty() == true)
 				this->_buildAutoIndexPage(this->_request->getRootPath(), this->_request->getPath(), oldPath);
 			else{
 				if (this->_request->getIndex() == "default_index.html")
@@ -305,7 +304,7 @@ class httpResponse{
 				return;
 			}
 			std::pair<std::string, std::string> locationRoot = retrieveLocationRoot(this->_request->getLocations(), this->_request->getRootPath(), this->_request->getPath());
-			if (retrieveLocationAutoIndex(this->_request->getLocations(), oldPath) == true){
+			if (retrieveLocationAutoIndex(this->_request->getLocations(), oldPath) == true && indexLocation.first.empty() == true){
 				if (isPathValid(this->_rootToFile) == true && isPathDirectory(this->_rootToFile) == false)
 					this->_retrieveFileContent(this->_rootToFile);
 				else if (locationRoot.first.empty() == true && isPathValid(this->_rootToFile) == false)
@@ -318,10 +317,14 @@ class httpResponse{
 				}
 			}
 			else if (indexLocation.first.empty() == false && isSameDirectory(indexLocation.second, oldPath) == true){
-				if (indexLocation.first == "default_index.html")
+				if (indexLocation.first.empty() ==false && indexLocation.first == "default_index.html")
 					this->_buildDefaultIndexPage();
-				else
-					this->_retrieveFileContent(buildPathTo(this->_request->getRootPath(), indexLocation.first, ""));
+				else if (indexLocation.first.empty() == false && indexLocation.first != "default_index.html"){
+					if (isPathValid(buildPathTo(this->_rootToFile, indexLocation.first, "")) == true)
+						this->_retrieveFileContent(buildPathTo(this->_rootToFile, indexLocation.first, ""));
+					else
+						this->_buildDefaultIndexPage();
+				}
 			}
 			else if (isPathDirectory(this->_rootToFile) == true && (this->_request->getAutoindex() == true || pathIsLocation(this->_request->getPath(), this->_request->getLocations(), "autoindex").first == true))
 				this->_buildAutoIndexPage(this->_request->getRootPath(), this->_request->getPath(), oldPath);
