@@ -11,8 +11,9 @@
 /* ************************************************************************** */
 
 #include "Client.hpp"
+#include "serverCore.hpp"
 
-void	handleInput(Client &client, Epoll &epoll)
+void	handleInput(std::map<int, Client> &clientList, EpollSocket &socketEvent, Client &client, Epoll &epoll)
 {
 	std::pair<std::string, int>					data;
 	const std::pair<std::string, std::string> 	clientInfo(client.socket.getNameInfo(NI_NUMERICHOST), client.socket.getNameInfo());
@@ -23,9 +24,9 @@ void	handleInput(Client &client, Epoll &epoll)
 	}
 	catch (std::exception &e)
 	{
-		client.socket.setEvents(client.socket.getEvents() | EPOLLERR);
-		epoll.control(EPOLL_CTL_MOD, client.socket);
 		std::cerr << "recvData error: " << e.what() << std::endl;
+		handleDeconnection(clientList, socketEvent, epoll);
+		return ;
 	}
 	if (client.linkedServer == NULL)
 		client.fetchServerlink(data.first);
