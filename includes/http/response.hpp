@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/05/01 04:39:54 by user42           ###   ########.fr       */
+/*   Updated: 2022/05/01 13:59:06 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -270,7 +270,7 @@ class httpResponse{
 			else{
 				if (this->_request->getIndex() == "default_index.html")
 					this->_buildDefaultIndexPage();
-				else if (this->_request->getIndex().empty() == false && this->_request->getIndex() == "default_index.html")
+				else if (this->_request->getIndex().empty() == false && this->_request->getIndex() != "default_index.html")
 					this->_retrieveFileContent(buildPathTo(this->_rootToFile, this->_request->getIndex(), ""));
 				else if (this->_request->getIndex().empty() == true && isPathValid(buildPathTo(this->_rootToFile, "index.html", "")) == true)
 					this->_retrieveFileContent(buildPathTo(this->_rootToFile, "index.html", ""));
