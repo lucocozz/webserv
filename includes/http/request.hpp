@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:46 by user42            #+#    #+#             */
-/*   Updated: 2022/04/30 17:40:28 by user42           ###   ########.fr       */
+/*   Updated: 2022/05/01 15:19:00 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,6 +44,7 @@ class httpRequest{
 		httpRequest(): _concatenedRequest() {
 			this->_status = OK;
 			this->_chunked = false;
+			this->_indexBool = true;
 			this->_contentLength = 0;
 			return;
 		}
@@ -65,6 +66,7 @@ class httpRequest{
 			this->_serverName = rhs.getServerName();
 			this->_rootPath = rhs.getRootPath();
 			this->_index = rhs.getIndex();
+			this->_indexBool = rhs.getIndexBool();
 			this->_autoindex = rhs.getAutoindex();
 			this->_allowedMethod = rhs.getAllowedMethod();
 			this->_errorPage = rhs.getErrorPage();
@@ -127,6 +129,7 @@ class httpRequest{
 			this->_serverName.clear();
 			this->_rootPath.clear();
 			this->_index.clear();
+			this->_indexBool = false;
 			this->_autoindex = false;
 			this->_errorPage.second = false;
 			this->_maxBodySize = 0;
@@ -156,6 +159,7 @@ class httpRequest{
 		const std::string													&getServerName()	const{return (this->_serverName);}
 		const std::string													&getRootPath() const{return (this->_rootPath);}
 		const std::string													&getIndex() const{return (this->_index);}
+		const bool															&getIndexBool() const{return (this->_indexBool);}
 		const bool															&getAutoindex() const{return (this->_autoindex);}
 		const std::vector<std::string>										&getAllowedMethod() const{return (this->_allowedMethod);}
 		const std::pair<std::map<std::string, std::string>, bool> 			&getErrorPage() const{return (this->_errorPage);}
@@ -245,7 +249,8 @@ class httpRequest{
 		void										_retrieveConfigInfo(Server const &server){
 			this->_serverName = getConfigServerName(server);
 			this->_rootPath = getConfigRootPath(server);
-			this->_index = getConfigIndex(server, _rootPath);
+			this->_index = getConfigIndex(server, _rootPath).first;
+			this->_indexBool = getConfigIndex(server, _rootPath).second;
 			this->_autoindex = getConfigAutoIndex(server);
 			this->_allowedMethod = getConfigAllowedMethod(server);
 			this->_maxBodySize = getConfigMaxBodySize(server);
@@ -449,6 +454,7 @@ class httpRequest{
 		std::string											_serverName;
 		std::string											_rootPath;
 		std::string											_index;
+		bool												_indexBool;
 		bool												_autoindex;
 		std::vector<std::string>							_allowedMethod;
 		std::pair<std::map<std::string, std::string>, bool> _errorPage;

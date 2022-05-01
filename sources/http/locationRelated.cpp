@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/15 00:58:14 by user42            #+#    #+#             */
-/*   Updated: 2022/04/30 00:22:59 by user42           ###   ########.fr       */
+/*   Updated: 2022/05/01 15:27:57 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,34 +85,14 @@ std::vector<std::string>				retrieveDirectiveArgs(LocationContext const &locatio
 	return (ret);
 }
 
-/*bool						isMethodAllowed(std::vector<LocationContext> locations, std::string path, std::string method, std::vector<std::string> allowedRoot){
-	std::pair<bool,LocationContext> isLocation = pathIsLocation(path, locations, "allowed_method");
-	if (isLocation.first == false && allowedRoot.empty() == false){
-		for (size_t i = 0; i < allowedRoot.size(); i++){
-			if (method == allowedRoot.at(i))
-				return (true);
-		}
-		return (false);
-	}
-	else if (isLocation.first == false)
-		return (true);
-
-	std::vector<std::string> allowedMethods = retrieveDirectiveArgs(isLocation.second, "allowed_method");
-	for (size_t i = 0; i < allowedMethods.size(); i++){
-		if (method == allowedMethods.at(i))
-			return (true);
-	}
-	return (false);
-}*/
-
 std::string					checkIndex(std::string rootPath, std::vector<std::string> index){
 	std::string ret;
 
 	for (std::vector<std::string>::iterator it = index.begin(); it != index.end(); it++){
-		if (isPathValid(buildPathTo(rootPath, *it, "")) == true)
+		if (isPathValid(buildPathTo(rootPath, *it, "")) == true || *it == "default_index.html")
 			return (*it);
 	}
-	return ("default_index.html");
+	return ("");
 }
 
 std::pair<std::string, std::string>				retrieveLocationIndex(std::vector<LocationContext> locations, std::string rootPath, std::string path){

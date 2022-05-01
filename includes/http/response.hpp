@@ -6,7 +6,7 @@
 /*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/10 15:58:52 by user42            #+#    #+#             */
-/*   Updated: 2022/05/01 13:59:06 by user42           ###   ########.fr       */
+/*   Updated: 2022/05/01 15:27:39 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -265,13 +265,17 @@ class httpResponse{
 		}
 
 		void													_treatRootContent(std::string oldPath){
-			if (this->_request->getAutoindex() == true && this->_request->getIndex().empty() == true)
+			if (this->_request->getAutoindex() == true && this->_request->getIndexBool() == false)
 				this->_buildAutoIndexPage(this->_request->getRootPath(), this->_request->getPath(), oldPath);
 			else{
 				if (this->_request->getIndex() == "default_index.html")
 					this->_buildDefaultIndexPage();
-				else if (this->_request->getIndex().empty() == false && this->_request->getIndex() != "default_index.html")
-					this->_retrieveFileContent(buildPathTo(this->_rootToFile, this->_request->getIndex(), ""));
+				else if (this->_request->getIndexBool() == true && this->_request->getIndex() != "default_index.html"){
+					if (this->_request->getIndex() == "" || isPathValid(buildPathTo(this->_rootToFile, this->_request->getIndex(), "")) == false)
+						this->_buildErrorPage(NOT_FOUND, "");
+					else
+						this->_retrieveFileContent(buildPathTo(this->_rootToFile, this->_request->getIndex(), ""));
+				}
 				else if (this->_request->getIndex().empty() == true && isPathValid(buildPathTo(this->_rootToFile, "index.html", "")) == true)
 					this->_retrieveFileContent(buildPathTo(this->_rootToFile, "index.html", ""));
 				else
@@ -307,8 +311,9 @@ class httpResponse{
 				this->_buildErrorPage(NOT_FOUND, "");
 				return;
 			}
+
 			std::pair<std::string, std::string> locationRoot = retrieveLocationRoot(this->_request->getLocations(), this->_request->getRootPath(), this->_request->getPath());
-			if (retrieveLocationAutoIndex(this->_request->getLocations(), oldPath) == true && indexLocation.first.empty() == true){
+			if (retrieveLocationAutoIndex(this->_request->getLocations(), oldPath) == true && indexLocation.first.empty() == true && indexLocation.second.empty() == true){
 				if (isPathValid(this->_rootToFile) == true && isPathDirectory(this->_rootToFile) == false)
 					this->_retrieveFileContent(this->_rootToFile);
 				else if (locationRoot.first.empty() == true && isPathValid(this->_rootToFile) == false)
@@ -320,15 +325,23 @@ class httpResponse{
 					return;
 				}
 			}
-			else if (indexLocation.first.empty() == false && isSameDirectory(indexLocation.second, oldPath) == true){
-				if (indexLocation.first.empty() ==false && indexLocation.first == "default_index.html")
+			else if (((indexLocation.first.empty() == false && indexLocation.second.empty() == false) || (indexLocation.first.empty() == true && indexLocation.second.empty() == false)) && isSameDirectory(indexLocation.second, oldPath) == true){
+				if (indexLocation.first.empty() == false && indexLocation.first == "default_index.html")
 					this->_buildDefaultIndexPage();
 				else if (indexLocation.first.empty() == false && indexLocation.first != "default_index.html"){
 					if (isPathValid(buildPathTo(this->_rootToFile, indexLocation.first, "")) == true)
 						this->_retrieveFileContent(buildPathTo(this->_rootToFile, indexLocation.first, ""));
 					else
-						this->_buildDefaultIndexPage();
+						this->_buildErrorPage(NOT_FOUND, "");
 				}
+				else if (indexLocation.first.empty() == true && indexLocation.second.empty() == false)
+					this->_buildErrorPage(NOT_FOUND, "");
+			}
+			else if ((indexLocation.first.empty() == true && indexLocation.second.empty() == false) && isSameDirectory(indexLocation.second, oldPath) == false){
+				if (isPathValid(buildPathTo(this->_rootToFile, "index.html", "")) == true)
+					this->_retrieveFileContent(buildPathTo(this->_rootToFile, "index.html", ""));
+				else
+					this->_buildErrorPage(FORBIDDEN, "");
 			}
 			else if (isPathDirectory(this->_rootToFile) == true && (this->_request->getAutoindex() == true || retrieveLocationAutoIndex(this->_request->getLocations(), oldPath) == true))
 				this->_buildAutoIndexPage(this->_request->getRootPath(), this->_request->getPath(), oldPath);
